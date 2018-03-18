@@ -1,0 +1,60 @@
+#include "DebugInfo.h"
+
+DebugInfo::DebugInfo() {
+	this->sampleSize = 5;
+	this->reset();
+}
+
+void DebugInfo::setTime(double _time) {
+	this->time = _time;
+}
+
+void DebugInfo::setDuration(duration<double> _cDuration) {
+	this->cDuration = _cDuration;
+}
+
+void DebugInfo::addFrameSample(int sample) {
+	
+	if ((int)this->frameSamples.size() >= this->sampleSize) this->frameSamples.erase(this->frameSamples.begin());
+	
+	this->frameSamples.push_back(sample);
+}
+
+void DebugInfo::addMessage(string message) {
+
+	this->messages.push_back(message);
+
+}
+
+void DebugInfo::reset() {
+	this->frameSamples.clear();
+	this->messages.clear();
+}
+
+string DebugInfo::getOutput() {
+	string output = "";
+
+	output.append("Current Time:\n");
+	//output.append(utils::doubleToString(time));
+	output.append(utils::doubleToString(cDuration.count()));
+	output.append("\nAvg. Framerate:\n");
+	output.append(utils::doubleToString(getAverageFrameRate()));
+	output.append("\nMessages:\n");
+
+	for (string message : this->messages) {
+		output.append(message);
+		output.append("\n");
+	}
+
+	return output;
+}
+
+double DebugInfo::getAverageFrameRate() {
+	double total = 0.0;
+
+	for (int sample : this->frameSamples) {
+		total = total + (double)sample;
+	}
+
+	return total / ((double)this->frameSamples.size());
+}
