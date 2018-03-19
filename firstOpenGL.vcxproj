@@ -104,6 +104,7 @@
     <ClCompile Include="DebugInfo.cpp" />
     <ClCompile Include="FreeType.cpp" />
     <ClCompile Include="gameloop.cpp" />
+    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="kgeUtils.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="win32_window.cpp" />
@@ -112,10 +113,10 @@
     <ClInclude Include="FreeType.h" />
     <ClInclude Include="gameloop.h" />
     <ClInclude Include="DebugInfo.h" />
+    <ClInclude Include="GameObject.h" />
     <ClInclude Include="kgeUtils.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Sprites.h" />
     <ClInclude Include="Image_Loading\nvImage.h" />
     <ClInclude Include="win32_window.h" />
   </ItemGroup>

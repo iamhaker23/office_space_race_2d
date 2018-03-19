@@ -61,6 +61,9 @@ struct font_data {
 //The current modelview matrix will also be applied to the text. 
 void print(const font_data &ft_font, float x, float y, const char *fmt, ...) ;
 
+void pop_projection_matrix();
+void pushScreenCoordinateMatrix();
 }
+
 
 #endif

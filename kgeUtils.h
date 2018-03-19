@@ -24,6 +24,7 @@
 			static GLvoid KillFont(GLvoid);
 			static GLvoid glPrint(string fmt);
 			static GLuint loadPNG(std::string name);
+			static void utils::enableTextureBlending();
 	};
 
 #endif

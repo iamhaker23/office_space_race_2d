@@ -20,6 +20,17 @@ int	mouse_x = 0, mouse_y = 0;
 bool LeftPressed = false;
 int screenWidth = 800, screenHeight = 800;
 
+int win32_window::getScreenHeight() {
+	return screenHeight;
+}
+int win32_window::getScreenWidth() {
+	return screenWidth;
+}
+
+bool win32_window::isLeftPressed() {
+	return LeftPressed;
+}
+
 int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 	HINSTANCE	hPrevInstance,		// Previous Instance
 	LPSTR		lpCmdLine,			// Command Line Parameters

@@ -20,7 +20,9 @@ public:
 	static bool CreateGLWindow(char* title, int width, int height); //creates the window
 	static int WINAPI WinMainHandler(HINSTANCE, HINSTANCE, LPSTR, int, char*);  // Win32 main function
 	static void reshape(int width, int height);
-
+	static int getScreenHeight();
+	static int getScreenWidth();
+	static bool isLeftPressed();
 };
 
 

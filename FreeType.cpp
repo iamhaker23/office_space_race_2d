@@ -190,7 +190,7 @@ void font_data::clean() {
 /// A fairly straight forward function that pushes
 /// a projection matrix that will make object world 
 /// coordinates identical to window coordinates.
-inline void pushScreenCoordinateMatrix() {
+void pushScreenCoordinateMatrix() {
 	glPushAttrib(GL_TRANSFORM_BIT);
 	GLint	viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
@@ -203,7 +203,7 @@ inline void pushScreenCoordinateMatrix() {
 
 /// Pops the projection matrix without changing the current
 /// MatrixMode.
-inline void pop_projection_matrix() {
+void pop_projection_matrix() {
 	glPushAttrib(GL_TRANSFORM_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -262,7 +262,9 @@ void print(const font_data &ft_font, float x, float y, const char *fmt, ...)  {
 	glEnable(GL_TEXTURE_2D);
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	
 
 	glListBase(font);
 
