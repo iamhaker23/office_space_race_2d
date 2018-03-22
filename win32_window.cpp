@@ -11,13 +11,11 @@ HINSTANCE	hInstance = NULL;		// Holds The Instance Of The Application
 time_t WIN_TIME = NULL;
 time_t START_TIME = NULL;
 system_clock::time_point START_CTIME;
-
+InputStates* inputs = new InputStates();
 DebugInfo* debugger = new DebugInfo();
-bool	keys[256];			// Array Used For The Keyboard Routine
 bool	active = TRUE;		// Window Active Flag Set To TRUE By Default
 bool	fullscreen = TRUE;	// Fullscreen Flag Set To Fullscreen Mode By Default
-int	mouse_x = 0, mouse_y = 0;
-bool LeftPressed = false;
+
 int screenWidth = 800, screenHeight = 800;
 
 int win32_window::getScreenHeight() {
@@ -28,7 +26,15 @@ int win32_window::getScreenWidth() {
 }
 
 bool win32_window::isLeftPressed() {
-	return LeftPressed;
+	return inputs->LeftPressed;
+}
+
+InputStates* win32_window::getInputs() {
+	return inputs;
+}
+
+void win32_window::printMessage(string message) {
+	debugger->addMessage(message);
 }
 
 int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
@@ -84,8 +90,7 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 		}
 		else										// If There Are No Messages
 		{
-			if (keys[VK_ESCAPE])
-				done = true;
+			//if (inputs->keys[VK_ESCAPE]) done = true; //close game
 
 			localFrameCount++;
 			gameloop::display();					// Draw The Scene
@@ -122,33 +127,33 @@ LRESULT CALLBACK win32_window::WndProc(HWND	hWnd,			// Handle For This Window
 
 	case WM_LBUTTONDOWN:
 	{
-		mouse_x = LOWORD(lParam);
-		mouse_y = screenHeight - HIWORD(lParam);
-		LeftPressed = true;
+		inputs->mouse_x = LOWORD(lParam);
+		inputs->mouse_y = screenHeight - HIWORD(lParam);
+		inputs->LeftPressed = true;
 	}
 	break;
 
 	case WM_LBUTTONUP:
 	{
-		LeftPressed = false;
+		inputs->LeftPressed = false;
 	}
 	break;
 
 	case WM_MOUSEMOVE:
 	{
-		mouse_x = LOWORD(lParam);
-		mouse_y = screenHeight - HIWORD(lParam);
+		inputs->mouse_x = LOWORD(lParam);
+		inputs->mouse_y = screenHeight - HIWORD(lParam);
 	}
 	break;
 	case WM_KEYDOWN:							// Is A Key Being Held Down?
 	{
-		keys[wParam] = true;					// If So, Mark It As TRUE
+		inputs->keys[wParam] = true;					// If So, Mark It As TRUE
 		return 0;								// Jump Back
 	}
 	break;
 	case WM_KEYUP:								// Has A Key Been Released?
 	{
-		keys[wParam] = false;					// If So, Mark It As FALSE
+		inputs->keys[wParam] = false;					// If So, Mark It As FALSE
 		return 0;								// Jump Back
 	}
 	break;
@@ -191,6 +196,11 @@ void win32_window::KillGLWindow()								// Properly Kill The Window
 		MessageBox(NULL, "Could Not Unregister Class.", "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
 		hInstance = NULL;									// Set hInstance To NULL
 	}
+
+	//Free variables.
+	delete debugger;
+	delete inputs;
+
 }
 
 /*	This Code Creates Our OpenGL Window.  Parameters Are:					*

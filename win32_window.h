@@ -5,6 +5,7 @@
 #include "DebugInfo.h"
 #include <chrono>
 #include <time.h>
+#include "InputStates.h"
 
 #ifndef WIN32_WINDOW_H
 
@@ -23,6 +24,8 @@ public:
 	static int getScreenHeight();
 	static int getScreenWidth();
 	static bool isLeftPressed();
+	static InputStates* getInputs();
+	static void printMessage(string message);
 };
 
 

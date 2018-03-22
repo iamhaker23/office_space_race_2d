@@ -1,7 +1,7 @@
 #include "DebugInfo.h"
 
 DebugInfo::DebugInfo() {
-	this->sampleSize = 5;
+	this->sampleSize = 2;
 	this->reset();
 }
 
@@ -45,6 +45,7 @@ string DebugInfo::getOutput() {
 		output.append(message);
 		output.append("\n");
 	}
+	this->messages.clear();
 
 	return output;
 }

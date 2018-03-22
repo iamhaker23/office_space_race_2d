@@ -9,6 +9,13 @@ string utils::doubleToString(double val) {
 	return ss.str();
 }
 
+string utils::intToString(int val) {
+	stringstream ss;
+	ss.precision(0);
+	ss << fixed << val;
+	return ss.str();
+}
+
 GLvoid utils::BuildFont(HDC hDC)								// Build Our Bitmap Font
 {
 	HFONT	font;										// Windows Font ID

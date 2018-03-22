@@ -20,6 +20,7 @@
 
 		public:
 			static string doubleToString(double val);
+			static string intToString(int val);
 			static GLvoid BuildFont(HDC hDC);
 			static GLvoid KillFont(GLvoid);
 			static GLvoid glPrint(string fmt);

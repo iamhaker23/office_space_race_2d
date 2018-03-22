@@ -114,6 +114,7 @@
     <ClInclude Include="gameloop.h" />
     <ClInclude Include="DebugInfo.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="InputStates.h" />
     <ClInclude Include="kgeUtils.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="resource.h" />
