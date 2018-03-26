@@ -24,8 +24,10 @@ enum AnimationLogic {
 class GameObject {
 	private:
 
+		static nv::Image* defaultSprite;
 		int activeSpriteIndex;
-		vector<string> sprites;
+		vector<nv::Image*> sprites;
+
 		float objectColor[4] = {
 			0.0f, 0.0f, 0.0f, 0.0f 
 		};
@@ -70,11 +72,12 @@ class GameObject {
 		static void setDebugMode(bool flag);
 		static void setDebugger(DebugInfo* _debugger);
 		static void setWorldToCameraTransform(Matrix3f* wtc);
+		static void freeData();
 
 		~GameObject();
 		GameObject();
 		GameObject(const GameObject &copy);
-		GameObject(string name, vector<string> sprites, vector<Vertex> mesh, int activeSprite, float objectColor[]);
+		GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite, float objectColor[]);
 		void setSprite(int index);
 		void animate(AnimationLogic al);
 		string toString();

@@ -5,6 +5,10 @@ DebugInfo* GameObject::debugger = NULL;
 Matrix3f* GameObject::worldToCamera = NULL;
 bool GameObject::drawDebug = false;
 
+void GameObject::freeData() {
+	delete GameObject::worldToCamera;
+}
+
 GameObject::~GameObject() {
 	for (CollisionRadii* c : this->collisionBounds) {
 		c->angles.clear();
@@ -13,8 +17,12 @@ GameObject::~GameObject() {
 	this->collisionBounds.clear();
 }
 
+nv::Image* GameObject::defaultSprite = utils::loadPNG("default-sprite.png");
+
 GameObject::GameObject() {
-	this->sprites.push_back("default-sprite.png");
+
+	this->sprites.push_back(GameObject::defaultSprite);
+
 	this->activeSpriteIndex = 0;
 	this->pingPongDirection = 1;
 	this->name = "DEFAULT_OBJECT";
@@ -88,7 +96,7 @@ GameObject::GameObject(const GameObject &copy) {
 
 }
 
-GameObject::GameObject(string name, vector<string> sprites, vector<Vertex> mesh, int activeSprite, float objectColor[]) {
+GameObject::GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite, float objectColor[]) {
 	
 	this->name = name;
 	
@@ -133,9 +141,7 @@ GameObject::GameObject(string name, vector<string> sprites, vector<Vertex> mesh,
 
 void GameObject::draw() {
 
-
-	//Problem: updates texture every frame!
-	GLuint myTexture = utils::loadPNG(this->sprites[this->activeSpriteIndex]);
+	utils::bindPNG(this->sprites[this->activeSpriteIndex]);
 
 	glEnable(GL_TEXTURE_2D);
 
@@ -155,7 +161,7 @@ void GameObject::draw() {
 
 		//glMultMatrixf(alsoWorldSpaceTransform);
 
-		glMultMatrixf(GameObject::worldToCamera->values);
+		if (GameObject::worldToCamera != NULL) glMultMatrixf(GameObject::worldToCamera->values);
 		//glMultMatrixf(this->worldSpaceTransform->values);
 
 		//glMultMatrixf((new Matrix3f(0.0f, 0.0f, 0.0f, 0.0f, this->scales[0], this->scales[1], this->scales[2]))->values);
@@ -451,8 +457,8 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 					float angleToOther = this->getAngleToOther(other);
 
 					//Confirmed: x-axis is 0|360
-					//GameObject::debugger->addMessage(this->name);
-					//GameObject::debugger->addMessage(utils::doubleToString((double)angleToOther));
+					GameObject::debugger->addMessage(this->name);
+					GameObject::debugger->addMessage(utils::doubleToString((double)angleToOther));
 
 					float myRad = this->getRadiusAtAngle(angleToOther, other->getWorldPosition());
 					float theirRad = other->getRadiusAtAngle(360.0f - angleToOther, this->getWorldPosition());
@@ -475,15 +481,19 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 						this->objectColor[1] = 0.0f;
 						this->objectColor[2] = 1.0f;
 						this->objectColor[3] = 1.0f;
+						
 						/*float xF = (other->getWorldPosition()->x*100.0f) - (this->getWorldPosition()->x*100.0f);
 						float yF = (other->getWorldPosition()->y*100.0f) - (this->getWorldPosition()->y*100.0f);
 						//GameObject::debugger->addMessage(utils::doubleToString((double)xF));
 						//GameObject::debugger->addMessage(utils::doubleToString((double)yF));
-						if (other->hasPhysics()) other->addForce(xF*0.001f, yF*0.001f, 0.0f);*/
-						float distance = (distanceSqrd - (combRad*combRad))/2.0f;
-						distance = (distance >= 1.0f) ? 1.0f : distance;
-						if (other->hasPhysics()) other->translate(cosf((angleToOther-180.0f)*(3.1415926f / 180.0f))*distance, sinf((angleToOther - 180.0f)*(3.1415926f / 180.0f)*distance), 0.0f);
-						//if (other->hasPhysics()) other->addForce(cosf((angleToOther - 180.0f)*(3.1415926f / 180.0f))*distance, sinf((angleToOther - 180.0f)*(3.1415926f / 180.0f)*distance), 0.0f);
+						if (other->hasPhysics()) other->addForce(xF*0.001f, yF*0.001f, 0.0f);
+						*/
+
+						//float distance = (distanceSqrd - (combRad*combRad))/2.0f;
+						//distance = (distance >= 0.6f) ? 0.6f : distance;
+						//if (other->hasPhysics()) other->translate(cosf((angleToOther-180.0f)*(3.1415926f / 180.0f))*distance, sinf((angleToOther - 180.0f)*(3.1415926f / 180.0f)*distance), 0.0f);
+						
+
 					}
 					else {
 						this->objectColor[0] = 1.0f;

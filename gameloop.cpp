@@ -2,16 +2,21 @@
 
 
 //Initialise static members
-GLuint GameLoop::myTexture = NULL;
 int GameLoop::frame = 0;
 HDC GameLoop::hDC = NULL;
 DebugInfo* GameLoop::debugger = NULL;
 vector<font_data*> GameLoop::fonts;
 Camera* GameLoop::camera = new Camera();
-
-//IMPORTANT
-//scene as vector<GameObject> instead of vector<GameObject*> resulted in temporary copies bug!
+nv::Image* GameLoop::backgroundPNG = utils::loadPNG("bg.png");
+InputStates* GameLoop::inputs = NULL;
 vector<GameObject*> scene;
+
+void GameLoop::freeData() {
+	GameLoop::fonts.clear();
+	delete GameLoop::camera;
+	delete GameLoop::backgroundPNG;
+	GameObject::freeData();
+}
 
 void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 {
@@ -20,7 +25,7 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 
 	GameObject::setDebugger(_debugger);
 	//GameObject::setDebugMode(true);
-
+	GameLoop::inputs = win32_window::getInputs();
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 
@@ -37,13 +42,13 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 		Vertex(1.0, 0.0, 0.5, -0.5)
 	};
 
-	vector<string> carSprites{ "car/1.png","car/2.png","car/3.png" };
-	vector<string> boxSprites{ "box/1.png","box/2.png","box/3.png" };
-	vector<string> trackSprites{ "track.png" };
+	vector<nv::Image*> carSprites{ utils::loadPNG("car/1.png") ,utils::loadPNG("car/2.png") ,utils::loadPNG("car/3.png") };
+	vector<nv::Image*> boxSprites{ utils::loadPNG("box/1.png"), utils::loadPNG("box/2.png"), utils::loadPNG("box/3.png") };
+	vector<nv::Image*> trackSprites{ utils::loadPNG("track.png") };
 
 	GameObject* car = new GameObject("Player", carSprites, planeMesh, 0, new float[4]{ 1.0f, 1.0f, 1.0f, 1.0f });
 	car->scale(0.3f);
-	car->setPhysicalAttributes(1.15f, 1.35f, 10.0f);
+	car->setPhysicalAttributes(2.0f, 2.0f, 10.0f);
 	car->setPlayerControl(true);
 	car->setCollider(true);
 	car->setPhysics(true);
@@ -85,12 +90,33 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 	track->scale(10.0f);
 	scene.push_back(track);
 
+
+	CollisionRadii* bradii2 = new CollisionRadii(0.0f, 0.0f);
+	bradii2->addRadius(0.29f, 0.0f);
+	bradii2->addRadius(0.32f, 90.0f);
+	bradii2->addRadius(0.29f, 180.0f);
+	bradii2->addRadius(0.25f, 270.0f);
+	bradii2->addRadius(0.4f, 45.0f);
+	bradii2->addRadius(0.4f, 135.0f);
+	bradii2->addRadius(0.35f, 225.0f);
+	bradii2->addRadius(0.35f, 315.0f);
+	vector<CollisionRadii*> bbounds2 = {
+		bradii2
+	};
+	GameObject* box2 = new GameObject("Box2", boxSprites, planeMesh, 0, new float[4]{ 1.0f, 0.5f, 0.5f, 1.0f });
+	box2->translate(0.3f, 0.3f, 0.0f);
+	box2->setCollider(true);
+	box2->setCollisionBounds(bbounds2);
+	box2->setPhysics(true);
+
+	scene.push_back(box2);
+
 	scene.push_back(box);
 
 	scene.push_back(car);
 
 	camera->setCameraTarget(car);
-	camera->setCameraSlowParentFactors(0.98f, 0.95f);
+	camera->setCameraSlowParentFactors(0.15f, 0.5f);
 }
 
 void GameLoop::display() {
@@ -100,12 +126,13 @@ void GameLoop::display() {
 	//glClear(GL_DEPTH_BUFFER_BIT);
 	//glClear(GL_STENCIL_BUFFER_BIT);
 
-	utils::enableTextureBlending();
-
-
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	
 	float bgColor[] = { 0.6f, 0.9f, 0.9f, 0.5f };
-	drawBackground("bg.png", 2, bgColor);
-
+	drawBackground(2, bgColor);
+	
+	
 	for (GameObject* obj : scene) {
 		obj->resetCollisionFlags();
 	}
@@ -115,33 +142,33 @@ void GameLoop::display() {
 	GameObject* camTarget = camera->getCameraTarget();
 	
 	if (camTarget != NULL) {
-		//Vect4f* follow = camTarget->getScreenPosition();
 		Vect4f* follow = camTarget->getWorldPosition();
+		Vect4f* camPos = camera->getCameraPosition();
 
 		float movDamp = camera->getSlowFactorMov();
-		float rotDamp = camera->getSlowFactorRot();
-		camera->setCameraPosition(follow->x * movDamp, follow->y * movDamp, 0.0f);
+		camera->setCameraPosition(camPos->x + ((follow->x-camPos->x) * movDamp), camPos->y + ((follow->y - camPos->y) * movDamp), 0.0f);
+
 		//TODO: account for damping
-		camera->setCameraZAngle(camTarget->getZAngle());
+		//float rotDamp = camera->getSlowFactorRot();
+		//camera->setCameraZAngle( camera->getCameraZAngle() +  ((camTarget->getZAngle() - camera->getCameraZAngle())* rotDamp));
 
 	}
 
-	//Before object rendering prevents GameObject::worldToCamera from being NULL
 	GameObject::setWorldToCameraTransform(camera->getTransformation());
 
-	InputStates* inputs = win32_window::getInputs();
 	for (GameObject* obj : scene) {
-		obj->processInputs(inputs);
+
+		if (inputs != NULL) obj->processInputs(GameLoop::inputs);
 		obj->resolveCollisions(scene);
 		obj->draw();
 	}
 
 	glPopMatrix();
-
+	
 	if (debugger != NULL) {
 
-		float textColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		float boxColor[] = { 0.1f, 0.1f, 0.1f, 0.8f };
+		Color4f textColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+		Color4f boxColor = Color4f(0.1f, 0.1f, 0.1f, 0.8f);
 		drawTextBox(*fonts.front(), debugger->getOutput(), -200.0f, -200.0f, 200.0f, 200.0f, textColor, boxColor);
 		
 	}
@@ -150,7 +177,7 @@ void GameLoop::display() {
 }
 
 
-void GameLoop::drawTextBox(freetype::font_data _font, string _str, float ssOffsetX, float ssOffsetY, float boxXSize, float boxYSize, float textColor[], float boxColor[]) {
+void GameLoop::drawTextBox(freetype::font_data _font, string _str, float ssOffsetX, float ssOffsetY, float boxXSize, float boxYSize, Color4f textColor, Color4f boxColor) {
 	glPushMatrix();
 	glTranslatef(ssOffsetX, ssOffsetY, 0);
 	float centreX = (float)win32_window::getScreenWidth() / 2.0f;
@@ -159,7 +186,7 @@ void GameLoop::drawTextBox(freetype::font_data _font, string _str, float ssOffse
 
 	freetype::pushScreenCoordinateMatrix();
 	glPushMatrix();
-	glColor4f(boxColor[0], boxColor[1], boxColor[2], boxColor[3]);
+	glColor4f(boxColor.r, boxColor.g, boxColor.b, boxColor.a);
 	glBegin(GL_QUADS);
 
 	float boxXFactor = boxXSize / 2;
@@ -171,21 +198,20 @@ void GameLoop::drawTextBox(freetype::font_data _font, string _str, float ssOffse
 
 	glEnd();
 
-	glColor4f(textColor[0], textColor[1], textColor[2], textColor[3]);
+	glColor4f(textColor.r, textColor.g, textColor.b, textColor.a);
 	freetype::print(_font, centreX - boxXFactor, centreY+boxYFactor-(_font.h), _str.c_str());
-
 
 	glPopMatrix();
 	freetype::pop_projection_matrix();
 	glPopMatrix();
 }
 
-void GameLoop::drawBackground(string png, float repeat, float tintColor[]) {
+void GameLoop::drawBackground(float repeat, float tintColor[]) {
 	glPushMatrix();
 
-	myTexture = utils::loadPNG(png);
-
 	glEnable(GL_TEXTURE_2D);
+
+	utils::bindPNG(backgroundPNG);
 
 	glColor4f(tintColor[0], tintColor[1], tintColor[2], tintColor[3]);
 	glBegin(GL_QUADS);
@@ -197,4 +223,6 @@ void GameLoop::drawBackground(string png, float repeat, float tintColor[]) {
 	glPopMatrix();
 
 	glDisable(GL_TEXTURE_2D);
+
+	
 }

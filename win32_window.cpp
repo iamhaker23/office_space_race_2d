@@ -200,7 +200,7 @@ void win32_window::KillGLWindow()								// Properly Kill The Window
 	//Free variables.
 	delete debugger;
 	delete inputs;
-
+	GameLoop::freeData();
 }
 
 /*	This Code Creates Our OpenGL Window.  Parameters Are:					*

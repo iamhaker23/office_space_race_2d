@@ -18,15 +18,16 @@
 		private:
 			static DebugInfo* debugger;
 			static HDC hDC;
-			static GLuint myTexture;
 			static int frame;
 			static vector<font_data*> fonts;
+			static nv::Image* backgroundPNG;
+			static InputStates* inputs;
 
-			static void drawTextBox(freetype::font_data _font, string _str, float ssOffsetX, float ssOffsetY, float boxXSize, float boxYSize, float textColor[], float boxColor[]);
-			static void drawBackground(string png, float repeat, float tintColor[]);
+			static void drawTextBox(freetype::font_data _font, string _str, float ssOffsetX, float ssOffsetY, float boxXSize, float boxYSize, Color4f textColor, Color4f boxColor);
+			static void drawBackground(float repeat, float tintColor[]);
 
 		public:
-
+			static void freeData();
 			static Camera* camera;
 			static void init(HDC _hDC, DebugInfo* _debugger);
 			static void display();

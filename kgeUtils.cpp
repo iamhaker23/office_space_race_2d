@@ -4,7 +4,7 @@ GLuint utils::base = NULL;
 
 string utils::doubleToString(double val) {
 	stringstream ss;
-	ss.precision(4);
+	ss.precision(2);
 	ss << fixed << val;
 	return ss.str();
 }
@@ -62,32 +62,41 @@ GLvoid utils::glPrint(string fmt)					// Custom GL "Print" Routine
 }
 
 
-GLuint utils::loadPNG(std::string name)
+nv::Image* utils::loadPNG(std::string name)
 {
 	// Texture loading object
-	nv::Image img;
+	nv::Image* img = new nv::Image();
+	
+	// Return true on success
+	if (img->loadImageFromFile(name.c_str()))
+	{
+		return img;
+	}
+	else
+		return NULL;
+}
+
+
+void utils::bindPNG(nv::Image* img) {
 
 	GLuint myTextureID;
 
-	// Return true on success
-	if (img.loadImageFromFile(name.c_str()))
-	{
+	if (img != NULL) {
+		//I once removed this line
+		//And created an odd bug where all my font changed to tiny image textures
+		//THAT was a headache!
 		glGenTextures(1, &myTextureID);
 		glBindTexture(GL_TEXTURE_2D, myTextureID);
 		glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-		glTexImage2D(GL_TEXTURE_2D, 0, img.getInternalFormat(), img.getWidth(), img.getHeight(), 0, img.getFormat(), img.getType(), img.getLevel(0));
+		glTexImage2D(GL_TEXTURE_2D, 0, img->getInternalFormat(), img->getWidth(), img->getHeight(), 0, img->getFormat(), img->getType(), img->getLevel(0));
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
-		
 	}
 
-	else
-		MessageBox(NULL, "Failed to load texture", "End of the world", MB_OK | MB_ICONINFORMATION);
-
-	return myTextureID;
+	//return myTextureID;
 }
 
 void utils::enableTextureBlending() {

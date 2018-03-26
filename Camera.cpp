@@ -17,13 +17,14 @@ float Camera::getCameraZAngle() {
 void Camera::setCameraZAngle(float zRads) {
 	this->zAngle = zRads;
 }
-float* Camera::getCameraPosition() {
+Vect4f* Camera::getCameraPosition() {
 	return this->cameraPos;
 }
+
 void Camera::setCameraPosition(float x, float y, float z) {
-	this->cameraPos[0] = x;
-	this->cameraPos[1] = y;
-	this->cameraPos[2] = z;
+	this->cameraPos->x = x;
+	this->cameraPos->y = y;
+	this->cameraPos->z = z;
 }
 
 float Camera::getSlowFactorMov() {
@@ -47,8 +48,10 @@ Matrix3f* Camera::getTransformation() {
 	//glRotatef(-zAngle, 0.0f, 0.0f, 1.0f);
 
 	//this->cameraTransform = (new Matrix3f(0.0f, -cameraPos[0], -cameraPos[1], -cameraPos[2], 0.0f))->RotateRadians(-zAngle);
+	
 	this->cameraTransform = (new Matrix3f(-zAngle, 0.0f, 0.0f, 0.0f, 1.0f));
-	this->cameraTransform = this->cameraTransform->Multiply(new Matrix3f(0.0f, -cameraPos[0], -cameraPos[1], -cameraPos[2], 1.0f));
+	//this->cameraTransform = (new Matrix3f(0.0f, 0.0f, 0.0f, 0.0f, 1.0f));
+	this->cameraTransform = this->cameraTransform->Multiply(new Matrix3f(0.0f, -cameraPos->x, -cameraPos->y, -cameraPos->z, 1.0f));
 	//this->cameraTransform = (new Matrix3f(0.0f, -cameraPos[0], -cameraPos[1], -cameraPos[2], 1.0f));
 	//this->cameraTransform = this->cameraTransform->Multiply(new Matrix3f(-zAngle, 0.0f, 0.0f, 0.0f, 1.0f));
 	//this->cameraTransform = (new Matrix3f(-zAngle, 0.0f, 0.0f, 0.0f, 1.0f))->Translate(-cameraPos[0], -cameraPos[1], -cameraPos[2]);

@@ -24,7 +24,8 @@
 			static GLvoid BuildFont(HDC hDC);
 			static GLvoid KillFont(GLvoid);
 			static GLvoid glPrint(string fmt);
-			static GLuint loadPNG(std::string name);
+			static nv::Image* loadPNG(std::string name);
+			static void bindPNG(nv::Image* img);
 			static void utils::enableTextureBlending();
 	};
 
