@@ -93,7 +93,7 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 			//if (inputs->keys[VK_ESCAPE]) done = true; //close game
 
 			localFrameCount++;
-			gameloop::display();					// Draw The Scene
+			GameLoop::display();					// Draw The Scene
 			SwapBuffers(hDC);				// Swap Buffers (Double Buffering)
 		}
 	}
@@ -326,7 +326,7 @@ bool win32_window::CreateGLWindow(char* title, int width, int height)
 	win32_window::reshape(width, height);					// Set Up Our Perspective GL Screen
 
 	if (hDC != NULL)
-		gameloop::init(hDC, debugger);
+		GameLoop::init(hDC, debugger);
 
 	return true;									// Success
 }

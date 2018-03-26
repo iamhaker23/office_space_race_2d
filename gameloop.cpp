@@ -2,24 +2,25 @@
 
 
 //Initialise static members
-GLuint gameloop::myTexture = NULL;
-int gameloop::frame = 0;
-HDC gameloop::hDC = NULL;
-DebugInfo* gameloop::debugger = NULL;
-vector<font_data*> gameloop::fonts;
-GameObject* cameraTarget;
-float slowParentFactor[] = { 0.15f, 0.99f };
-float cameraZRads = 0.0f;
+GLuint GameLoop::myTexture = NULL;
+int GameLoop::frame = 0;
+HDC GameLoop::hDC = NULL;
+DebugInfo* GameLoop::debugger = NULL;
+vector<font_data*> GameLoop::fonts;
+Camera* GameLoop::camera = new Camera();
 
 //IMPORTANT
 //scene as vector<GameObject> instead of vector<GameObject*> resulted in temporary copies bug!
-
 vector<GameObject*> scene;
 
-void gameloop::init(HDC _hDC, DebugInfo* _debugger)
+void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 {
 	hDC = _hDC;
 	debugger = _debugger;
+
+	GameObject::setDebugger(_debugger);
+	//GameObject::setDebugMode(true);
+
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 
@@ -39,50 +40,61 @@ void gameloop::init(HDC _hDC, DebugInfo* _debugger)
 	vector<string> carSprites{ "car/1.png","car/2.png","car/3.png" };
 	vector<string> boxSprites{ "box/1.png","box/2.png","box/3.png" };
 	vector<string> trackSprites{ "track.png" };
-	vector<string> treeSprites{
-		"tree/1.png",
-		"tree/2.png",
-		"tree/3.png",
-		"tree/4.png",
-		"tree/5.png",
-		"tree/6.png",
-		"tree/7.png",
-		"tree/8.png",
-		"tree/9.png",
-		"tree/10.png",
-		"tree/11.png",
-		"tree/12.png",
-		"tree/13.png",
-		"tree/14.png",
-		"tree/15.png",
-		"tree/16.png"
-	};
 
 	GameObject* car = new GameObject("Player", carSprites, planeMesh, 0, new float[4]{ 1.0f, 1.0f, 1.0f, 1.0f });
 	car->scale(0.3f);
-	car->setPhysicalAttributes(1.2f, 1.2f, 5.0f);
+	car->setPhysicalAttributes(1.15f, 1.35f, 10.0f);
 	car->setPlayerControl(true);
+	car->setCollider(true);
+	car->setPhysics(true);
 
-	//GameObject* box = new GameObject("Box", boxSprites, planeMesh, 0, new float[4]{ 1.0f, 0.5f, 0.5f, 1.0f });
-	//box->scale(0.75f);
-	//box->translate(1.0f, 1.0f, 0.0f);
+	//TODO: read from file
+	CollisionRadii* radii = new CollisionRadii(0.0f, 0.0f);
+	radii->addRadius(0.1f, 0.0f);
+	radii->addRadius(0.38f, 90.0f);
+	radii->addRadius(0.1f, 180.0f);
+	radii->addRadius(0.39f, 270.0f);
+	radii->addRadius(0.1f, 45.0f);
+	radii->addRadius(0.1f, 135.0f);
+	radii->addRadius(0.1f, 225.0f);
+	radii->addRadius(0.1f, 315.0f);
+	vector<CollisionRadii*> bounds = {
+		radii
+	};
+	car->setCollisionBounds(bounds);
+
+
+	CollisionRadii* bradii = new CollisionRadii(0.0f, 0.0f);
+	bradii->addRadius(0.29f, 0.0f);
+	bradii->addRadius(0.32f, 90.0f);
+	bradii->addRadius(0.29f, 180.0f);
+	bradii->addRadius(0.25f, 270.0f);
+	bradii->addRadius(0.4f, 45.0f);
+	bradii->addRadius(0.4f, 135.0f);
+	bradii->addRadius(0.35f, 225.0f);
+	bradii->addRadius(0.35f, 315.0f);
+	vector<CollisionRadii*> bbounds = {
+		bradii
+	};
+	GameObject* box = new GameObject("Box", boxSprites, planeMesh, 0, new float[4]{ 1.0f, 0.5f, 0.5f, 1.0f });
+	box->translate(0.3f, 0.3f, 0.0f);
+	box->setCollider(true);
+	box->setCollisionBounds(bbounds);
 
 	GameObject* track = new GameObject("Track", trackSprites, planeMesh, 0, new float[4]{ 1.0f, 1.0f, 1.0f, 1.0f });
 	track->scale(10.0f);
-
-	//GameObject* tree = new GameObject("Tree", treeSprites, planeMesh, 0, new float[4]{ 0.8f, 1.0f, 0.6f, 1.0f });
-	//tree->nuScale(0.5f, 1.0f, 1.0f);
-
 	scene.push_back(track);
-	//scene.push_back(tree);
-	//scene.push_back(box);
-	scene.push_back(car);
-	
 
-	cameraTarget = car;
+	scene.push_back(box);
+
+	scene.push_back(car);
+
+	camera->setCameraTarget(car);
+	camera->setCameraSlowParentFactors(0.98f, 0.95f);
 }
 
-void gameloop::display() {
+void GameLoop::display() {
+
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	//glClear(GL_DEPTH_BUFFER_BIT);
@@ -93,38 +105,38 @@ void gameloop::display() {
 
 	float bgColor[] = { 0.6f, 0.9f, 0.9f, 0.5f };
 	drawBackground("bg.png", 2, bgColor);
-	
+
+	for (GameObject* obj : scene) {
+		obj->resetCollisionFlags();
+	}
+
 	glPushMatrix();
 
-	if (cameraTarget != NULL) {
-		vector<float> follow = cameraTarget->getPosition();
-		glTranslatef(-follow[0] * slowParentFactor[0], -follow[1] * slowParentFactor[0], 0.0f);
+	GameObject* camTarget = camera->getCameraTarget();
+	
+	if (camTarget != NULL) {
+		//Vect4f* follow = camTarget->getScreenPosition();
+		Vect4f* follow = camTarget->getWorldPosition();
 
-		float followAngle = cameraTarget->getZAngle();
-		if (abs(cameraZRads - followAngle) > (0.15f)) {
-			cameraZRads = -(followAngle*slowParentFactor[1]);
-			glRotatef(cameraZRads, 0.0f, 0.0f, 1.0f);
-		}
+		float movDamp = camera->getSlowFactorMov();
+		float rotDamp = camera->getSlowFactorRot();
+		camera->setCameraPosition(follow->x * movDamp, follow->y * movDamp, 0.0f);
+		//TODO: account for damping
+		camera->setCameraZAngle(camTarget->getZAngle());
 
 	}
 
+	//Before object rendering prevents GameObject::worldToCamera from being NULL
+	GameObject::setWorldToCameraTransform(camera->getTransformation());
+
 	InputStates* inputs = win32_window::getInputs();
-	
 	for (GameObject* obj : scene) {
-
-		if (obj->getName() == "Tree") {
-			obj->animate(AnimationLogic::LOOPEND);
-		}
-		
 		obj->processInputs(inputs);
-
-		//win32_window::printMessage(obj->toString());
-
+		obj->resolveCollisions(scene);
 		obj->draw();
 	}
 
 	glPopMatrix();
-
 
 	if (debugger != NULL) {
 
@@ -133,11 +145,12 @@ void gameloop::display() {
 		drawTextBox(*fonts.front(), debugger->getOutput(), -200.0f, -200.0f, 200.0f, 200.0f, textColor, boxColor);
 		
 	}
+
 	
 }
 
 
-void gameloop::drawTextBox(freetype::font_data _font, string _str, float ssOffsetX, float ssOffsetY, float boxXSize, float boxYSize, float textColor[], float boxColor[]) {
+void GameLoop::drawTextBox(freetype::font_data _font, string _str, float ssOffsetX, float ssOffsetY, float boxXSize, float boxYSize, float textColor[], float boxColor[]) {
 	glPushMatrix();
 	glTranslatef(ssOffsetX, ssOffsetY, 0);
 	float centreX = (float)win32_window::getScreenWidth() / 2.0f;
@@ -167,7 +180,7 @@ void gameloop::drawTextBox(freetype::font_data _font, string _str, float ssOffse
 	glPopMatrix();
 }
 
-void gameloop::drawBackground(string png, float repeat, float tintColor[]) {
+void GameLoop::drawBackground(string png, float repeat, float tintColor[]) {
 	glPushMatrix();
 
 	myTexture = utils::loadPNG(png);

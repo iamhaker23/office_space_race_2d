@@ -4,7 +4,7 @@ GLuint utils::base = NULL;
 
 string utils::doubleToString(double val) {
 	stringstream ss;
-	ss.precision(2);
+	ss.precision(4);
 	ss << fixed << val;
 	return ss.str();
 }
