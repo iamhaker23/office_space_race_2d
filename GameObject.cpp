@@ -23,6 +23,8 @@ GameObject::GameObject() {
 
 	this->sprites.push_back(GameObject::defaultSprite);
 
+	this->objectColor = new Color4f();
+
 	this->activeSpriteIndex = 0;
 	this->pingPongDirection = 1;
 	this->name = "DEFAULT_OBJECT";
@@ -46,14 +48,8 @@ GameObject::GameObject() {
 
 	this->colliderFlag = false;
 
-	
-	for (int i = 0; i < 16; i++) {
-		this->alsoWorldSpaceTransform[i] = 0.0f;
-	}
-	this->alsoWorldSpaceTransform[0] = 1.0f;
-	this->alsoWorldSpaceTransform[5] = 1.0f;
-	this->alsoWorldSpaceTransform[10] = 1.0f;
-	this->alsoWorldSpaceTransform[15] = 1.0f;
+	this->physics = false;
+	this->physicsContainer = false;
 	
 }
 
@@ -65,9 +61,9 @@ GameObject::GameObject(const GameObject &copy) {
 	for (int i = 0; i < 3; i++) {
 		this->forces[i] = copy.forces[i];
 	}
-	for (int i = 0; i < 4; i++) {
-		this->objectColor[i] = copy.objectColor[i];
-	}
+	
+	this->objectColor = copy.objectColor;
+
 	this->friction = copy.friction;
 	this->angularDamping = copy.angularDamping;
 
@@ -85,18 +81,11 @@ GameObject::GameObject(const GameObject &copy) {
 	this->topSpeed = 0.0f;
 
 	this->colliderFlag = false;
-
-	for (int i = 0; i < 16; i++) {
-		this->alsoWorldSpaceTransform[i] = 0.0f;
-	}
-	this->alsoWorldSpaceTransform[0] = 1.0f;
-	this->alsoWorldSpaceTransform[5] = 1.0f;
-	this->alsoWorldSpaceTransform[10] = 1.0f;
-	this->alsoWorldSpaceTransform[15] = 1.0f;
-
+	this->physics = false;
+	this->physicsContainer = false;
 }
 
-GameObject::GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite, float objectColor[]) {
+GameObject::GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite,  Color4f* objectColor) {
 	
 	this->name = name;
 	
@@ -105,10 +94,7 @@ GameObject::GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> m
 
 	this->activeSpriteIndex = 0;
 
-	this->objectColor[0] = objectColor[0];
-	this->objectColor[1] = objectColor[1];
-	this->objectColor[2] = objectColor[2];
-	this->objectColor[3] = objectColor[3];
+	this->objectColor = objectColor;
 
 
 	this->scales[0] = 1.0f;
@@ -128,46 +114,28 @@ GameObject::GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> m
 	this->angularDamping = 0.0f;
 	this->playerControl = false;
 	this->colliderFlag = false;
-
-	for (int i = 0; i < 16; i++) {
-		this->alsoWorldSpaceTransform[i] = 0.0f;
-	}
-	this->alsoWorldSpaceTransform[0] = 1.0f;
-	this->alsoWorldSpaceTransform[5] = 1.0f;
-	this->alsoWorldSpaceTransform[10] = 1.0f;
-	this->alsoWorldSpaceTransform[15] = 1.0f;
-
+	this->physics = false;
+	this->physicsContainer = false;
 }
 
 void GameObject::draw() {
 
-	utils::bindPNG(this->sprites[this->activeSpriteIndex]);
-
-	glEnable(GL_TEXTURE_2D);
+	if ((int)this->sprites.size() > 0) {
+		utils::bindPNG(this->sprites[this->activeSpriteIndex]);
+		glEnable(GL_TEXTURE_2D);
+	}
+	else {
+		glDisable(GL_TEXTURE_2D);
+	}
 
 	glMatrixMode(GL_MODELVIEW);
 
-	glColor4f(this->objectColor[0], this->objectColor[1], this->objectColor[2], this->objectColor[3]);
+	glColor4f(this->objectColor->r, this->objectColor->g, this->objectColor->b, this->objectColor->a);
 	
-
 	glPushMatrix();
-		//TODO: World transform separate from screen transform
-
-		/*this->worldSpaceTransform = this->worldSpaceTransform->Translate(this->forces[0], this->forces[1], this->forces[2]);
-		this->worldSpaceTransform = this->worldSpaceTransform->RotateRadians(this->zTorque);// *(3.1415926f / 180.0f));
-		this->worldSpaceTransform = this->worldSpaceTransform->Scale(scales[0], scales[1], scales[2]);
-		*/
-	
-
-		//glMultMatrixf(alsoWorldSpaceTransform);
 
 		if (GameObject::worldToCamera != NULL) glMultMatrixf(GameObject::worldToCamera->values);
-		//glMultMatrixf(this->worldSpaceTransform->values);
-
-		//glMultMatrixf((new Matrix3f(0.0f, 0.0f, 0.0f, 0.0f, this->scales[0], this->scales[1], this->scales[2]))->values);
-		//glMultMatrixf((new Matrix3f(this->zTorque*(3.1415926f / 180.0f), 0.0f, 0.0f, 0.0f, 1.0f))->values);
-		//glMultMatrixf((new Matrix3f(0.0f, this->forces[0], this->forces[1], this->forces[2], 1.0f))->values);
-
+		
 		Matrix3f* transform = (new Matrix3f(0.0f, this->forces[0], this->forces[1], this->forces[2], 1.0f))->Multiply(
 		((new Matrix3f(this->zTorque*(3.1415926f / 180.0f), 0.0f, 0.0f, 0.0f, 1.0f))->Multiply(
 		new Matrix3f(0.0f, 0.0f, 0.0f, 0.0f, this->scales[0], this->scales[1], this->scales[2])
@@ -175,56 +143,50 @@ void GameObject::draw() {
 		));
 
 		this->worldSpaceTransform = this->worldSpaceTransform->Multiply(transform);
+		
 		glMultMatrixf(this->worldSpaceTransform->values);
-
-		
-
-
-		//glScalef(scales[0], scales[1], scales[2]);
-		//glRotatef(this->zTorque, 0.0f, 0.0f, 1.0f);
-		//glTranslatef(this->forces[0], this->forces[1], this->forces[2]);
-
-		//GLfloat tmpValues[16];
-		//glGetFloatv(GL_MODELVIEW_MATRIX, tmpValues);
-		//glGetFloatv(GL_MODELVIEW_MATRIX, alsoWorldSpaceTransform);
-		
-		// after world space
-		//this->worldSpaceTransform = new Matrix3f();
-		//this->worldSpaceTransform->loadMatrix(tmpValues);
-		
-		//this->worldSpaceTransform = this->worldSpaceTransform
-			//->Add(GameObject::worldToCamera->inverse());
-			//->Translate(GameObject::worldToCamera->getPosition()->x, GameObject::worldToCamera->getPosition()->y, GameObject::worldToCamera->getPosition()->z)
-			//->Add(new Matrix3f(this->zTorque*(3.1415926f / 180.0f), 0.0f, 0.0f, 0.0f, 1.0f));
-		
 
 		resetModifiers();
 
-	glBegin(GL_QUADS);
+		glBegin(GL_QUADS);
 	
-	for (Vertex v : this->mesh) {
-		glTexCoord2f(v.u, v.v); 
-		glVertex2f(v.x, v.y);
-	}
+		for (Vertex v : this->mesh) {
+			glTexCoord2f(v.u, v.v); 
+			glVertex2f(v.x, v.y);
+		}
 
-	glEnd();
+		glEnd();
 
-	if (GameObject::drawDebug) {
-		for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
+		if (GameObject::drawDebug) {
+			for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
 
-			CollisionRadii* tmp = this->collisionBounds.at(i);
-			for (int j = 0; j < (int)tmp->radii.size(); j++) {
+				CollisionRadii* tmp = this->collisionBounds.at(i);
+				for (int j = 0; j < (int)tmp->radii.size(); j++) {
 
-				//draw all radii, white unless last selected
-				drawCircle(0.0f, 0.0f, tmp->radii.at(j), (j != tmp->getLastSelected()[0] && j != tmp->getLastSelected()[1]) ? tmp->getDrawColor() : new Color4f(0.0f, 1.0f, 0.0f, 1.0f));
+					//draw all radii, white unless last selected
+					//drawCircle(0.0f, 0.0f, tmp->radii.at(j), (j != tmp->getLastSelected()[0] && j != tmp->getLastSelected()[1]) ? tmp->getDrawColor() : new Color4f(0.0f, 1.0f, 0.0f, 1.0f));
 
+					//slow because glBegin inside loop
+					glBegin(GL_LINES);
+					glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+					glPointSize(5.0f);
+
+					Vect4f centre = Vect4f(tmp->centreX, tmp->centreY, 0.0f);
+					Vect4f* toDraw = this->localToWorldSpace(centre);
+
+					glVertex3f(toDraw->x, toDraw->y, 0.0f);
+					toDraw = this->localToWorldSpace(Vect4f(toDraw->x + (tmp->radii.at(j)*cosf(tmp->angles.at(j)*(3.1415926f / 180.0f))), toDraw->y + (tmp->radii.at(j)*sinf(tmp->angles.at(j)*(3.1415926f / 180.0f))), 0.0f));
+					glVertex3f(toDraw->x, toDraw->y, 0.0f);
+
+					//glVertex3f(tmp->centreX, tmp->centreY, 0.0f);
+					//glVertex3f(tmp->centreX + (tmp->radii.at(j)*cosf(tmp->angles.at(j)*(3.1415926f/180.0f))), tmp->centreY + (tmp->radii.at(j)*sinf(tmp->angles.at(j)*(3.1415926f / 180.0f))), 0.0f);
+					glEnd();
+					
+				}
 			}
 		}
-	}
 
-	//glPopMatrix();
 	glPopMatrix();
-
 	glDisable(GL_TEXTURE_2D);
 	
 	
@@ -382,6 +344,11 @@ Vect4f* GameObject::getWorldPosition() {
 	
 }
 
+Vect4f* GameObject::localToWorldSpace(Vect4f localCoords) {
+	Vect4f* output = localCoords.transform(this->worldSpaceTransform);
+	return output;
+}
+
 void GameObject::setWorldToCameraTransform(Matrix3f* wtc){
 	//STATIC
 	GameObject::worldToCamera = wtc;
@@ -445,29 +412,45 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 	if (this->isCollider()) {
 		for (GameObject* other : others) {
 			if (other != NULL && other != this) {
-				if (other->isCollider() && !other->hasCollidedWith(this->name)) {
-					float distX = this->getWorldPosition()->x - other->getWorldPosition()->x;
-					float distY = this->getWorldPosition()->y - other->getWorldPosition()->y;
-
-					float distanceSqrd = (distX * distX) + (distY * distY);
-
+				if (other->isCollider() && !other->hasCollidedWith(this->name) && (this->hasPhysics() || other->hasPhysics())) {
 					//float myRad = this->getRadiusToObj(other);
 					//float theirRad = other->getRadiusToObj(this);
 
 					float angleToOther = this->getAngleToOther(other);
 
 					//Confirmed: x-axis is 0|360
-					GameObject::debugger->addMessage(this->name);
-					GameObject::debugger->addMessage(utils::doubleToString((double)angleToOther));
+					//GameObject::debugger->addMessage(this->name);
+					//GameObject::debugger->addMessage(utils::doubleToString((double)angleToOther));
 
-					float myRad = this->getRadiusAtAngle(angleToOther, other->getWorldPosition());
-					float theirRad = other->getRadiusAtAngle(360.0f - angleToOther, this->getWorldPosition());
+					CollisionRadii* myClosest = this->getClosestRadiiTo(other->getWorldPosition());
+					CollisionRadii* theirClosest = other->getClosestRadiiTo(new Vect4f(myClosest->centreX, myClosest->centreY, 0.0f));
+					myClosest = this->getClosestRadiiTo(new Vect4f(theirClosest->centreX, theirClosest->centreY, 0.0f));
+					theirClosest = other->getClosestRadiiTo(new Vect4f(myClosest->centreX, myClosest->centreY, 0.0f));
+
+					float myRad = myClosest->getInterpolatedRadiusAt(angleToOther);
+					float theirRad = theirClosest->getInterpolatedRadiusAt(360.0f - angleToOther);
+
+					Vect4f* myCentreWo = this->localToWorldSpace(Vect4f(myClosest->centreX, myClosest->centreY, 0.0f));
+					Vect4f* theirCentreWo = other->localToWorldSpace(Vect4f(theirClosest->centreX, theirClosest->centreY, 0.0f));
+					//float distX = (myCentreWo->x - theirCentreWo->x);
+					//float distY = (myCentreWo->y - theirCentreWo->y);
+
+					float distX = (myClosest->centreX - theirClosest->centreX);
+					float distY = (myClosest->centreY - theirClosest->centreY);
+
+					float distanceSqrd = (distX * distX) + (distY * distY);
 
 					float combRad = theirRad + myRad;
 
+					if (this->name == "Track" && other->name == "Player") {
+						GameObject::debugger->addMessage(utils::doubleToString((double)this->getWorldPosition()->x));
+						GameObject::debugger->addMessage(utils::doubleToString((double)myCentreWo->x));
+						GameObject::debugger->addMessage(utils::doubleToString((double)myClosest->centreX));
+					}
+
 					if (GameObject::drawDebug) {
-						drawCircle(this->getWorldPosition()->x, this->getWorldPosition()->y, combRad*combRad, new Color4f(1.0f, 0.0f, 0.0f, 1.0f));
-						drawCircle(this->getWorldPosition()->x, this->getWorldPosition()->y, distanceSqrd, new Color4f(0.0f, 0.0f, 1.0f, 1.0f));
+						//drawCircle(this->getWorldPosition()->x, this->getWorldPosition()->y, combRad*combRad, new Color4f(1.0f, 0.0f, 0.0f, 1.0f));
+						//drawCircle(this->getWorldPosition()->x, this->getWorldPosition()->y, distanceSqrd, new Color4f(0.0f, 0.0f, 1.0f, 1.0f));
 						/*GameObject::debugger->addMessage(this->name);
 						GameObject::debugger->addMessage(utils::doubleToString((double)myRad));
 						GameObject::debugger->addMessage(utils::doubleToString((double)angleToOther));
@@ -476,12 +459,16 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 						*/
 					}
 
-					if (combRad*combRad > distanceSqrd) {
-						this->objectColor[0] = 0.0f;
-						this->objectColor[1] = 0.0f;
-						this->objectColor[2] = 1.0f;
-						this->objectColor[3] = 1.0f;
+					bool iContain = this->isPhysicsContainer();
+					bool theyContain = other->isPhysicsContainer();
+
+					if ((!iContain && !theyContain) && combRad*combRad > distanceSqrd) {
 						
+						//regular collision
+						if (GameObject::drawDebug) {
+							//collision is detected, even if either object is "ghost"
+							this->objectColor = new Color4f(0.0f, 0.0f, 1.0f, 1.0f);
+						}
 						/*float xF = (other->getWorldPosition()->x*100.0f) - (this->getWorldPosition()->x*100.0f);
 						float yF = (other->getWorldPosition()->y*100.0f) - (this->getWorldPosition()->y*100.0f);
 						//GameObject::debugger->addMessage(utils::doubleToString((double)xF));
@@ -492,14 +479,39 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 						//float distance = (distanceSqrd - (combRad*combRad))/2.0f;
 						//distance = (distance >= 0.6f) ? 0.6f : distance;
 						//if (other->hasPhysics()) other->translate(cosf((angleToOther-180.0f)*(3.1415926f / 180.0f))*distance, sinf((angleToOther - 180.0f)*(3.1415926f / 180.0f)*distance), 0.0f);
-						
+						if (!this->isGhost() && !other->isGhost()) {
+							float factor = 0.06f;
+							float torque = (angleToOther <= 270.0f && angleToOther >= 90.0f) ? -1.4f : 1.4f;
+							bool bothPhysics = this->hasPhysics() && other->hasPhysics();
+
+							//short circuit optimisation?
+							if (bothPhysics || other->hasPhysics()) {
+								//other->addForce(-other->forces[0] * 2.0f, -other->forces[1] * 2.0f, 0.0f);
+								if (!bothPhysics) other->zTorque += torque;
+								other->translate(-distX*factor, -distY*factor, 0.0f);
+							}
+							if (bothPhysics || this->hasPhysics()) {
+								//this->addForce(-this->forces[0]*2.0f, -this->forces[1] * 2.0f, 0.0f);
+								if (!bothPhysics) this->zTorque += -torque;
+								this->translate(distX*factor, distY*factor, 0.0f);
+							}
+						}
 
 					}
+					else if ((iContain && (myRad*myRad <= (distanceSqrd-(theirRad*theirRad)))) ||
+						(theyContain && (theirRad*theirRad <= (distanceSqrd-(myRad*myRad))))) {
+						if (GameObject::drawDebug) {
+							this->objectColor = new Color4f(1.0f, 0.0f, 0.0f, 1.0f);
+
+							other->objectColor = new Color4f(1.0f, 0.0f, 0.0f, 1.0f);
+
+						}
+					}
 					else {
-						this->objectColor[0] = 1.0f;
-						this->objectColor[1] = 1.0f;
-						this->objectColor[2] = 1.0f;
-						this->objectColor[3] = 1.0f;
+
+						if (GameObject::drawDebug) {
+							this->objectColor = new Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+						}
 					}
 					other->setHasCollidedWith(this->name);
 					this->setHasCollidedWith(other->name);
@@ -509,6 +521,21 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 	}
 }
 
+void GameObject::setGhost(bool flag) {
+	this->ghost = flag;
+}
+
+bool GameObject::isGhost() {
+	return this->ghost;
+}
+
+void GameObject::setPhysicsContainer(bool flag) {
+	this->physicsContainer = flag;
+}
+
+bool GameObject::isPhysicsContainer() {
+	return this->physicsContainer;
+}
 
 void GameObject::addForce(float x, float y, float z) {
 	this->forces[0] = x;
@@ -537,24 +564,39 @@ float GameObject::getAngleToOther(GameObject* other) {
 	return (atan2f(myY - otherY, myX - otherX) * (180.0f / 3.1415926f)) + 180.0f;
 }
 
-float GameObject::getRadiusAtAngle(float angleToOther, Vect4f* otherPosition) {
+CollisionRadii* GameObject::getClosestRadiiTo(Vect4f* otherPosition) {
 	int closestCollisionRadii = 0;
 
-	float smallestDistSqrd = FLT_MAX;
+	float smallestDistSqrd = 999999.99f;
+	Vect4f* tmpWoPos;
+	float tmpCX = 0.0f;
 
 	for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
 
 		CollisionRadii* tmp = this->collisionBounds.at(i);
 
-		float distSqrd = ((tmp->centreX - otherPosition->x)*(tmp->centreX - otherPosition->x)) + ((tmp->centreY - otherPosition->y)*(tmp->centreY - otherPosition->y));
+		tmpWoPos = this->localToWorldSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
+		tmpCX = tmp->centreX;
+
+		float distSqrd = ((tmpWoPos->x - otherPosition->x)*(tmpWoPos->x - otherPosition->x)) + ((tmpWoPos->y - otherPosition->y)*(tmpWoPos->y - otherPosition->y));
+				
+		//float distSqrd = ((tmp->centreX - otherPosition->x)*(tmp->centreX - otherPosition->x)) + ((tmp->centreY - otherPosition->y)*(tmp->centreY - otherPosition->y));
 		if (distSqrd < smallestDistSqrd) {
 			//closest centre so far
 			//Because an object may have multiple centres
+			smallestDistSqrd = distSqrd;
 			closestCollisionRadii = i;
 		}
 	}
-	CollisionRadii* closest = this->collisionBounds.at(closestCollisionRadii);
-	return closest->getInterpolatedRadiusAt(angleToOther);
+	
+	
+	if (this->name == "Track") {
+		//GameObject::debugger->addMessage(utils::doubleToString((double)tmpCX));
+		//GameObject::debugger->addMessage(utils::doubleToString((double)tmpWoPos->x));
+	}
+	
+
+	return this->collisionBounds.at(closestCollisionRadii);
 }
 
 float GameObject::getRadiusToObj(GameObject* other){

@@ -13,6 +13,7 @@
 	using std::string;
 	using std::fixed;
 	using std::stringstream;
+	using std::vector;
 
 	class utils {
 		private:
@@ -27,6 +28,12 @@
 			static nv::Image* loadPNG(std::string name);
 			static void bindPNG(nv::Image* img);
 			static void utils::enableTextureBlending();
+			static vector<string> getFileContents(char* filename);
+			static vector<string> readLines(FILE* fptr);
+			static vector<string> splitString(string input, char delimiter);
+
+
+
 	};
 
 #endif

@@ -9,6 +9,8 @@
     <ClCompile Include="win32_window.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="GameLoop.cpp" />
+    <ClCompile Include="kgeMatrix.cpp" />
+    <ClCompile Include="kgeVect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FreeType.h" />
@@ -23,6 +25,8 @@
     <ClInclude Include="kgeGeometry.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="GameLoop.h" />
+    <ClInclude Include="kgeMatrix.h" />
+    <ClInclude Include="kgeVect.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="firstOpenGL.rc" />

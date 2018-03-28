@@ -106,7 +106,9 @@
     <ClCompile Include="FreeType.cpp" />
     <ClCompile Include="GameLoop.cpp" />
     <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="kgeMatrix.cpp" />
     <ClCompile Include="kgeUtils.cpp" />
+    <ClCompile Include="kgeVect.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="win32_window.cpp" />
   </ItemGroup>
@@ -118,7 +120,9 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="InputStates.h" />
     <ClInclude Include="kgeGeometry.h" />
+    <ClInclude Include="kgeMatrix.h" />
     <ClInclude Include="kgeUtils.h" />
+    <ClInclude Include="kgeVect.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Image_Loading\nvImage.h" />

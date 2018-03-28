@@ -28,9 +28,7 @@ class GameObject {
 		int activeSpriteIndex;
 		vector<nv::Image*> sprites;
 
-		float objectColor[4] = {
-			0.0f, 0.0f, 0.0f, 0.0f 
-		};
+		Color4f* objectColor;
 
 		// openGL Matrix indices
 		//|0, 4, 8,  12|
@@ -38,7 +36,6 @@ class GameObject {
 		//|2, 6, 10, 14|
 		//|3, 7, 11, 15|
 		Matrix3f* worldSpaceTransform;
-		GLfloat alsoWorldSpaceTransform[16];
 
 		GLfloat forces[3];
 		GLfloat zTorque;
@@ -58,6 +55,8 @@ class GameObject {
 		bool playerControl;
 		float topSpeed;
 		bool colliderFlag;
+		bool ghost;
+		bool physicsContainer;
 
 		static DebugInfo* debugger;
 		//Matrix to convert world to camera space
@@ -73,11 +72,11 @@ class GameObject {
 		static void setDebugger(DebugInfo* _debugger);
 		static void setWorldToCameraTransform(Matrix3f* wtc);
 		static void freeData();
-
+		
 		~GameObject();
 		GameObject();
 		GameObject(const GameObject &copy);
-		GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite, float objectColor[]);
+		GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite, Color4f* objectColor);
 		void setSprite(int index);
 		void animate(AnimationLogic al);
 		string toString();
@@ -109,13 +108,21 @@ class GameObject {
 		bool hasCollidedWith(string name);
 		void setHasCollidedWith(string name);
 		void resetCollisionFlags();
+		CollisionRadii* getClosestRadiiTo(Vect4f* otherPosition);
 
 		float getAngleToOther(GameObject* other);
-		float getRadiusAtAngle(float angleToOther, Vect4f* otherPosition);
+		//float getRadiusAtAngle(float angleToOther, Vect4f* otherPosition);
+		Vect4f* localToWorldSpace(Vect4f localCoords);
 
 		void addForce(float x, float y, float z);
 		bool hasPhysics();
 		void setPhysics(bool flag);
+
+		void setGhost(bool flag);
+		bool isGhost();
+		void setPhysicsContainer(bool flag);
+		bool isPhysicsContainer();
+
 };
 
 

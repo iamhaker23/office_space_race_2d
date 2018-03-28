@@ -5,6 +5,11 @@ DebugInfo::DebugInfo() {
 	this->reset();
 }
 
+double DebugInfo::getTime() {
+	std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(this->cDuration);
+	return (double)ms.count()/1000.0;
+}
+
 void DebugInfo::setTime(double _time) {
 	this->time = _time;
 }

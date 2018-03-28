@@ -1,6 +1,6 @@
 #include "kgeUtils.h"
 
-GLuint utils::base = NULL;
+GLuint utils::base = 0;
 
 string utils::doubleToString(double val) {
 	stringstream ss;
@@ -79,14 +79,16 @@ nv::Image* utils::loadPNG(std::string name)
 
 void utils::bindPNG(nv::Image* img) {
 
-	GLuint myTextureID;
+	GLuint myTextureID = 0;
 
 	if (img != NULL) {
-		//I once removed this line
-		//And created an odd bug where all my font changed to tiny image textures
-		//THAT was a headache!
-		glGenTextures(1, &myTextureID);
+		
+		//URGENT TODO
+		//Commentting ruins text
+		//Uncommenting results in constant memory usage increase
+		//glGenTextures(1, &myTextureID);
 		glBindTexture(GL_TEXTURE_2D, myTextureID);
+
 		glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 		glTexImage2D(GL_TEXTURE_2D, 0, img->getInternalFormat(), img->getWidth(), img->getHeight(), 0, img->getFormat(), img->getType(), img->getLevel(0));
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -102,4 +104,93 @@ void utils::bindPNG(nv::Image* img) {
 void utils::enableTextureBlending() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
+}
+
+vector<string> utils::getFileContents(char* filename) {
+	FILE* fptr = fopen(filename, "r");
+	if (!fptr) {
+		MessageBox(NULL, "Could not load data file.", "ERROR", MB_OK | MB_ICONINFORMATION);
+		return {};
+	}
+
+	vector<string> fileContents = readLines(fptr);
+	fclose(fptr);
+	return fileContents;
+}
+
+vector<string> utils::readLines(FILE* fptr) {
+
+	vector<string> output;
+
+	string line = "";
+
+	char c = fgetc(fptr);
+	do {
+		char peek = fgetc(fptr);
+		if (c) {
+
+			if ((c != '\n' && c != '\r' && peek != EOF)) {
+				line.append(string(1, c));
+
+			}
+			else {
+				if (line != "") {
+
+					//add the final character
+					if (peek == EOF) line.append(string(1, c));
+
+
+					output.push_back(line);
+
+				}
+				line = "";
+			}
+		}
+		c = peek;
+	} while (c != EOF);
+
+
+	return output;
+}
+
+vector<string> utils::splitString(string input, char delimiter) {
+
+
+	vector<string> output;
+
+	if (input.length() < 1) return output;
+
+	string part = "";
+	int currentChar = 0;
+	char c = input[currentChar];
+	int str_len = input.length();
+
+	do {
+
+		if (c) {
+
+			if (c != delimiter && c != ' ' && c != '\n' && c != '\r' && int(c) != int(0x1E) && int(c) != int(0x01) && (currentChar != str_len - 1)) {
+				part.append(string(1, c));
+			}
+			else {
+				if (part != "" || (currentChar == str_len - 1 && c != delimiter && c != ' ' && c != '\n' && c != '\r' && int(c) != int(0x1E) && int(c) != int(0x01))) {
+
+					//if there's a part to append or we're on the last character and it's not a space
+
+					if (currentChar == str_len - 1) {
+						part.append(string(1, c));
+					}
+
+					output.push_back(part);
+					part = "";
+				}
+			}
+		}
+
+
+		c = input[++currentChar];
+	} while (currentChar < str_len);
+
+
+	return output;
 }

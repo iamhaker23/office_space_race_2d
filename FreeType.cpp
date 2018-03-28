@@ -259,13 +259,11 @@ void print(const font_data &ft_font, float x, float y, const char *fmt, ...)  {
 	glPushAttrib(GL_LIST_BIT | GL_CURRENT_BIT  | GL_ENABLE_BIT | GL_TRANSFORM_BIT);	
 	glMatrixMode(GL_MODELVIEW);
 	glDisable(GL_LIGHTING);
-	glEnable(GL_TEXTURE_2D);
 	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
-	
-
 	glListBase(font);
 
 	float modelview_matrix[16];	
@@ -297,11 +295,7 @@ void print(const font_data &ft_font, float x, float y, const char *fmt, ...)  {
 	//	float len=x-rpos[0];
 
 		glPopMatrix();
-
-		
-
 	}
-
 
 	glPopAttrib();		
 

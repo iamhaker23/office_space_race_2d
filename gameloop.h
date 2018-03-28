@@ -20,11 +20,17 @@
 			static HDC hDC;
 			static int frame;
 			static vector<font_data*> fonts;
+
 			static nv::Image* backgroundPNG;
+			static vector<nv::Image*> bgSprites;
+			static int bgSpriteIndex;
+
 			static InputStates* inputs;
 
 			static void drawTextBox(freetype::font_data _font, string _str, float ssOffsetX, float ssOffsetY, float boxXSize, float boxYSize, Color4f textColor, Color4f boxColor);
-			static void drawBackground(float repeat, float tintColor[]);
+			static void drawBackground(float repeat, Color4f tintColor);
+
+			static vector<CollisionRadii*> generateTrackBounds(char* filename);
 
 		public:
 			static void freeData();

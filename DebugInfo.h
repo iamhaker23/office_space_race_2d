@@ -23,6 +23,7 @@
 
 		public:
 			DebugInfo();
+			double getTime();
 			void addFrameSample(int sample);
 			void addMessage(string message);
 			void reset();
