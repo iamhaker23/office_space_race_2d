@@ -77,6 +77,32 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 		radii
 	};
 	car->setCollisionBounds(bounds);
+	
+	GameObject* track = new GameObject("Track", trackSprites, planeMesh, 0, new Color4f(1.0f,1.0f,1.0f, 0.4f));
+	//GameObject* track = new GameObject("Track", {}, {}, 0, new Color4f());
+	//GameObject* trackbounds = new GameObject("TrackBounds", {}, {}, 0, new Color4f());
+	//track->setCollisionBounds(generateTrackBounds("track_walls.txt"));
+	//trackbounds->setCollisionBounds(generateTrackBounds("track_container.txt"));
+	track->setCollisionBounds(generateTrackBounds("track_container.txt"));
+	//trackinner->setCollisionBounds(generateTrackBounds("track_inner_bounds.txt"));
+	//trackbounds->setCollider(true);
+	//trackbounds->setGhost(true);
+	//trackbounds->setPhysicsContainer(true); 
+	
+	track->setCollider(true);
+	//track->setGhost(true);
+	//track->setPhysicsContainer(true);
+	//trackinner->setCollider(true);
+	track->scale(5.0f);
+	//trackbounds->scale(2.0f);
+	//trackbounds->nuScale(1.5f, 2.0f, 0.0f);
+
+	//TODO: select correct collision radius based on collider world co-ords
+	//Account for transformations (e.g. track.scale(2.0) ) correctly
+	//trackinner->translate(2.0f, 0.0f, 0.0f);
+	//trackinner->scale(2.0f);
+	//scene.push_back(trackbounds);
+	scene.push_back(track);
 
 
 	
@@ -92,44 +118,12 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 	vector<CollisionRadii*> bbounds = {
 		bradii
 	};
-	
-	
-	GameObject* box = new GameObject("Box", boxSprites, planeMesh, 0, new Color4f(1.0f, 0.5f, 0.5f, 1.0f ));
+		GameObject* box = new GameObject("Box", boxSprites, planeMesh, 0, new Color4f(1.0f, 0.5f, 0.5f, 1.0f));
 	box->translate(0.3f, 0.3f, 0.0f);
 	box->setCollider(true);
 	box->setCollisionBounds(bbounds);
 	box->setGhost(true);
-	box->setPhysicsContainer(true); 
-	
-
-	GameObject* track = new GameObject("Track", trackSprites, planeMesh, 0, new Color4f(1.0f,1.0f,1.0f, 0.4f));
-	//GameObject* track = new GameObject("Track", {}, {}, 0, new Color4f());
-	GameObject* trackbounds = new GameObject("TrackBounds", {}, {}, 0, new Color4f());
-	//track->setCollisionBounds(generateTrackBounds("track_walls.txt"));
-	trackbounds->setCollisionBounds(generateTrackBounds("track_container.txt"));
-	track->setCollisionBounds(generateTrackBounds("track_container.txt"));
-	//trackinner->setCollisionBounds(generateTrackBounds("track_inner_bounds.txt"));
-	trackbounds->setCollider(true);
-	trackbounds->setGhost(true);
-	trackbounds->setPhysicsContainer(true); 
-	
-	track->setCollider(true);
-	track->setGhost(true);
-	track->setPhysicsContainer(true);
-	//trackinner->setCollider(true);
-	track->scale(2.0f);
-	trackbounds->scale(2.0f);
-	//trackbounds->nuScale(1.5f, 2.0f, 0.0f);
-
-	//TODO: select correct collision radius based on collider world co-ords
-	//Account for transformations (e.g. track.scale(2.0) ) correctly
-	//trackinner->translate(2.0f, 0.0f, 0.0f);
-	//trackinner->scale(2.0f);
-	scene.push_back(trackbounds);
-	scene.push_back(track);
-
-
-	
+	box->setPhysicsContainer(true);
 	CollisionRadii* bradii2 = new CollisionRadii(0.0f, 0.0f);
 	bradii2->addRadius(0.29f, 0.0f);
 	bradii2->addRadius(0.32f, 90.0f);
@@ -148,7 +142,6 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 	box2->setCollisionBounds(bbounds2);
 	box2->setPhysics(true);
 	
-
 	scene.push_back(box2);
 	scene.push_back(box);
 	

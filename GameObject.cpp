@@ -50,6 +50,7 @@ GameObject::GameObject() {
 
 	this->physics = false;
 	this->physicsContainer = false;
+	this->ghost = false;
 	
 }
 
@@ -83,6 +84,7 @@ GameObject::GameObject(const GameObject &copy) {
 	this->colliderFlag = false;
 	this->physics = false;
 	this->physicsContainer = false;
+	this->ghost = false;
 }
 
 GameObject::GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite,  Color4f* objectColor) {
@@ -116,6 +118,7 @@ GameObject::GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> m
 	this->colliderFlag = false;
 	this->physics = false;
 	this->physicsContainer = false;
+	this->ghost = false;
 }
 
 void GameObject::draw() {
@@ -166,6 +169,7 @@ void GameObject::draw() {
 					//draw all radii, white unless last selected
 					//drawCircle(0.0f, 0.0f, tmp->radii.at(j), (j != tmp->getLastSelected()[0] && j != tmp->getLastSelected()[1]) ? tmp->getDrawColor() : new Color4f(0.0f, 1.0f, 0.0f, 1.0f));
 
+					/*
 					//slow because glBegin inside loop
 					glBegin(GL_LINES);
 					glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
@@ -181,6 +185,7 @@ void GameObject::draw() {
 					//glVertex3f(tmp->centreX, tmp->centreY, 0.0f);
 					//glVertex3f(tmp->centreX + (tmp->radii.at(j)*cosf(tmp->angles.at(j)*(3.1415926f/180.0f))), tmp->centreY + (tmp->radii.at(j)*sinf(tmp->angles.at(j)*(3.1415926f / 180.0f))), 0.0f);
 					glEnd();
+					*/
 					
 				}
 			}
@@ -413,8 +418,8 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 		for (GameObject* other : others) {
 			if (other != NULL && other != this) {
 				if (other->isCollider() && !other->hasCollidedWith(this->name) && (this->hasPhysics() || other->hasPhysics())) {
-					//float myRad = this->getRadiusToObj(other);
-					//float theirRad = other->getRadiusToObj(this);
+					float myRad = this->getRadiusToObj(other);
+					float theirRad = other->getRadiusToObj(this);
 
 					float angleToOther = this->getAngleToOther(other);
 
@@ -422,30 +427,33 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 					//GameObject::debugger->addMessage(this->name);
 					//GameObject::debugger->addMessage(utils::doubleToString((double)angleToOther));
 
-					CollisionRadii* myClosest = this->getClosestRadiiTo(other->getWorldPosition());
-					CollisionRadii* theirClosest = other->getClosestRadiiTo(new Vect4f(myClosest->centreX, myClosest->centreY, 0.0f));
-					myClosest = this->getClosestRadiiTo(new Vect4f(theirClosest->centreX, theirClosest->centreY, 0.0f));
-					theirClosest = other->getClosestRadiiTo(new Vect4f(myClosest->centreX, myClosest->centreY, 0.0f));
+					//CollisionRadii* myClosest = this->getClosestRadiiTo(other->getWorldPosition());
+					//CollisionRadii* theirClosest = other->getClosestRadiiTo(new Vect4f(myClosest->centreX, myClosest->centreY, 0.0f));
+					//myClosest = this->getClosestRadiiTo(new Vect4f(theirClosest->centreX, theirClosest->centreY, 0.0f));
+					//theirClosest = other->getClosestRadiiTo(new Vect4f(myClosest->centreX, myClosest->centreY, 0.0f));
 
-					float myRad = myClosest->getInterpolatedRadiusAt(angleToOther);
-					float theirRad = theirClosest->getInterpolatedRadiusAt(360.0f - angleToOther);
+					//float myRad = myClosest->getInterpolatedRadiusAt(angleToOther);
+					//float theirRad = theirClosest->getInterpolatedRadiusAt(360.0f - angleToOther);
 
-					Vect4f* myCentreWo = this->localToWorldSpace(Vect4f(myClosest->centreX, myClosest->centreY, 0.0f));
-					Vect4f* theirCentreWo = other->localToWorldSpace(Vect4f(theirClosest->centreX, theirClosest->centreY, 0.0f));
+					//Vect4f* myCentreWo = this->localToWorldSpace(Vect4f(myClosest->centreX, myClosest->centreY, 0.0f));
+					//Vect4f* theirCentreWo = other->localToWorldSpace(Vect4f(theirClosest->centreX, theirClosest->centreY, 0.0f));
 					//float distX = (myCentreWo->x - theirCentreWo->x);
 					//float distY = (myCentreWo->y - theirCentreWo->y);
 
-					float distX = (myClosest->centreX - theirClosest->centreX);
-					float distY = (myClosest->centreY - theirClosest->centreY);
+					//float distX = (myClosest->centreX - theirClosest->centreX);
+					//float distY = (myClosest->centreY - theirClosest->centreY);
+
+					float distX = this->getWorldPosition()->x - other->getWorldPosition()->x;
+					float distY = this->getWorldPosition()->y - other->getWorldPosition()->y;
 
 					float distanceSqrd = (distX * distX) + (distY * distY);
 
 					float combRad = theirRad + myRad;
 
 					if (this->name == "Track" && other->name == "Player") {
-						GameObject::debugger->addMessage(utils::doubleToString((double)this->getWorldPosition()->x));
-						GameObject::debugger->addMessage(utils::doubleToString((double)myCentreWo->x));
-						GameObject::debugger->addMessage(utils::doubleToString((double)myClosest->centreX));
+						//GameObject::debugger->addMessage(utils::doubleToString((double)this->getWorldPosition()->x));
+						//GameObject::debugger->addMessage(utils::doubleToString((double)myCentreWo->x));
+						//GameObject::debugger->addMessage(utils::doubleToString((double)myClosest->centreX));
 					}
 
 					if (GameObject::drawDebug) {
@@ -568,19 +576,19 @@ CollisionRadii* GameObject::getClosestRadiiTo(Vect4f* otherPosition) {
 	int closestCollisionRadii = 0;
 
 	float smallestDistSqrd = 999999.99f;
-	Vect4f* tmpWoPos;
-	float tmpCX = 0.0f;
+	//Vect4f* tmpWoPos;
+	//float tmpCX = 0.0f;
 
 	for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
 
 		CollisionRadii* tmp = this->collisionBounds.at(i);
 
-		tmpWoPos = this->localToWorldSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
-		tmpCX = tmp->centreX;
+		//tmpWoPos = this->localToWorldSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
+		//tmpCX = tmp->centreX;
 
-		float distSqrd = ((tmpWoPos->x - otherPosition->x)*(tmpWoPos->x - otherPosition->x)) + ((tmpWoPos->y - otherPosition->y)*(tmpWoPos->y - otherPosition->y));
-				
-		//float distSqrd = ((tmp->centreX - otherPosition->x)*(tmp->centreX - otherPosition->x)) + ((tmp->centreY - otherPosition->y)*(tmp->centreY - otherPosition->y));
+		//float distSqrd = ((tmpWoPos->x - otherPosition->x)*(tmpWoPos->x - otherPosition->x)) + ((tmpWoPos->y - otherPosition->y)*(tmpWoPos->y - otherPosition->y));	
+		float distSqrd = ((tmp->centreX - otherPosition->x)*(tmp->centreX - otherPosition->x)) + ((tmp->centreY - otherPosition->y)*(tmp->centreY - otherPosition->y));
+
 		if (distSqrd < smallestDistSqrd) {
 			//closest centre so far
 			//Because an object may have multiple centres
