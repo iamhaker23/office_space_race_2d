@@ -58,6 +58,7 @@ struct CollisionRadii {
 public:
 	float centreX;
 	float centreY;
+	bool trigonometricInterpolation;
 
 	//TODO: should strictly be an ordered map
 	vector<float> radii;
@@ -74,6 +75,7 @@ public:
 		this->radii = {};
 		this->angles = {};
 		drawColor = new Color4f();
+		trigonometricInterpolation = false;
 	}
 
 	//IMPORTANT: MUST PROVIDE ANGLES IN ASC ORDER, AND THEIR RADII AT CORRESPONDING INDEXES
@@ -83,6 +85,7 @@ public:
 		this->angles = angles;
 		this->radii = radii;
 
+		trigonometricInterpolation = false;
 		drawColor = new Color4f();
 	}
 	inline void setLastSelected(int lasta, int lastb) {
@@ -98,6 +101,10 @@ public:
 		drawColor = new Color4f(r, g, b, a);
 	}
 
+	inline void setInterpolationTrigO(bool flag) {
+		this->trigonometricInterpolation = flag;
+	}
+
 	inline Color4f* CollisionRadii::getDrawColor() {
 		return this->drawColor;
 	}
@@ -111,30 +118,37 @@ public:
 			return;
 		}
 
-		vector<float> newRadii;
-		vector<float> newAngles;
+		vector<float> newRadii = {};
+		vector<float> newAngles = {};
 
 		bool added = false;
 
 		for (int i = 0; i < (int)this->angles.size(); i++) {
 			float currentRadius = this->radii.at(i);
 			float currentAngle = this->angles.at(i);
-			if (currentAngle < angle) {
-				//still before insert position
-				newRadii.push_back(currentRadius);
-				newAngles.push_back(currentAngle);
-			}
-			else if (currentAngle == angle) {
-				//update, don't include the old
-				added = true;
-				newRadii.push_back(radius);
-				newAngles.push_back(currentAngle);
+			if (!added) {
+				if (currentAngle < angle) {
+					//still before insert position
+					newRadii.push_back(currentRadius);
+					newAngles.push_back(currentAngle);
+				}
+				else if (currentAngle == angle) {
+					//update, don't include the old
+					added = true;
+					newRadii.push_back(radius);
+					newAngles.push_back(currentAngle);
+				}
+				else if (currentAngle > angle){
+					//insert new ones first
+					added = true;
+					newRadii.push_back(radius);
+					newAngles.push_back(angle);
+					newRadii.push_back(currentRadius);
+					newAngles.push_back(currentAngle);
+				}
 			}
 			else {
-				//insert new ones first
-				added = true;
-				newRadii.push_back(radius);
-				newAngles.push_back(angle);
+				//inserted new radius, so simply add the remaining to the new list
 				newRadii.push_back(currentRadius);
 				newAngles.push_back(currentAngle);
 			}
@@ -227,16 +241,112 @@ public:
 			else index++;
 		}
 
+		//wrap around, first is the largest angle available (this->angles.size - 1), otherwise the smaller of the two (index - 1)
 		int first = (index == 0) ? this->angles.size() - 1 : index - 1;
 		int second = (first == this->angles.size() - 1) ? 0 : index;
-		float interpolationPercentage = abs((this->angles.at(second) - this->angles.at(first))) / (angle * 100.0f);
 
-		float firstRadius = this->radii.at(first);
-		float secondRadius = this->radii.at(second);
 
-		float difference = secondRadius - firstRadius;
+		float firstAngle = this->angles.at(first) * (3.1415926f / 180.0f);
+		float secondAngle = this->angles.at(second) * (3.1415926f / 180.0f);
+
+		float radius = 1.0f;
+		
+		//if (firstAngle - secondAngle >= 90.0f) {
+			//use trigonometric interpolation
+			float smallest = (firstAngle >= secondAngle) ? secondAngle : firstAngle;
+			float absSinAngle = abs(sinf(angle * (3.1415926f / 180.0f)));
+			float absCosAngle = abs(cosf(angle * (3.1415926f / 180.0f)));
+			//interpolationPercentage = 0.0f;
+			//if (abs(sinf(smallest * (3.1415926f / 180.0f))) > abs(cosf(smallest * (3.1415926f / 180.0f)))) {
+			/*if (absSinAngle > absCosAngle){
+				float Y_1 = abs(this->radii.at(first) * sinf(firstAngle));
+				float Y_2 = abs(this->radii.at(second) * sinf(secondAngle));
+
+				//float difference = secondRadius - firstRadius;
+				float difference = Y_1 - Y_2;
+				radius = ((interpolationPercentage * (abs(difference))) + ((difference > 0.0f) ? Y_2 : Y_1)) / absSinAngle;
+				//float radius = (interpolationPercentage * (Y_1 + Y_2)) / sinf(angle * (3.1415926f / 180.0f));
+			}
+			else {
+
+				float X_1 = abs(this->radii.at(first) * cosf(firstAngle));
+				float X_2 = abs(this->radii.at(second) * cosf(secondAngle));
+
+				//float difference = secondRadius - firstRadius;
+				float difference = X_1 - X_2;
+				radius = ((interpolationPercentage * (abs(difference))) + ((difference > 0.0f) ? X_2 : X_1)) / absCosAngle;
+			}*/
+			if (this->trigonometricInterpolation) {
+
+				float interpolationPercentage = angle / (((this->angles.at(second) + this->angles.at(first)))/2.0f);
+
+				float Y_1 = abs(this->radii.at(first) * sinf(firstAngle));
+				float Y_2 = abs(this->radii.at(second) * sinf(secondAngle));
+				float differenceY = Y_1 - Y_2;
+				float radiusS = ((interpolationPercentage * (abs(differenceY))) + ((differenceY > 0.0f) ? Y_2 : Y_1)) / absSinAngle;
+				float X_1 = abs(this->radii.at(first) * cosf(firstAngle));
+				float X_2 = abs(this->radii.at(second) * cosf(secondAngle));
+				float differenceX = X_1 - X_2;
+				float radiusC = ((interpolationPercentage * (abs(differenceX))) + ((differenceX > 0.0f) ? X_2 : X_1)) / absCosAngle;
+
+				radius = min(radiusC, radiusS);
+				radius = max(0.2f, radius);
+				//radius = (radiusC > this->radii.at(first)) ? radiusS : radiusC;
+			}
+			else {
+
+				return this->radii.at(first);
+				
+				float interpolationPercentage = angle / (((this->angles.at(second) + this->angles.at(first)))/2.0f);
+				float firstRadius = this->radii.at(first);
+				float secondRadius = this->radii.at(second);
+
+				float difference = firstRadius - secondRadius;
+
+				radius = ((difference < 0.0f) ? firstRadius : secondRadius) + (abs(difference) * interpolationPercentage);
+				
+			}
+
+			
+		/*}
+		else {
+			//use linear interpolation
+			float firstRadius = this->radii.at(first);
+			float secondRadius = this->radii.at(second);
+			
+			float difference = firstRadius - secondRadius;
+
+			radius = ((difference > 0.0f) ? firstRadius : secondRadius) + (abs(difference) * interpolationPercentage);
+		}*/
 
 		//enable drawing this radius as green
+
+		/*float absSinAngle = abs(sinf(angle * (3.1415926f / 180.0f)));
+		float absCosAngle = abs(cosf(angle * (3.1415926f / 180.0f)));
+
+		float mutingS = (absSinAngle <= 0.2f) ? 0.0f : 1.0f;
+		float mutingC = (mutingS != 0.0f && absCosAngle <= 0.2f) ? 0.0f : 1.0f;
+
+		float Y_1 = abs(this->radii.at(first) * sinf(firstAngle));
+		float Y_2 = abs(this->radii.at(second) * sinf(secondAngle));
+
+		//float difference = secondRadius - firstRadius;
+		float differenceY = Y_1 - Y_2;
+
+		float X_1 = abs(this->radii.at(first) * cosf(firstAngle));
+		float X_2 = abs(this->radii.at(second) * cosf(secondAngle));
+
+		//float difference = secondRadius - firstRadius;
+		float differenceX = X_1 - X_2;
+
+		radius = (
+				((((interpolationPercentage * (abs(differenceY))) + ((differenceY > 0.0f) ? Y_2 : Y_1)) / absSinAngle)*mutingS)
+				+
+				((((interpolationPercentage * (abs(differenceX))) + ((differenceX > 0.0f) ? X_2 : X_1)) / absCosAngle)*mutingC)
+			)
+			/ (mutingC + mutingS);
+
+			*/
 		this->lastSelected[0] = first;
 		this->lastSelected[1] = second;
 
@@ -245,7 +355,7 @@ public:
 		//if (abs(difference) - 0.5f < 0.05f) {
 		//	this->addRadius(radius, angle);
 		//}
-		float radius = ((difference > 0.0f) ? firstRadius : secondRadius) + (difference * interpolationPercentage);
+
 
 		return radius;
 	}

@@ -4,6 +4,13 @@ GLuint utils::base = 0;
 
 string utils::doubleToString(double val) {
 	stringstream ss;
+	ss.precision(4);
+	ss << fixed << val;
+	return ss.str();
+}
+
+string utils::floatToString(float val) {
+	stringstream ss;
 	ss.precision(2);
 	ss << fixed << val;
 	return ss.str();

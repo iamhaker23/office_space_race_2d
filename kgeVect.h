@@ -22,6 +22,11 @@ public:
 	Vect4f();
 	Vect4f* add(Vect4f* other);
 	Vect4f* transform(Matrix3f* space);
+	Vect4f* scale(float x, float y, float z);
+	float getXYMagnitude();
+	float getX();
+	float getY();
+	float getZ();
 };
 
 #endif

@@ -36,10 +36,12 @@ class GameObject {
 		//|2, 6, 10, 14|
 		//|3, 7, 11, 15|
 		Matrix3f* worldSpaceTransform;
+		Matrix3f* boundsTransform;
 
 		GLfloat forces[3];
 		GLfloat zTorque;
 		GLfloat scales[3];
+		GLfloat boundScales[3];
 		
 		GLfloat friction;
 		GLfloat angularDamping;
@@ -66,7 +68,8 @@ class GameObject {
 		vector<string> collidedWithThisFrame;
 
 		bool physics;
-	
+		bool steering;
+
 	public:
 		static void setDebugMode(bool flag);
 		static void setDebugger(DebugInfo* _debugger);
@@ -84,9 +87,11 @@ class GameObject {
 		void draw();
 		void processInputs(InputStates* inputs);
 
-		void scale(float uScale);
-		void nuScale(float x, float y, float z);
+		void scale(float uScale, bool scaleCollider);
+		void nuScale(float x, float y, float z, bool scaleCollider);
+		void nuScaleBounds(float x, float y, float z);
 		void translate(float x, float y, float z);
+		void translateBounds(float x, float y, float z);
 
 		void setPhysicalAttributes(float friction, float angularDamping, float topSpeed);
 		Vect4f* getWorldPosition();
@@ -113,6 +118,7 @@ class GameObject {
 		float getAngleToOther(GameObject* other);
 		//float getRadiusAtAngle(float angleToOther, Vect4f* otherPosition);
 		Vect4f* localToWorldSpace(Vect4f localCoords);
+		Vect4f* boundSpaceToObjectSpace(Vect4f localCoords);
 
 		void addForce(float x, float y, float z);
 		bool hasPhysics();
@@ -122,6 +128,10 @@ class GameObject {
 		bool isGhost();
 		void setPhysicsContainer(bool flag);
 		bool isPhysicsContainer();
+
+		float radius2DToObjectSpace(float radius, float angle);
+		float radius2DToWorldSpace(float radius, float angle);
+		void applyBoundsScale();
 
 };
 

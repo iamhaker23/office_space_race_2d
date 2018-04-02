@@ -62,5 +62,5 @@ double DebugInfo::getAverageFrameRate() {
 		total = total + (double)sample;
 	}
 
-	return total / ((double)this->frameSamples.size());
+	return (this->frameSamples.size() > 0) ? (total / ((double)this->frameSamples.size())) : 30.0;
 }
