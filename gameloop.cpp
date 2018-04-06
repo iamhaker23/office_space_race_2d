@@ -48,89 +48,42 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 		Vertex(1.0, 0.0, 0.5, -0.5)
 	};
 
-	//GameLoop::bgSprites = { utils::loadPNG("animbg/bg1.png"), utils::loadPNG("animbg/bg2.png"), utils::loadPNG("animbg/bg3.png") };
-	GameLoop::bgSprites = { utils::loadPNG("animbg/bg1.png") };
+	GameLoop::bgSprites = { utils::loadPNG("animbg/bg_1.png") };
 
-	vector<nv::Image*> carSprites = { utils::loadPNG("car/1.png") ,utils::loadPNG("car/2.png") ,utils::loadPNG("car/3.png") };
+	vector<nv::Image*> carSprites = { utils::loadPNG("chair/1.png") ,utils::loadPNG("chair/2.png") ,utils::loadPNG("chair/3.png") };
 	vector<nv::Image*> boxSprites = { utils::loadPNG("box/1.png"), utils::loadPNG("box/2.png"), utils::loadPNG("box/3.png") };
-	vector<nv::Image*> trackSprites = { utils::loadPNG("track.png") };
+	vector<nv::Image*> trackSprites = { utils::loadPNG("office_1.png") };
 
 	GameObject* car = new GameObject("Player", carSprites, planeMesh, 0, new Color4f( 1.0f, 1.0f, 1.0f, 1.0f ));
-	car->scale(0.3f, true);
-	car->setPhysicalAttributes(1.6f, 1.5f, 4.0f);
+	car->scale(0.8f, false);
+	car->setPhysicalAttributes(1.6f, 1.5f, 6.0f);
 	car->translate(-1.0f, 1.0f, 0.0f);
 	car->setPlayerControl(true);
 	car->setCollider(true);
 	car->setPhysics(true);
-
-	//TODO: read from file
 	CollisionRadii* radii = new CollisionRadii(0.0f, 0.0f);
-	//radii->addRadius(0.1f, 0.0f);
+	radii->addRadius(0.1f, 0.0f);
 	radii->addRadius(0.38f, 90.0f);
-	//radii->addRadius(0.1f, 180.0f);
+	radii->addRadius(0.1f, 180.0f);
 	radii->addRadius(0.39f, 270.0f);
-	//radii->addRadius(0.1f, 45.0f);
-	//radii->addRadius(0.1f, 135.0f);
-	//radii->addRadius(0.1f, 225.0f);
-	//radii->addRadius(0.1f, 315.0f);
+	radii->addRadius(0.1f, 45.0f);
+	radii->addRadius(0.1f, 135.0f);
+	radii->addRadius(0.1f, 225.0f);
+	radii->addRadius(0.1f, 315.0f);
 	vector<CollisionRadii*> bounds = {
 		radii
 	};
 	car->setCollisionBounds(bounds);
 	
-	GameObject* track = new GameObject("Track", trackSprites, planeMesh, 0, new Color4f(0.0f,0.0f,0.0f, 0.1f));
-	//GameObject* trackinner = new GameObject("TrackInner", {}, planeMesh, 0, new Color4f(0.0f, 0.0f, 0.0f, 0.1f));
-	//GameObject* trackbounds = new GameObject("TrackBounds", {}, {}, 0, new Color4f());
-	//track->setCollisionBounds(generateTrackBounds("track_walls.txt"));
-	//trackbounds->setCollisionBounds(generateTrackBounds("track_container.txt"));
-	track->setCollisionBounds(generateTrackBounds("track_container.txt"));
-	//trackinner->setCollisionBounds(generateTrackBounds("track_inner_bounds.txt"));
-	//trackbounds->setCollider(true);
-	//trackbounds->setGhost(true);
-	//trackbounds->setPhysicsContainer(true); 
-
+	GameObject* track = new GameObject("Track", trackSprites, planeMesh, 0, new Color4f(1.0f,1.0f,1.0f, 1.0f));
+	track->setCollisionBounds(generateTrackBounds("office_container.txt"));
 	track->setCollider(true);
-	//trackinner->setCollider(true);
-	//track->setGhost(true);
 	track->setPhysicsContainer(true);
-	//trackinner->setCollider(true);
 	track->scale(10.0f, false);
-	track->translateBounds(-0.4f, -1.5f, 0.0f);
-	//track->translate(-2.0f, 3.0f, 0.0f);
-	track->nuScaleBounds(1.0f, 2.0f, 1.0f);
-	//trackinner->translateBounds(0.0f, -1.0f, 0.0f);
-	//trackinner->nuScaleBounds(0.4f, 0.8f, 1.0f);
-	//trackbounds->scale(2.0f);
-	//trackbounds->nuScale(1.5f, 2.0f, 0.0f);
+	track->nuScaleBounds(0.5f, 0.5f, 1.0f);
 
-	//TODO: select correct collision radius based on collider world co-ords
-	//Account for transformations (e.g. track.scale(2.0) ) correctly
-	//trackinner->translate(2.0f, 0.0f, 0.0f);
-	//trackinner->scale(2.0f);
-	//scene.push_back(trackbounds);
 	scene.push_back(track);
-	//scene.push_back(trackinner);
 
-
-	
-	CollisionRadii* bradii = new CollisionRadii(0.0f, 0.0f);
-	bradii->addRadius(0.29f, 0.0f);
-	bradii->addRadius(0.32f, 90.0f);
-	bradii->addRadius(0.29f, 180.0f);
-	bradii->addRadius(0.25f, 270.0f);
-	bradii->addRadius(0.4f, 45.0f);
-	bradii->addRadius(0.4f, 135.0f);
-	bradii->addRadius(0.35f, 225.0f);
-	bradii->addRadius(0.35f, 315.0f);
-	vector<CollisionRadii*> bbounds = {
-		bradii
-	};
-		GameObject* box = new GameObject("Box", boxSprites, planeMesh, 0, new Color4f(1.0f, 0.5f, 0.5f, 1.0f));
-	box->translate(0.3f, 0.3f, 0.0f);
-	box->setCollider(true);
-	box->setCollisionBounds(bbounds);
-	box->setGhost(true);
-	box->setPhysicsContainer(true);
 	CollisionRadii* bradii2 = new CollisionRadii(0.0f, 0.0f);
 	bradii2->addRadius(0.29f, 0.0f);
 	bradii2->addRadius(0.32f, 90.0f);
@@ -144,17 +97,13 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 		bradii2
 	};
 	GameObject* box2 = new GameObject("Box2", boxSprites, planeMesh, 0, new Color4f(1.0f, 0.5f, 0.5f, 1.0f ));
-	box2->translate(0.3f, 0.3f, 0.0f);
-	box2->scale(0.3f, true);
+	box2->scale(0.5f, false);
+	box2->translate(-1.0f, 1.5f, 0.0f);
 	box2->setCollider(true);
-	//box2->setGhost(true);
 	box2->setCollisionBounds(bbounds2);
 	box2->setPhysics(true);
 	
-	//scene.push_back(box2);
-	//scene.push_back(box);
-	
-
+	scene.push_back(box2);
 	scene.push_back(car);
 
 	camera->setCameraTarget(car);

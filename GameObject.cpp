@@ -172,6 +172,35 @@ void GameObject::draw() {
 
 		glEnd();
 
+		if (GameObject::drawDebug) {
+			glPushMatrix();
+			glLoadIdentity();
+
+			if (GameObject::worldToCamera != NULL) glMultMatrixf(GameObject::worldToCamera->values);
+			if (this->hasPhysics()) glMultMatrixf(this->worldSpaceTransform->values);
+
+			glDisable(GL_TEXTURE_2D);
+			for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
+
+				CollisionRadii* tmp = this->collisionBounds.at(i);
+				for (int j = 0; j < (int)tmp->radii.size(); j++) {
+
+					glBegin(GL_LINES);
+						glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+						glPointSize(5.0f);
+						Vect4f* centre = boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
+						glVertex3f(centre->x, centre->y, 0.0f);
+						float ang = tmp->angles.at(j);
+						float rad = this->radius2DToWorldSpace(tmp->radii.at(j), ang);
+						Vect4f* toDraw = new Vect4f((rad*cosf(ang*(3.1415926f / 180.0f))), (rad*sinf(ang*(3.1415926f / 180.0f))), 0.0f);
+						glVertex3f(toDraw->getX() + centre->getX(), toDraw->getY() + centre->getY(), 0.0f);
+					glEnd();
+				}
+			}
+			glEnable(GL_TEXTURE_2D);
+			glPopMatrix();
+		}
+
 	glPopMatrix();
 	glDisable(GL_TEXTURE_2D);
 
@@ -283,7 +312,8 @@ void GameObject::processInputs(InputStates* inputs) {
 
 	//if the framerate is over 25, scale the force down
 	//TODO: implement fixed-frequency tics
-	float factor = (GameObject::debugger != NULL && GameObject::debugger->getAverageFrameRate() > 25.0f) ? ((float)(1.0 / (GameObject::debugger->getAverageFrameRate()/100.0f))) : 1.0f;
+	//float factor = (GameObject::debugger != NULL && GameObject::debugger->getAverageFrameRate() > 25.0f) ? ((float)(1.0 / (GameObject::debugger->getAverageFrameRate()/100.0f))) : 1.0f;
+	float factor = 1.0f;
 
 	if (inputs->keys[0x53]) {
 		//S Key
@@ -507,7 +537,7 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 					float combRad = theirRad + myRad;
 
 
-					if (this->name == "Track" && other->name == "Player") {
+					/*if (this->name == "Track" && other->name == "Player") {
 						GameObject::debugger->addMessage(utils::doubleToString((double)distanceSqrd));
 						GameObject::debugger->addMessage(utils::doubleToString((double)myRad*myRad));
 						//GameObject::debugger->addMessage(utils::doubleToString((double)theirRad));
@@ -519,14 +549,14 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 						GameObject::debugger->addMessage(utils::doubleToString((double)theirCentreWo->x));
 						//GameObject::debugger->addMessage(utils::doubleToString((double)theirCentreWo->y));
 
-
+						
 						if (GameObject::drawDebug) {
 							glPushMatrix();
 							glLoadIdentity();
 
 							if (GameObject::worldToCamera != NULL) glMultMatrixf(GameObject::worldToCamera->values);
 
-							//glMultMatrixf(this->worldSpaceTransform->values);
+							if (this->hasPhysics()) glMultMatrixf(this->worldSpaceTransform->values);
 
 							glDisable(GL_TEXTURE_2D);
 							for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
@@ -536,10 +566,6 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 
 									//draw all radii, white unless last selected
 									//drawCircle(0.0f, 0.0f, tmp->radii.at(j), (j != tmp->getLastSelected()[0] && j != tmp->getLastSelected()[1]) ? tmp->getDrawColor() : new Color4f(0.0f, 1.0f, 0.0f, 1.0f));
-
-
-
-									//I DON'T THINK THIS WORKS...
 
 									//slow because glBegin inside loop
 									//Draw the world-space co-ordinates 
@@ -578,7 +604,7 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 							glPopMatrix();
 						}
 
-					}
+					}*/
 
 					if (GameObject::drawDebug) {
 						//drawCircle(this->getWorldPosition()->x, this->getWorldPosition()->y, combRad*combRad, new Color4f(1.0f, 0.0f, 0.0f, 1.0f));
@@ -633,9 +659,9 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 					}
 					//else if ((iContain && (myRad*myRad <= (distanceSqrd-(theirRad*theirRad)))) ||
 					//	(theyContain && (theirRad*theirRad <= (distanceSqrd-(myRad*myRad))))) {
-					else if ((iContain && ((myRad*myRad) < (distanceSqrd))) ||
-							(theyContain && ((theirRad*theirRad) < (distanceSqrd)))) {
-						float factor = 0.03f;
+					else if ((iContain && ((myRad*myRad) < (distanceSqrd - (theirRad*theirRad)))) ||
+							(theyContain && ((theirRad*theirRad) < (distanceSqrd - (myRad*myRad))))) {
+						float factor = 0.09f;
 						float torque = (angleToOther <= 270.0f && angleToOther >= 90.0f) ? -1.4f : 1.4f;
 						bool bothPhysics = this->hasPhysics() && other->hasPhysics();
 
