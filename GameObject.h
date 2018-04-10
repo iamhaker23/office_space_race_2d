@@ -55,6 +55,7 @@ class GameObject {
 		string name;
 
 		bool playerControl;
+		bool aiControl;
 		float topSpeed;
 		bool colliderFlag;
 		bool ghost;
@@ -69,13 +70,17 @@ class GameObject {
 
 		bool physics;
 		bool steering;
+		bool collided;
 
 	public:
 		static void setDebugMode(bool flag);
 		static void setDebugger(DebugInfo* _debugger);
 		static void setWorldToCameraTransform(Matrix3f* wtc);
 		static void freeData();
-		
+		static void toggleDebugMode();
+		static void doAIControl(GameObject* me, GameObject* track);
+		static float getAngleBetweenPositions(Vect4f* a, Vect4f* b);
+
 		~GameObject();
 		GameObject();
 		GameObject(const GameObject &copy);
@@ -101,7 +106,6 @@ class GameObject {
 		string getName();
 		void resetModifiers();
 		void setCollisionBounds(vector<CollisionRadii*> bounds);
-		float getRadiusToObj(GameObject* other);
 		void resolveCollisions(vector<GameObject*> others);
 
 		bool isCollider();
@@ -110,8 +114,8 @@ class GameObject {
 		static void drawCircle(float x, float y, float radius, Color4f* col);
 		static void drawLine(float x1, float y1, float x2, float y2);
 
-		bool hasCollidedWith(string name);
-		void setHasCollidedWith(string name);
+		bool hasResolvedWith(string name);
+		void setCollisionResolvedWith(string name);
 		void resetCollisionFlags();
 		CollisionRadii* getClosestRadiiTo(Vect4f* otherPosition);
 
@@ -133,6 +137,14 @@ class GameObject {
 		float radius2DToWorldSpace(float radius, float angle);
 		void applyBoundsScale();
 
+		void setAIControl(bool flag);
+		CollisionRadii* getNextCollisionRadiiFor(Vect4f* otherPosition, int step);
+		int getIndexOfClosestRadiiTo(Vect4f* otherPosition);
+		bool isAI();
+		float getAngleToPosition(Vect4f* position);
+		float getAngleFromX();
+
+		Matrix3f* getNewPosition();
 };
 
 

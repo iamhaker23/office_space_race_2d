@@ -8,9 +8,8 @@ HWND		hWnd = NULL;		// Holds Our Window Handle
 HINSTANCE	hInstance = NULL;		// Holds The Instance Of The Application
 
 
-time_t WIN_TIME = NULL;
-time_t START_TIME = NULL;
 system_clock::time_point START_CTIME;
+system_clock::time_point WIN_CTIME;
 InputStates* inputs = new InputStates();
 DebugInfo* debugger = new DebugInfo();
 bool	active = TRUE;		// Window Active Flag Set To TRUE By Default
@@ -53,29 +52,15 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 	}
 
 	//Window was created
-	time(&START_TIME);
-	START_CTIME = system_clock::from_time_t(START_TIME);
+	START_CTIME = system_clock::now();
+	WIN_CTIME = START_CTIME;
+
+	//TODO: toggle pause and display a menu via a scenemanager
+	bool paused = false;
 
 	while (!done){
 		// Loop That Runs While done=FALSE
-
-		time_t now;
-		time(&now);
-
-		system_clock::time_point cNow = system_clock::now();
-		duration<double> duration = cNow - START_CTIME;
-		debugger->setDuration(duration);
-
-		if (WIN_TIME == NULL || difftime(now, WIN_TIME) >= 1.0) {
-			WIN_TIME = now;
-			if (START_TIME != NULL) {
-				debugger->setTime(difftime(WIN_TIME, START_TIME));
-				
-			}
-			debugger->addFrameSample(localFrameCount);
-			localFrameCount = 0;
-		}
-
+		
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))	// Is There A Message Waiting?
 		{
 			if (msg.message == WM_QUIT)				// Have We Received A Quit Message?
@@ -90,11 +75,33 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 		}
 		else										// If There Are No Messages
 		{
-			//if (inputs->keys[VK_ESCAPE]) done = true; //close game
+			if (inputs->keys[VK_ESCAPE]) done = true; //close game
 
-			localFrameCount++;
-			GameLoop::display();					// Draw The Scene
-			SwapBuffers(hDC);				// Swap Buffers (Double Buffering)
+			if (!done) {
+
+				system_clock::time_point cNow = system_clock::now();
+				WIN_CTIME = cNow;
+				duration<double> duration = cNow - START_CTIME;
+				debugger->setDuration(duration);
+
+				paused = inputs->keys[VK_BACK];
+
+				if (!paused) {
+					localFrameCount++;
+
+					//if it's been a second since last tic, update framesamples
+					if (std::chrono::duration_cast<std::chrono::milliseconds>(cNow-WIN_CTIME).count() >= 1000) {
+						debugger->addFrameSample(localFrameCount);
+						localFrameCount = 0;
+					}
+
+					GameLoop::display();	// Draw The Scene
+					SwapBuffers(hDC);				// Swap Buffers (Double Buffering)
+				}
+				else {
+					GameLoop::writeMessage("Paused.");
+				}
+			}
 		}
 	}
 
@@ -147,13 +154,18 @@ LRESULT CALLBACK win32_window::WndProc(HWND	hWnd,			// Handle For This Window
 	break;
 	case WM_KEYDOWN:							// Is A Key Being Held Down?
 	{
+		
+		
 		inputs->keys[wParam] = true;					// If So, Mark It As TRUE
+		//inputs->keysActivated[wParam] = WIN_CTIME;
+
 		return 0;								// Jump Back
 	}
 	break;
 	case WM_KEYUP:								// Has A Key Been Released?
 	{
 		inputs->keys[wParam] = false;					// If So, Mark It As FALSE
+
 		return 0;								// Jump Back
 	}
 	break;

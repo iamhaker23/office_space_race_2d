@@ -221,11 +221,11 @@ public:
 		if (this->angles.size() == 0) return 0.2f;
 
 		//bound angle
-		float myAngle = angle;
+		//float myAngle = angle;
 
-		while (myAngle > 360.0f) {
-			myAngle -= 360.0f;
-		}
+		//while (myAngle > 360.0f) {
+		//	myAngle -= 360.0f;
+		//}
 
 		bool found = false;
 		int index = 0;
@@ -244,18 +244,10 @@ public:
 		//wrap around, first is the largest angle available (this->angles.size - 1), otherwise the smaller of the two (index - 1)
 		int first = (index == 0) ? this->angles.size() - 1 : index - 1;
 		int second = (first == this->angles.size() - 1) ? 0 : index;
-
-
-		float firstAngle = this->angles.at(first) * (3.1415926f / 180.0f);
-		float secondAngle = this->angles.at(second) * (3.1415926f / 180.0f);
-
+		
 		float radius = 1.0f;
 		
 		//if (firstAngle - secondAngle >= 90.0f) {
-			//use trigonometric interpolation
-			float smallest = (firstAngle >= secondAngle) ? secondAngle : firstAngle;
-			float absSinAngle = abs(sinf(angle * (3.1415926f / 180.0f)));
-			float absCosAngle = abs(cosf(angle * (3.1415926f / 180.0f)));
 			//interpolationPercentage = 0.0f;
 			//if (abs(sinf(smallest * (3.1415926f / 180.0f))) > abs(cosf(smallest * (3.1415926f / 180.0f)))) {
 			/*if (absSinAngle > absCosAngle){
@@ -278,26 +270,61 @@ public:
 			}*/
 			if (this->trigonometricInterpolation) {
 
-				float interpolationPercentage = angle / (((this->angles.at(second) + this->angles.at(first)))/2.0f);
 
-				float Y_1 = abs(this->radii.at(first) * sinf(firstAngle));
-				float Y_2 = abs(this->radii.at(second) * sinf(secondAngle));
-				float differenceY = Y_1 - Y_2;
-				float radiusS = ((interpolationPercentage * (abs(differenceY))) + ((differenceY > 0.0f) ? Y_2 : Y_1)) / absSinAngle;
-				float X_1 = abs(this->radii.at(first) * cosf(firstAngle));
-				float X_2 = abs(this->radii.at(second) * cosf(secondAngle));
-				float differenceX = X_1 - X_2;
-				float radiusC = ((interpolationPercentage * (abs(differenceX))) + ((differenceX > 0.0f) ? X_2 : X_1)) / absCosAngle;
+				int smallest = (this->angles.at(first) <= this->angles.at(second)) ? first : second;
+				int largest = (smallest == first) ? second : first;
 
-				radius = min(radiusC, radiusS);
-				radius = max(0.2f, radius);
-				//radius = (radiusC > this->radii.at(first)) ? radiusS : radiusC;
+				float rl = this->radii.at(largest);
+				float rs = this->radii.at(smallest);
+
+				float al_rads = this->angles.at(largest)*(3.1415926f / 180.0f);
+				float as_rads = this->angles.at(smallest)*(3.1415926f / 180.0f);
+				float al_x_ratio = cosf(al_rads);
+				float al_y_ratio = sinf(al_rads);
+				float as_x_ratio = cosf(as_rads);
+				float as_y_ratio = sinf(as_rads);
+
+				float x_2 = (rl * al_x_ratio);
+				float y_2 = (rl * al_y_ratio);
+
+				float x_1 = (rs * as_x_ratio);
+				float y_1 = (rs * as_y_ratio);
+
+				float largestAngle = this->angles.at(largest);
+				float smallestAngle = this->angles.at(smallest);
+
+				if (largest == first) {
+					//if the largest is the first then we have to wrap so we interpolate correctly
+					if (angle >= largestAngle) angle = angle - 360.0f;
+					largestAngle = largestAngle - 360.0f;
+				}
+
+				float interpolationPercentage = ((angle - smallestAngle) / (largestAngle - smallestAngle));
+
+				radius = (
+					Vect4f(
+					((x_2*interpolationPercentage) + (x_1*(1.0f - interpolationPercentage)))
+						, ((y_2*interpolationPercentage) + (y_1*(1.0f - interpolationPercentage)))
+						, 0.0f
+						, 1.0f
+					)
+					).getXYMagnitude();
 			}
 			else {
+				//linear interpolation results in a circular edge
+				//float interpolationPercentage = angle / (((this->angles.at(second) + this->angles.at(first))));
 
-				return this->radii.at(first);
-				
-				float interpolationPercentage = angle / (((this->angles.at(second) + this->angles.at(first)))/2.0f);
+				int smallest = (this->angles.at(first) <= this->angles.at(second)) ? first : second;
+				int largest = (smallest == first) ? second : first;
+				float largestAngle = this->angles.at(largest);
+				float smallestAngle = this->angles.at(smallest);
+				if (largest == first) {
+					//if the largest is the first then we have to wrap so we interpolate correctly
+					if (angle >= largestAngle) angle = angle - 360.0f;
+					largestAngle = largestAngle - 360.0f;
+				}
+				float interpolationPercentage = ((angle - smallestAngle) / (largestAngle - smallestAngle));
+
 				float firstRadius = this->radii.at(first);
 				float secondRadius = this->radii.at(second);
 

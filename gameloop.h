@@ -31,12 +31,13 @@
 			static void drawBackground(float repeat, Color4f tintColor);
 
 			static vector<CollisionRadii*> generateTrackBounds(char* filename);
-
 		public:
 			static void freeData();
 			static Camera* camera;
 			static void init(HDC _hDC, DebugInfo* _debugger);
 			static void display();
+			static void writeMessage(string _str);
+
 
 	};
 

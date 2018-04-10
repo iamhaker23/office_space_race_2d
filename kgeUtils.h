@@ -23,6 +23,7 @@
 			static string doubleToString(double val);
 			static string intToString(int val);
 			static string floatToString(float val);
+			static string floatLabel(char* prefix, float val, char* suffix);
 			static GLvoid BuildFont(HDC hDC);
 			static GLvoid KillFont(GLvoid);
 			static GLvoid glPrint(string fmt);

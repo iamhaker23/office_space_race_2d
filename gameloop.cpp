@@ -30,7 +30,7 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 	debugger = _debugger;
 
 	GameObject::setDebugger(_debugger);
-	GameObject::setDebugMode(true);
+	
 	GameLoop::inputs = win32_window::getInputs();
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -54,27 +54,36 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 	vector<nv::Image*> boxSprites = { utils::loadPNG("box/1.png"), utils::loadPNG("box/2.png"), utils::loadPNG("box/3.png") };
 	vector<nv::Image*> trackSprites = { utils::loadPNG("office_1.png") };
 
-	GameObject* car = new GameObject("Player", carSprites, planeMesh, 0, new Color4f( 1.0f, 1.0f, 1.0f, 1.0f ));
-	car->scale(0.8f, false);
+	GameObject* car = new GameObject("Player", carSprites, planeMesh, 0, new Color4f( 1.0f, 0.0f, 0.0f, 1.0f ));
+	car->scale(0.6f, true);
 	car->setPhysicalAttributes(1.6f, 1.5f, 6.0f);
-	car->translate(-1.0f, 1.0f, 0.0f);
+	car->translate(-1.0f, -1.0f, 0.0f);
 	car->setPlayerControl(true);
 	car->setCollider(true);
 	car->setPhysics(true);
+
+	GameObject* ai = new GameObject("AI", carSprites, planeMesh, 0, new Color4f(0.0f, 0.5f, 1.0f, 1.0f));
+	ai->scale(0.6f, true);
+	ai->setPhysicalAttributes(1.4f, 1.3f, 7.5f);
+	ai->setCollider(true);
+	ai->setPhysics(true);
+	ai->setAIControl(true);
+	
 	CollisionRadii* radii = new CollisionRadii(0.0f, 0.0f);
-	radii->addRadius(0.1f, 0.0f);
-	radii->addRadius(0.38f, 90.0f);
-	radii->addRadius(0.1f, 180.0f);
-	radii->addRadius(0.39f, 270.0f);
-	radii->addRadius(0.1f, 45.0f);
-	radii->addRadius(0.1f, 135.0f);
-	radii->addRadius(0.1f, 225.0f);
-	radii->addRadius(0.1f, 315.0f);
+	radii->addRadius(0.3f, 0.0f);
+	radii->addRadius(0.32f, 90.0f);
+	radii->addRadius(0.3f, 180.0f);
+	radii->addRadius(0.33f, 270.0f);
+	radii->addRadius(0.3f, 45.0f);
+	radii->addRadius(0.3f, 135.0f);
+	radii->addRadius(0.3f, 225.0f);
+	radii->addRadius(0.3f, 315.0f);
 	vector<CollisionRadii*> bounds = {
 		radii
 	};
 	car->setCollisionBounds(bounds);
-	
+	ai->setCollisionBounds(bounds);
+
 	GameObject* track = new GameObject("Track", trackSprites, planeMesh, 0, new Color4f(1.0f,1.0f,1.0f, 1.0f));
 	track->setCollisionBounds(generateTrackBounds("office_container.txt"));
 	track->setCollider(true);
@@ -82,6 +91,7 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 	track->scale(10.0f, false);
 	track->nuScaleBounds(0.5f, 0.5f, 1.0f);
 
+	//TODO: select track by more flexible means than hard-coding it's index
 	scene.push_back(track);
 
 	CollisionRadii* bradii2 = new CollisionRadii(0.0f, 0.0f);
@@ -97,16 +107,21 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 		bradii2
 	};
 	GameObject* box2 = new GameObject("Box2", boxSprites, planeMesh, 0, new Color4f(1.0f, 0.5f, 0.5f, 1.0f ));
-	box2->scale(0.5f, false);
+	//box2->scale(0.5f, false);
 	box2->translate(-1.0f, 1.5f, 0.0f);
 	box2->setCollider(true);
 	box2->setCollisionBounds(bbounds2);
 	box2->setPhysics(true);
-	
+	//box2->setGhost(true);
+	//box2->setPlayerControl(true);
+	box2->setPhysicalAttributes(1.6f, 1.5f, 6.0f);
+
 	scene.push_back(box2);
 	scene.push_back(car);
 
-	camera->setCameraTarget(car);
+	scene.push_back(ai);
+
+	camera->setCameraTarget(ai);
 	camera->setCameraSlowParentFactors(0.15f, 0.5f);
 }
 
@@ -117,6 +132,7 @@ void GameLoop::display() {
 	//glClear(GL_STENCIL_BUFFER_BIT);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glEnable(GL_BLEND);
 
 	drawBackground(4, Color4f());
@@ -139,7 +155,8 @@ void GameLoop::display() {
 
 		//TODO: account for damping
 		//float rotDamp = camera->getSlowFactorRot();
-		//camera->setCameraZAngle( camera->getCameraZAngle() +  ((camTarget->getZAngle() - camera->getCameraZAngle())* rotDamp));
+		//camera->setCameraZAngle(camera->getCameraZAngle() + ((camTarget->getZAngle() - camera->getCameraZAngle()) * rotDamp));
+		camera->setCameraZAngle(camera->getCameraZAngle() + ((camTarget->getZAngle() - camera->getCameraZAngle())));
 
 	}
 
@@ -151,9 +168,13 @@ void GameLoop::display() {
 		//double frameDelay = 1.0 / 100.0;
 		//if ((debugger->getTime() - LastFrameTime) >= frameDelay) {
 			//LastFrameTime = (double)now- (frameDelay/1.0);
-			if (inputs != NULL) obj->processInputs(GameLoop::inputs);
-			obj->draw();
-			obj->resolveCollisions(scene);
+		if (inputs != NULL) obj->processInputs(GameLoop::inputs);
+		obj->draw();
+		obj->resolveCollisions(scene);
+		if (obj->isAI()) {
+			GameObject::doAIControl(obj, scene.at(0));
+		}
+
 		//}
 
 	}
@@ -167,36 +188,45 @@ void GameLoop::display() {
 		drawTextBox(*fonts.front(), debugger->getOutput(), -200.0f, -200.0f, 200.0f, 200.0f, textColor, boxColor);
 
 	}
-
 }
 
+void GameLoop::writeMessage(string str) {
+	if (fonts.size() > 0) {
+		Color4f textColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+		Color4f boxColor = Color4f(0.1f, 0.1f, 0.1f, 0.8f);
+		drawTextBox(*fonts.front(), str, 0.0f, 0.0f, 200.0f, 200.0f, textColor, boxColor);
+	}
+}
 
 void GameLoop::drawTextBox(freetype::font_data _font, string _str, float ssOffsetX, float ssOffsetY, float boxXSize, float boxYSize, Color4f textColor, Color4f boxColor) {
 	glPushMatrix();
-	glTranslatef(ssOffsetX, ssOffsetY, 0);
-	float centreX = (float)win32_window::getScreenWidth() / 2.0f;
-	float centreY = (float)win32_window::getScreenHeight() / 2.0f;
+
+		glTranslatef(ssOffsetX, ssOffsetY, 0);
+		float centreX = (float)win32_window::getScreenWidth() / 2.0f;
+		float centreY = (float)win32_window::getScreenHeight() / 2.0f;
 
 
-	freetype::pushScreenCoordinateMatrix();
-	glPushMatrix();
-	glColor4f(boxColor.r, boxColor.g, boxColor.b, boxColor.a);
-	glBegin(GL_QUADS);
+		freetype::pushScreenCoordinateMatrix();
+		glPushMatrix();
+			glDisable(GL_TEXTURE_2D);
+			glColor4f(boxColor.r, boxColor.g, boxColor.b, boxColor.a);
+			glBegin(GL_QUADS);
 
-	float boxXFactor = boxXSize / 2;
-	float boxYFactor = boxYSize / 2;
-	glVertex2f(centreX - boxXFactor, centreY - boxYFactor);
-	glVertex2f(centreX - boxXFactor, centreY + boxYFactor);
-	glVertex2f(centreX + boxXFactor, centreY + boxYFactor);
-	glVertex2f(centreX + boxXFactor, centreY - boxYFactor);
+			float boxXFactor = boxXSize / 2;
+			float boxYFactor = boxYSize / 2;
+			glVertex2f(centreX - boxXFactor, centreY - boxYFactor);
+			glVertex2f(centreX - boxXFactor, centreY + boxYFactor);
+			glVertex2f(centreX + boxXFactor, centreY + boxYFactor);
+			glVertex2f(centreX + boxXFactor, centreY - boxYFactor);
 
-	glEnd();
+			glEnd();
 
-	glColor4f(textColor.r, textColor.g, textColor.b, textColor.a);
-	freetype::print(_font, centreX - boxXFactor, centreY+boxYFactor-(_font.h), _str.c_str());
+			glColor4f(textColor.r, textColor.g, textColor.b, textColor.a);
+			freetype::print(_font, centreX - boxXFactor, centreY+boxYFactor-(_font.h), _str.c_str());
 
-	glPopMatrix();
-	freetype::pop_projection_matrix();
+			glEnable(GL_TEXTURE_2D);
+		glPopMatrix();
+		freetype::pop_projection_matrix();
 	glPopMatrix();
 }
 

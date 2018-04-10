@@ -10,10 +10,6 @@ double DebugInfo::getTime() {
 	return (double)ms.count()/1000.0;
 }
 
-void DebugInfo::setTime(double _time) {
-	this->time = _time;
-}
-
 void DebugInfo::setDuration(duration<double> _cDuration) {
 	this->cDuration = _cDuration;
 }
@@ -40,7 +36,6 @@ string DebugInfo::getOutput() {
 	string output = "";
 
 	output.append("Current Time:\n");
-	//output.append(utils::doubleToString(time));
 	output.append(utils::doubleToString(cDuration.count()));
 	output.append("\nAvg. Framerate:\n");
 	output.append(utils::doubleToString(getAverageFrameRate()));
@@ -62,5 +57,5 @@ double DebugInfo::getAverageFrameRate() {
 		total = total + (double)sample;
 	}
 
-	return (this->frameSamples.size() > 0) ? (total / ((double)this->frameSamples.size())) : 30.0;
+	return (this->frameSamples.size() > 0) ? (total / ((double)this->frameSamples.size())) : -1.0;
 }

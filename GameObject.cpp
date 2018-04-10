@@ -55,6 +55,7 @@ GameObject::GameObject() {
 	this->physics = false;
 	this->physicsContainer = false;
 	this->ghost = false;
+	this->aiControl = false;
 	
 }
 
@@ -93,6 +94,7 @@ GameObject::GameObject(const GameObject &copy) {
 	this->physics = false;
 	this->physicsContainer = false;
 	this->ghost = false;
+	this->aiControl = false;
 }
 
 GameObject::GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite,  Color4f* objectColor) {
@@ -131,6 +133,7 @@ GameObject::GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> m
 	this->physics = false;
 	this->physicsContainer = false;
 	this->ghost = false;
+	this->aiControl = false;
 }
 
 void GameObject::draw() {
@@ -145,19 +148,21 @@ void GameObject::draw() {
 
 	glMatrixMode(GL_MODELVIEW);
 
-	glColor4f(this->objectColor->r, this->objectColor->g, this->objectColor->b, this->objectColor->a);
+	//glColor4f(this->objectColor->r, this->objectColor->g, this->objectColor->b, this->objectColor->a);
+	//glColor4f(this->currentColor->r, this->currentColor->g, this->currentColor->b, this->currentColor->a);
+	if ((this->collided || !this->steering) && (this->playerControl || this->aiControl)) {
+		glColor4f(1.0f, 1.0f, 1.0f, 0.75f); 	
+	}
+	else {
+		//glColor4f(1.0f, 1.0f, 1.0f, 0.75f); 	
+		glColor4f(this->objectColor->r, this->objectColor->g, this->objectColor->b, this->objectColor->a);
+	}
 	
 	glPushMatrix();
 
 		if (GameObject::worldToCamera != NULL) glMultMatrixf(GameObject::worldToCamera->values);
 		
-		Matrix3f* transform = (new Matrix3f(0.0f, this->forces[0], this->forces[1], this->forces[2], 1.0f))->Multiply(
-		((new Matrix3f(this->zTorque*(3.1415926f / 180.0f), 0.0f, 0.0f, 0.0f, 1.0f))->Multiply(
-		new Matrix3f(0.0f, 0.0f, 0.0f, 0.0f, this->scales[0], this->scales[1], this->scales[2])
-		)
-		));
-
-		this->worldSpaceTransform = this->worldSpaceTransform->Multiply(transform);
+		this->worldSpaceTransform = this->getNewPosition();
 		
 		glMultMatrixf(this->worldSpaceTransform->values);
 
@@ -173,19 +178,20 @@ void GameObject::draw() {
 		glEnd();
 
 		if (GameObject::drawDebug) {
-			glPushMatrix();
-			glLoadIdentity();
+			//if ((int)this->collisionBounds.size() != 0) {
+				glPushMatrix();
+				glLoadIdentity();
 
-			if (GameObject::worldToCamera != NULL) glMultMatrixf(GameObject::worldToCamera->values);
-			if (this->hasPhysics()) glMultMatrixf(this->worldSpaceTransform->values);
+				if (GameObject::worldToCamera != NULL) glMultMatrixf(GameObject::worldToCamera->values);
+				if (this->hasPhysics()) glMultMatrixf(this->worldSpaceTransform->values);
 
-			glDisable(GL_TEXTURE_2D);
-			for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
+				glDisable(GL_TEXTURE_2D);
+				for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
 
-				CollisionRadii* tmp = this->collisionBounds.at(i);
-				for (int j = 0; j < (int)tmp->radii.size(); j++) {
+					CollisionRadii* tmp = this->collisionBounds.at(i);
+					for (int j = 0; j < (int)tmp->radii.size(); j++) {
 
-					glBegin(GL_LINES);
+						glBegin(GL_LINES);
 						glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
 						glPointSize(5.0f);
 						Vect4f* centre = boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
@@ -194,19 +200,25 @@ void GameObject::draw() {
 						float rad = this->radius2DToWorldSpace(tmp->radii.at(j), ang);
 						Vect4f* toDraw = new Vect4f((rad*cosf(ang*(3.1415926f / 180.0f))), (rad*sinf(ang*(3.1415926f / 180.0f))), 0.0f);
 						glVertex3f(toDraw->getX() + centre->getX(), toDraw->getY() + centre->getY(), 0.0f);
-					glEnd();
+						glEnd();
+					}
 				}
-			}
-			glEnable(GL_TEXTURE_2D);
-			glPopMatrix();
+				glEnable(GL_TEXTURE_2D);
+				glPopMatrix();
+			//}
 		}
 
 	glPopMatrix();
 	glDisable(GL_TEXTURE_2D);
 
 
-
-	
+	if (this->playerControl) {
+		float speed = sqrtf((this->forces[0]* this->forces[0]) + (this->forces[1]* this->forces[1])) * 10.0f;
+		GameObject::debugger->addMessage(utils::floatLabel("Speed: ", speed, "m/s"));
+		//GameObject::debugger->addMessage(utils::floatToString(this->getWorldPosition()->x));
+		//GameObject::debugger->addMessage(utils::floatToString(this->getWorldPosition()->y));
+		
+	}
 	
 }
 
@@ -308,61 +320,66 @@ void GameObject::resetModifiers() {
 
 void GameObject::processInputs(InputStates* inputs) {
 	
-	if (!playerControl) return;
+	if (playerControl) {
 
-	//if the framerate is over 25, scale the force down
-	//TODO: implement fixed-frequency tics
-	//float factor = (GameObject::debugger != NULL && GameObject::debugger->getAverageFrameRate() > 25.0f) ? ((float)(1.0 / (GameObject::debugger->getAverageFrameRate()/100.0f))) : 1.0f;
-	float factor = 1.0f;
+		GameObject::setDebugMode(inputs->keys[0x09]);
 
-	if (inputs->keys[0x53]) {
-		//S Key
-		if (this->forces[1] > -0.5f*this->topSpeed) {
+		//if the framerate is over 25, scale the force down
+		//TODO: implement fixed-frequency tics
+		//float factor = (GameObject::debugger != NULL && GameObject::debugger->getAverageFrameRate() > 25.0f) ? ((float)(1.0 / (GameObject::debugger->getAverageFrameRate()/100.0f))) : 1.0f;
+		float factor = 1.0f;
 
-			/*if ((this->oldForces[1] - (this->forces[1] - 0.02f)) > 0.05f) {
-				this->oldForces[1] = this->forces[1];
-			}*/
-			this->forces[1] -= 0.02f * factor;
-		}
-	}
-	if (inputs->keys[0x57]) {
-		//W Key
-		if (this->forces[1] < this->topSpeed) {
-
-			/*if ((this->oldForces[1] - (this->forces[1] - 0.02f)) > 0.05f) {
-				this->oldForces[1] = this->forces[1];
-			}*/
-			this->forces[1] += 0.03f * factor;
-		}
 		
-	}
+		
+		int sprite = 0;
 
-	bool backwards = this->forces[1] < 0.0f;
+		if (this->steering) {
+			if (inputs->keys[0x53]) {
+				//S Key
+				if (this->forces[1] > -0.5f*this->topSpeed) {
 
-	int sprite = 0;
+					/*if ((this->oldForces[1] - (this->forces[1] - 0.02f)) > 0.05f) {
+					this->oldForces[1] = this->forces[1];
+					}*/
+					this->forces[1] -= 0.02f * factor;
+				}
+			}
+			if (inputs->keys[0x57]) {
+				//W Key
+				if (this->forces[1] < this->topSpeed) {
 
-	if (inputs->keys[0x41]) {
-		//A Key
-		sprite = 1;
-		if (this->forces[1] != 0.0f) {
-			this->zTorque -= ((backwards) ? 1.0f : -1.0f) * 1.1f * factor;
+					/*if ((this->oldForces[1] - (this->forces[1] - 0.02f)) > 0.05f) {
+					this->oldForces[1] = this->forces[1];
+					}*/
+					this->forces[1] += 0.03f * factor;
+				}
+
+			}
+			bool backwards = this->forces[1] < 0.0f;
+
+			if (inputs->keys[0x41]) {
+				//A Key
+				sprite = 1;
+				if (this->forces[1] != 0.0f) {
+					this->zTorque -= ((backwards) ? 1.0f : -1.0f) * 1.1f * factor;
+				}
+			}
+
+			if (inputs->keys[0x44]) {
+				//D Key
+				sprite = 2;
+				if (this->forces[1] != 0.0f) {
+					this->zTorque += ((backwards) ? -1.0f : 1.0f) * -1.1f * factor;
+				}
+			}
+		}
+
+		this->setSprite(sprite);
+		//Animations after auto-animation
+		if (inputs->LeftPressed) {
+			this->animate(AnimationLogic::LOOPEND);
 		}
 	}
-
-	if (inputs->keys[0x44]) {
-		//D Key
-		sprite = 2;
-		if (this->forces[1] != 0.0f) {
-			this->zTorque += ((backwards)?-1.0f:1.0f) * -1.1f * factor;
-		}
-	}
-	
-	this->setSprite(sprite);
-	//Animations after auto-animation
-	if (inputs->LeftPressed) {
-		this->animate(AnimationLogic::LOOPEND);
-	}
-
 }
 
 Vect4f* GameObject::getScreenPosition() {
@@ -392,10 +409,6 @@ Vect4f* GameObject::getWorldPosition() {
 
 Vect4f* GameObject::localToWorldSpace(Vect4f localCoords) {
 	return localCoords.transform(this->worldSpaceTransform);
-	/*Vect4f* output = localCoords.transform(new Matrix3f(0.0f, 0.0f, 0.0f, 0.0f, this->worldSpaceTransform->scalex, this->worldSpaceTransform->scaley, this->worldSpaceTransform->scalez));
-	output->transform((new Matrix3f(this->worldSpaceTransform->getZAngle(), 0.0f, 0.0f, 0.0f, 1.0f)));;
-	output->transform(new Matrix3f(0.0f, this->worldSpaceTransform->values[12], this->worldSpaceTransform->values[13], this->worldSpaceTransform->values[14], 1.0f));
-	return output;*/
 }
 
 Vect4f* GameObject::boundSpaceToObjectSpace(Vect4f localCoords) {
@@ -432,6 +445,17 @@ float GameObject::getZAngle() {
 	//0..PI = anticlockwise 180 (facing left)
 	//0..-PI = clockwise 180 (facing right)
 	return this->worldSpaceTransform->getZAngle();
+}
+
+float GameObject::getAngleFromX() {
+	float output = this->getZAngle() * (180.0f / 3.1415926f);
+
+	if (output < 0.0f) {
+		output += 360.0f;
+	}
+
+	return output;
+
 }
 
 void GameObject::translate(float x, float y, float z) {
@@ -485,46 +509,68 @@ void GameObject::setCollider(bool flag) {
 
 void GameObject::resolveCollisions(vector<GameObject*> others) {
 	
+	if ((int)this->collisionBounds.size() == 0) {
+		if (GameObject::debugger != NULL) {
+			GameObject::debugger->addMessage("ERROR - no bounds for object:");
+			GameObject::debugger->addMessage(this->name);
+		}
+		return;
+	}
+
 	if (this->isCollider()) {
 
 		for (GameObject* other : others) {
+
+			if ((int)other->collisionBounds.size() == 0) {
+				if (GameObject::debugger != NULL) {
+					GameObject::debugger->addMessage("ERROR - no bounds for object:");
+					GameObject::debugger->addMessage(other->name);
+				}
+				continue;
+			}
+
 			if (other != NULL && other != this) {
-				if (other->isCollider() && !other->hasCollidedWith(this->name) && (this->hasPhysics() || other->hasPhysics())) {
+				if (other->isCollider() && !other->hasResolvedWith(this->name) && (this->hasPhysics() || other->hasPhysics())) {
 					//float myRad = this->getRadiusToObj(other);
 					//float theirRad = other->getRadiusToObj(this);
 
-					float angleToOther = this->getAngleToOther(other);
-
-					//Confirmed: x-axis is 0|360
-					//GameObject::debugger->addMessage(this->name);
-					//GameObject::debugger->addMessage(utils::doubleToString((double)angleToOther));
-					
+					//THIS DOES NOT ACCOUNT FOR CURRENTLY SELECTED COLLISION RADII CENTRE POSTION OR BOUNDS SPACE!!
+					//float angleToOther = this->getAngleToOther(other);
+										
 					CollisionRadii* myClosest = this->getClosestRadiiTo(other->getWorldPosition());
+					
 					//Vect4f* myCentreWo = this->localToWorldSpace(*(this->boundSpaceToObjectSpace(Vect4f(myClosest->centreX, myClosest->centreY, 0.0f))));
-					Vect4f* myCentreWo = (this->boundSpaceToObjectSpace(Vect4f(myClosest->centreX, myClosest->centreY, 0.0f)));
+					
+					//bool atOrigin = (this->worldSpaceTransform->getPosition()->x == 0.0f && this->worldSpaceTransform->getPosition()->y == 0.0f && this->worldSpaceTransform->getPosition()->z == 0.0f);
+					//bounds are transformed seperately to the object
+					//we only apply object transform in the case of dynamic or translated objects (e.g. physics)
+					Vect4f* myCentreWo = 
+						//(!atOrigin && this->hasPhysics()) ?
+						(this->hasPhysics()) ?
+						this->localToWorldSpace(*(this->boundSpaceToObjectSpace(Vect4f(myClosest->centreX, myClosest->centreY, 0.0f))))
+						: (this->boundSpaceToObjectSpace(Vect4f(myClosest->centreX, myClosest->centreY, 0.0f)));
+
 					//Vect4f* myCentreWo = this->localToWorldSpace(Vect4f(myClosest->centreX, myClosest->centreY, 0.0f));
 					//Vect4f* myCentreWo = this->boundsLocalToWorldSpace(Vect4f(myClosest->centreX, myClosest->centreY, 0.0f));
 					//Vect4f* myCentreWo = new Vect4f(myClosest->centreX, myClosest->centreY, 0.0f);
 					CollisionRadii* theirClosest = other->getClosestRadiiTo(myCentreWo);
-					//myClosest = this->getClosestRadiiTo(new Vect4f(theirClosest->centreX, theirClosest->centreY, 0.0f));
-					
-					//get closest to the closest centres
-					//myClosest = this->getClosestRadiiTo(other->localToWorldSpace(Vect4f(theirClosest->centreX, theirClosest->centreY, 0.0f)));
-					//theirClosest = other->getClosestRadiiTo(this->localToWorldSpace(Vect4f(myClosest->centreX, myClosest->centreY, 0.0f)));
-					//myCentreWo = (this->boundSpaceToObjectSpace(Vect4f(myClosest->centreX, myClosest->centreY, 0.0f)));
+
+					Vect4f* theirCentreWo = other->localToWorldSpace(*(other->boundSpaceToObjectSpace(Vect4f(theirClosest->centreX, theirClosest->centreY, 0.0f))));
+					float distX = (myCentreWo->x - theirCentreWo->x);
+					float distY = (myCentreWo->y - theirCentreWo->y);
+
+					float angleToOther = GameObject::getAngleBetweenPositions(myCentreWo, theirCentreWo);
 
 					float myRad = this->radius2DToWorldSpace(myClosest->getInterpolatedRadiusAt(angleToOther), angleToOther);
 					
-					float otherAngleToMe = abs((((angleToOther >= 180.0f) ? angleToOther - 180.0f : 360.0f - (180.0f - angleToOther))) - (other->getZAngle() * (180.0f / 3.1415926f) ));
+					float otherAngleToMe = abs((((angleToOther >= 180.0f) ? angleToOther - 180.0f : 360.0f - (180.0f - angleToOther))) - other->getAngleFromX());
+
 					while (otherAngleToMe > 360.0f) {
 						otherAngleToMe -= 360.0f;
 					}
 
 					float theirRad = other->radius2DToWorldSpace(theirClosest->getInterpolatedRadiusAt(otherAngleToMe), otherAngleToMe);
 
-					Vect4f* theirCentreWo = other->localToWorldSpace(*(other->boundSpaceToObjectSpace(Vect4f(theirClosest->centreX, theirClosest->centreY, 0.0f))));
-					float distX = (myCentreWo->x - theirCentreWo->x);
-					float distY = (myCentreWo->y - theirCentreWo->y);
 					
 					//float distX = (myClosest->centreX - theirClosest->centreX);
 					//float distY = (myClosest->centreY - theirClosest->centreY);
@@ -535,9 +581,12 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 					float distanceSqrd = (distX * distX) + (distY * distY);
 
 					float combRad = theirRad + myRad;
-
-
+					
 					/*if (this->name == "Track" && other->name == "Player") {
+						GameObject::debugger->addMessage(utils::floatToString(myClosest->getInterpolatedRadiusAt(angleToOther)));
+						GameObject::debugger->addMessage(utils::floatToString(myCentreWo->x));
+						GameObject::debugger->addMessage(utils::floatToString(myCentreWo->y));
+					}
 						GameObject::debugger->addMessage(utils::doubleToString((double)distanceSqrd));
 						GameObject::debugger->addMessage(utils::doubleToString((double)myRad*myRad));
 						//GameObject::debugger->addMessage(utils::doubleToString((double)theirRad));
@@ -622,6 +671,9 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 
 					if ((!iContain && !theyContain) && combRad*combRad > distanceSqrd) {
 						
+						this->collided = true;
+						other->collided = true;
+
 						//regular collision
 						if (GameObject::drawDebug) {
 							//collision is detected, even if either object is "ghost"
@@ -657,13 +709,16 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 						}
 
 					}
-					//else if ((iContain && (myRad*myRad <= (distanceSqrd-(theirRad*theirRad)))) ||
-					//	(theyContain && (theirRad*theirRad <= (distanceSqrd-(myRad*myRad))))) {
-					else if ((iContain && ((myRad*myRad) < (distanceSqrd - (theirRad*theirRad)))) ||
-							(theyContain && ((theirRad*theirRad) < (distanceSqrd - (myRad*myRad))))) {
+					//else if ((iContain && (myRad*myRad <= (distanceSqrd+(0.25f*theirRad*theirRad)))) ||
+					//	(theyContain && (theirRad*theirRad <= (distanceSqrd+(0.25f*myRad*myRad))))) {
+					else if ((iContain && ((myRad*myRad) < (distanceSqrd ))) ||
+							(theyContain && ((theirRad*theirRad) < (distanceSqrd )))) {
 						float factor = 0.09f;
 						float torque = (angleToOther <= 270.0f && angleToOther >= 90.0f) ? -1.4f : 1.4f;
 						bool bothPhysics = this->hasPhysics() && other->hasPhysics();
+
+						this->collided = true;
+						other->collided = true;
 
 						//short circuit optimisation?
 						if (bothPhysics || (other->hasPhysics() && !this->isGhost())) {
@@ -675,9 +730,7 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 							//other->forces[2] *= -1.0f;
 							other->steering = false;
 						}
-						else {
-							other->steering = true;
-						}
+
 						if (bothPhysics || (this->hasPhysics() && !other->isGhost())) {
 							//this->addForce(-this->forces[0]*2.0f, -this->forces[1] * 2.0f, 0.0f);
 							//if (!bothPhysics) this->zTorque += -torque;
@@ -686,9 +739,6 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 							//this->forces[1] *= -1.0f;
 							//this->forces[2] *= -1.0f;
 							this->steering = false;
-						}
-						else {
-							this->steering = true;
 						}
 
 						if (GameObject::drawDebug) {
@@ -700,12 +750,22 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 					}
 					else {
 
+						this->collided = false;
+						other->collided = false;
+
+						//no collision
 						if (GameObject::drawDebug) {
 							this->objectColor = new Color4f(1.0f, 1.0f, 1.0f, 1.0f);
 						}
+
+						//as long as we are far away enough from collision, allow steering again
+						if (distanceSqrd - (combRad * combRad) < 0.5f) {
+							other->steering = true;
+							this->steering = true;
+						}
 					}
-					other->setHasCollidedWith(this->name);
-					this->setHasCollidedWith(other->name);
+					other->setCollisionResolvedWith(this->name);
+					this->setCollisionResolvedWith(other->name);
 				}
 			}
 		}
@@ -782,21 +842,43 @@ void GameObject::setPhysics(bool flag) {
 
 float GameObject::getAngleToOther(GameObject* other) {
 
-	Vect4f* myPos = this->getWorldPosition();
-	float myX = myPos->x;
-	float myY = myPos->y;
+	return this->getAngleToPosition(other->getWorldPosition());
 
-	Vect4f* otherPos = other->getWorldPosition();
-	float otherX = otherPos->x;
-	float otherY = otherPos->y;
+}
 
-	return (atan2f(myY - otherY, myX - otherX) * (180.0f / 3.1415926f)) +180.0f;
+float GameObject::getAngleToPosition(Vect4f* position) {
+	return getAngleBetweenPositions(this->getWorldPosition(), position);
+}
+
+float GameObject::getAngleBetweenPositions(Vect4f* a, Vect4f* b) {
+
+	float myX = a->x;
+	float myY = a->y;
+
+	float otherX = b->x;
+	float otherY = b->y;
+
+	return ((atan2f(myY - otherY, myX - otherX) * (180.0f / 3.1415926f)) + 180.0f);
+}
+
+CollisionRadii* GameObject::getNextCollisionRadiiFor(Vect4f* otherPosition, int step) {
+	int closestCollisionRadii = getIndexOfClosestRadiiTo(otherPosition);
+
+	//increment and wrap
+	closestCollisionRadii = (closestCollisionRadii + step  < 0) ? ((int)this->collisionBounds.size()) - 1 : closestCollisionRadii + step;
+	closestCollisionRadii = (closestCollisionRadii > (int)this->collisionBounds.size() - 1) ? 0 : closestCollisionRadii;
+
+	return this->collisionBounds.at(closestCollisionRadii);
 }
 
 CollisionRadii* GameObject::getClosestRadiiTo(Vect4f* otherPosition) {
+	return this->collisionBounds.at(this->getIndexOfClosestRadiiTo(otherPosition));
+}
+
+int GameObject::getIndexOfClosestRadiiTo(Vect4f* otherPosition) {
 	int closestCollisionRadii = 0;
 
-	float smallestDistSqrd = 999999.99f;
+	float smallestDistSqrd = 10000.0f;
 	//Vect4f* tmpWoPos;
 	//float tmpCX = 0.0f;
 
@@ -806,105 +888,25 @@ CollisionRadii* GameObject::getClosestRadiiTo(Vect4f* otherPosition) {
 
 		//tmpWoPos = this->localToWorldSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
 		//Vect4f* tmpWoPos = this->localToWorldSpace(*(this->boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f))));
-		Vect4f* tmpWoPos = this->boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
+		Vect4f* tmpWoPos = (!this->hasPhysics()) ? (this->boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f))) : 
+			this->localToWorldSpace(*(this->boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f))));
 
-		float distSqrd = ((tmpWoPos->x - otherPosition->x)*(tmpWoPos->x - otherPosition->x)) + ((tmpWoPos->y - otherPosition->y)*(tmpWoPos->y - otherPosition->y));	
+		float distSqrd = ((tmpWoPos->x - otherPosition->x)*(tmpWoPos->x - otherPosition->x)) + ((tmpWoPos->y - otherPosition->y)*(tmpWoPos->y - otherPosition->y));
 		//float distSqrd = ((tmp->centreX - otherPosition->x)*(tmp->centreX - otherPosition->x)) + ((tmp->centreY - otherPosition->y)*(tmp->centreY - otherPosition->y));
 
 		if (distSqrd < smallestDistSqrd) {
 			//closest centre so far
 			//Because an object may have multiple centres
-			
+
 			//tmpCX = tmp->centreX;
 
 			smallestDistSqrd = distSqrd;
 			closestCollisionRadii = i;
-			continue;
+			//continue;
 		}
 	}
-	
-	
-	if (this->name == "Track") {
-		//GameObject::debugger->addMessage(utils::doubleToString((double)tmpCX));
-		//GameObject::debugger->addMessage(utils::doubleToString((double)tmpWoPos->x));
-	}
-	
 
-	return this->collisionBounds.at(closestCollisionRadii);
-}
-
-float GameObject::getRadiusToObj(GameObject* other){
-
-	Vect4f* myPos = this->getWorldPosition();
-	float myX = myPos->x;
-	float myY = myPos->y;
-
-	Vect4f* otherPos = other->getWorldPosition();
-	float otherX = otherPos->x;
-	float otherY = otherPos->y;
-
-	float radius = 1.0f;
-	
-	if ((int)this->collisionBounds.size() == 0) {
-		//Default radius
-		//Vect4f* myPos = this->getWorldPosition();
-		//GameObject::drawCircle(myPos->x, myPos->y, radius);
-		return radius;
-	}
-	
-	int closestCollisionRadii = 0;
-
-	float smallestDistSqrd = FLT_MAX;
-
-	for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
-
-		CollisionRadii* tmp = this->collisionBounds.at(i);
-
-		float distSqrd = ((tmp->centreX - otherX)*(tmp->centreX - otherX)) + ((tmp->centreY - otherY)*(tmp->centreY - otherY));
-		if (distSqrd < smallestDistSqrd) {
-			//closest centre so far
-			//Because an object may have multiple centres
-			closestCollisionRadii = i;
-		}
-	}
-	
-
-	//float angleToOther = (atan2f(myX*otherY - myY*otherY, myX*otherX+ myY*otherY) * (180.0f / 3.1415926f)) + 180.0f;
-	
-	//angle between localX and object
-	//float angleToOther = (atan2f(otherY, otherX + otherY) * (180.0f / 3.1415926f)) + 180.0f;
-	
-	//otherToMe is 360-angleToOther
-	float angleToOther = (atan2f(myY - otherY, myX - otherX) * (180.0f / 3.1415926f)) + 180.0f;
-
-	//if (GameObject::screenToWorld != NULL) {
-	//	angleToOther -= GameObject::screenToWorld->getZAngle()/(180.0f / 3.1415926f);
-	//}
-
-	CollisionRadii* closest = this->collisionBounds.at(closestCollisionRadii);
-	radius = closest->getInterpolatedRadiusAt(angleToOther);
-
-	//drawLine(myX, myY, myX + radius, myY);
-	//drawLine(myX, myY, otherX, otherY);
-
-	//GameObject::debugger->addMessage(utils::doubleToString((double)myX));
-	//GameObject::debugger->addMessage(utils::doubleToString((double)myY));
-
-	//GameObject::debugger->addMessage(utils::doubleToString((double)getScreenPosition()->x));
-	//GameObject::debugger->addMessage(utils::doubleToString((double)getScreenPosition()->y));
-
-	//GameObject::debugger->addMessage(utils::doubleToString((double)this->getZAngle()));
-
-
-	//GameObject::debugger->addMessage(this->name);
-	//GameObject::debugger->addMessage(utils::doubleToString((double)angleToOther));
-	//GameObject::debugger->addMessage(utils::doubleToString((double)radius));
-
-	//drawLine(myX, myY, (myX+radius) + cosf(angleToOther*(3.1415926f/ 180.0f)), (myY+radius) * sinf(angleToOther*(3.1415926f / 180.0f)));
-	//drawLine(myX, myY, otherX, otherY);
-
-	return radius;
-
+	return closestCollisionRadii;
 }
 
 void GameObject::drawCircle(float x, float y, float radius, Color4f* col)
@@ -952,17 +954,85 @@ void GameObject::drawLine(float x1, float y1, float x2, float y2) {
 	glEnable(GL_TEXTURE_2D);
 }
 
-bool GameObject::hasCollidedWith(string name) {
+bool GameObject::hasResolvedWith(string name) {
 	for (string collidedWith : this->collidedWithThisFrame) {
 		if (name == collidedWith) return true;
 	}
 	return false;
 }
 
-void GameObject::setHasCollidedWith(string name) {
+void GameObject::setCollisionResolvedWith(string name) {
 	this->collidedWithThisFrame.push_back(name);
 }
 
 void GameObject::resetCollisionFlags() {
 	this->collidedWithThisFrame.clear();
+}
+
+void GameObject::toggleDebugMode() {
+	GameObject::drawDebug = !GameObject::drawDebug;
+}
+
+void GameObject::setAIControl(bool flag) {
+	this->aiControl = flag;
+}
+
+void GameObject::doAIControl(GameObject* me, GameObject* track) {
+	
+	//Vect4f* closestTo = me->localToWorldSpace(Vect4f(0.0f, 0.5f, 0.0f));
+	Vect4f* closestTo = me->localToWorldSpace(Vect4f(0.2f, 0.0f, 0.0f));
+
+	if (GameObject::drawDebug) {
+		drawLine(me->getWorldPosition()->getX(), me->getWorldPosition()->getY(), closestTo->getX(), closestTo->getY());
+	}
+
+	CollisionRadii* target = track->getNextCollisionRadiiFor(closestTo, 1);
+	//CollisionRadii* target = track->getClosestRadiiTo(closestTo);
+	Vect4f* targetWoCo = (track->boundSpaceToObjectSpace(Vect4f(target->centreX, target->centreY, 0.0f)));
+
+	float distX = (targetWoCo->x - me->getWorldPosition()->x);
+	float distY = (targetWoCo->y - me->getWorldPosition()->y);
+	float distSqrd = (distX*distX) + (distY*distY);
+
+	//float angleFromY = (me->getZAngle()*(180.0f / 3.1415926f));
+	//float angleBetweenYAndTarget = me->getAngleToPosition(new Vect4f(targetWoCo->x, targetWoCo->y, 0.0f));
+	//float angle = (angleBetweenYAndTarget - angleFromY);
+
+	//TODO: sometimes positive when it should be negative
+	float angle = (me->getAngleToPosition(new Vect4f(targetWoCo->x, targetWoCo->y, 0.0f)) - (me->getAngleFromX()));
+
+	if (angle > 180.0f) angle -= 360.0f;
+	if (angle < -180.0f) angle += 360.0f;
+	
+	if (abs(angle) > 0.02f || (distSqrd) > 0.001f) {
+		
+		me->zTorque += 0.02f*angle;
+		me->addForce(0.08f, 0.00f, 0.0f);
+		//me->addForce(0.00f, 0.09f, 0.0f);
+	}
+	
+	//GameObject::debugger->addMessage(utils::floatToString(targetWoCo->x));
+	//GameObject::debugger->addMessage(utils::floatToString(targetWoCo->y));
+	//GameObject::debugger->addMessage(utils::floatToString(me->getAngleToPosition(new Vect4f(targetWoCo->x, targetWoCo->y, 0.0f))));
+	//GameObject::debugger->addMessage(utils::floatToString(me->getAngleFromX()));
+	//GameObject::debugger->addMessage(utils::floatToString(angleFromY));
+	GameObject::debugger->addMessage(utils::floatToString(angle));
+	GameObject::debugger->addMessage(utils::floatToString(distSqrd));
+	
+
+
+}
+
+bool GameObject::isAI() {
+	return this->aiControl;
+}
+
+Matrix3f* GameObject::getNewPosition() {
+	Matrix3f* transform = (new Matrix3f(0.0f, this->forces[0], this->forces[1], this->forces[2], 1.0f))->Multiply(
+		((new Matrix3f(this->zTorque*(3.1415926f / 180.0f), 0.0f, 0.0f, 0.0f, 1.0f))->Multiply(
+			new Matrix3f(0.0f, 0.0f, 0.0f, 0.0f, this->scales[0], this->scales[1], this->scales[2])
+		)
+			));
+
+	return this->worldSpaceTransform->Multiply(transform);
 }

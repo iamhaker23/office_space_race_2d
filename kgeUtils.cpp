@@ -23,6 +23,13 @@ string utils::intToString(int val) {
 	return ss.str();
 }
 
+string utils::floatLabel(char* prefix, float val, char* suffix) {
+	stringstream ss;
+	ss.precision(2);
+	ss << prefix << fixed << val << suffix;
+	return ss.str();
+}
+
 GLvoid utils::BuildFont(HDC hDC)								// Build Our Bitmap Font
 {
 	HFONT	font;										// Windows Font ID

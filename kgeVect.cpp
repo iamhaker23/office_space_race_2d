@@ -23,6 +23,7 @@ Vect4f* Vect4f::add(Vect4f* other) {
 }
 Vect4f* Vect4f::transform(Matrix3f* space) {
 	return space->Multiply((new Matrix3f(0.0f, this->x, this->y, this->z, 1.0f)))->getPosition();
+	
 	/*Vect4f* output = new Vect4f(this->x, this->y, this->z, 1.0f);
 
 	output->x = (output->x * space->values[0]) + (output->y * space->values[4]);
