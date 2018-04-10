@@ -979,8 +979,8 @@ void GameObject::setAIControl(bool flag) {
 
 void GameObject::doAIControl(GameObject* me, GameObject* track) {
 	
-	//Vect4f* closestTo = me->localToWorldSpace(Vect4f(0.0f, 0.5f, 0.0f));
-	Vect4f* closestTo = me->localToWorldSpace(Vect4f(0.2f, 0.0f, 0.0f));
+	Vect4f* closestTo = me->localToWorldSpace(Vect4f(0.0f, 0.5f, 0.0f));
+	//Vect4f* closestTo = me->localToWorldSpace(Vect4f(0.2f, 0.0f, 0.0f));
 
 	if (GameObject::drawDebug) {
 		drawLine(me->getWorldPosition()->getX(), me->getWorldPosition()->getY(), closestTo->getX(), closestTo->getY());
@@ -999,7 +999,7 @@ void GameObject::doAIControl(GameObject* me, GameObject* track) {
 	//float angle = (angleBetweenYAndTarget - angleFromY);
 
 	//TODO: sometimes positive when it should be negative
-	float angle = (me->getAngleToPosition(new Vect4f(targetWoCo->x, targetWoCo->y, 0.0f)) - (me->getAngleFromX()));
+	float angle = (me->getAngleToPosition(new Vect4f(targetWoCo->x, targetWoCo->y, 0.0f)) - (me->getAngleFromX()+90.0f));
 
 	if (angle > 180.0f) angle -= 360.0f;
 	if (angle < -180.0f) angle += 360.0f;
@@ -1007,8 +1007,8 @@ void GameObject::doAIControl(GameObject* me, GameObject* track) {
 	if (abs(angle) > 0.02f || (distSqrd) > 0.001f) {
 		
 		me->zTorque += 0.02f*angle;
-		me->addForce(0.08f, 0.00f, 0.0f);
-		//me->addForce(0.00f, 0.09f, 0.0f);
+		//me->addForce(0.08f, 0.00f, 0.0f);
+		me->addForce(0.00f, 0.09f, 0.0f);
 	}
 	
 	//GameObject::debugger->addMessage(utils::floatToString(targetWoCo->x));
