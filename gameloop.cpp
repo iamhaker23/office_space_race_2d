@@ -56,7 +56,7 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 
 	GameObject* car = new GameObject("Player", carSprites, planeMesh, 0, new Color4f( 1.0f, 0.0f, 0.0f, 1.0f ));
 	car->scale(0.6f, true);
-	car->setPhysicalAttributes(1.6f, 1.5f, 6.0f);
+	car->setPhysicalAttributes(1.4f, 1.3f, 7.5f);
 	car->translate(-1.0f, -1.0f, 0.0f);
 	car->setPlayerControl(true);
 	car->setCollider(true);
@@ -121,7 +121,7 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 
 	scene.push_back(ai);
 
-	camera->setCameraTarget(ai);
+	camera->setCameraTarget(car);
 	camera->setCameraSlowParentFactors(0.15f, 0.5f);
 }
 
