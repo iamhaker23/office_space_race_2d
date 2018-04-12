@@ -56,6 +56,8 @@ GameObject::GameObject() {
 	this->physicsContainer = false;
 	this->ghost = false;
 	this->aiControl = false;
+
+	this->raceData = NULL;
 	
 }
 
@@ -95,6 +97,9 @@ GameObject::GameObject(const GameObject &copy) {
 	this->physicsContainer = false;
 	this->ghost = false;
 	this->aiControl = false;
+
+	this->raceData = NULL;
+
 }
 
 GameObject::GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite,  Color4f* objectColor) {
@@ -134,6 +139,9 @@ GameObject::GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> m
 	this->physicsContainer = false;
 	this->ghost = false;
 	this->aiControl = false;
+
+	this->raceData = NULL;
+
 }
 
 void GameObject::draw() {
@@ -438,6 +446,10 @@ void GameObject::setDebugger(DebugInfo* _debugger) {
 
 void GameObject::setDebugMode(bool flag) {
 	GameObject::drawDebug = flag;
+}
+
+bool GameObject::getDebugMode(){
+	return GameObject::drawDebug;
 }
 
 float GameObject::getZAngle() {
@@ -977,7 +989,7 @@ void GameObject::setAIControl(bool flag) {
 	this->aiControl = flag;
 }
 
-void GameObject::doAIControl(GameObject* me, GameObject* track) {
+void GameObject::doAIControl(GameObject* me, GameObject* track, int trackStep) {
 	
 	Vect4f* closestTo = me->localToWorldSpace(Vect4f(0.0f, 0.5f, 0.0f));
 	//Vect4f* closestTo = me->localToWorldSpace(Vect4f(0.2f, 0.0f, 0.0f));
@@ -986,7 +998,7 @@ void GameObject::doAIControl(GameObject* me, GameObject* track) {
 		drawLine(me->getWorldPosition()->getX(), me->getWorldPosition()->getY(), closestTo->getX(), closestTo->getY());
 	}
 
-	CollisionRadii* target = track->getNextCollisionRadiiFor(closestTo, 1);
+	CollisionRadii* target = track->getNextCollisionRadiiFor(closestTo, trackStep);
 	//CollisionRadii* target = track->getClosestRadiiTo(closestTo);
 	Vect4f* targetWoCo = (track->boundSpaceToObjectSpace(Vect4f(target->centreX, target->centreY, 0.0f)));
 
@@ -1016,15 +1028,17 @@ void GameObject::doAIControl(GameObject* me, GameObject* track) {
 	//GameObject::debugger->addMessage(utils::floatToString(me->getAngleToPosition(new Vect4f(targetWoCo->x, targetWoCo->y, 0.0f))));
 	//GameObject::debugger->addMessage(utils::floatToString(me->getAngleFromX()));
 	//GameObject::debugger->addMessage(utils::floatToString(angleFromY));
-	GameObject::debugger->addMessage(utils::floatToString(angle));
-	GameObject::debugger->addMessage(utils::floatToString(distSqrd));
+	//GameObject::debugger->addMessage(utils::floatToString(angle));
+	//GameObject::debugger->addMessage(utils::floatToString(distSqrd));
 	
-
-
 }
 
 bool GameObject::isAI() {
 	return this->aiControl;
+}
+
+bool GameObject::isRacer() {
+	return (this->aiControl || this->playerControl);
 }
 
 Matrix3f* GameObject::getNewPosition() {
@@ -1035,4 +1049,45 @@ Matrix3f* GameObject::getNewPosition() {
 			));
 
 	return this->worldSpaceTransform->Multiply(transform);
+}
+
+RaceData* GameObject::getRaceData() {
+	return this->raceData;
+}
+
+void GameObject::initRaceData() {
+	this->raceData = new RaceData();
+}
+
+
+int GameObject::countCollisionRadii() {
+	return (int)this->collisionBounds.size();
+}
+
+float GameObject::getProgressAcrossTrackSegment(int segIndex, Vect4f* worldPosition, int step) {
+	
+	//currSeg = segments[segIndex]
+	//total = (currSeg - last segment) + (currSeg - distance to next segment)
+	//current = worldPosition - next segment
+
+	int prev = (segIndex - step < 0) ? ((int)this->collisionBounds.size()) - 1 : segIndex - step;
+	int next = (segIndex + step == (int)this->collisionBounds.size()) ? 0 : segIndex + step;
+
+	Vect4f* currSeg = boundSpaceToObjectSpace(Vect4f(this->collisionBounds.at(segIndex)->centreX, this->collisionBounds.at(segIndex)->centreY, 0.0f));
+	Vect4f* prevSeg = boundSpaceToObjectSpace(Vect4f(this->collisionBounds.at(prev)->centreX, this->collisionBounds.at(prev)->centreY, 0.0f));
+	Vect4f* nextSeg = boundSpaceToObjectSpace(Vect4f(this->collisionBounds.at(next)->centreX, this->collisionBounds.at(next)->centreY, 0.0f));
+
+	float total = (nextSeg->subtract(currSeg)->getXYMagnitude()) +(currSeg->subtract(prevSeg)->getXYMagnitude());
+	float current = (nextSeg->subtract(worldPosition)->getXYMagnitude());
+		
+	float angle = this->getAngleBetweenPositions(nextSeg, worldPosition);
+	//float currentX = this->radius2DToWorldSpace(current, angle);
+	
+	while (angle >= 90.0f) {
+		angle -= 90.0f;
+	}
+	float currentXComponent = current * (((angle >= 90.0f && angle <= 180.0f) || (angle <= 360.0f && angle >= 270.0f)) ? sinf(angle*(3.1415926f / 180.0f)) : cosf(angle*(3.1415926f / 180.0f)));
+
+	return (total - currentXComponent) / total;
+	
 }

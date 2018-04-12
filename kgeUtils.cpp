@@ -30,6 +30,20 @@ string utils::floatLabel(char* prefix, float val, char* suffix) {
 	return ss.str();
 }
 
+string utils::intLabel(char* prefix, int val, char* suffix) {
+	stringstream ss;
+	ss.precision(0);
+	ss << prefix << fixed << val << suffix;
+	return ss.str();
+}
+
+string utils::lapsLabel(int completed, int laps) {
+	stringstream ss;
+	ss.precision(2);
+	ss << "Laps:" << fixed << completed << "/" << laps;
+	return ss.str();
+}
+
 GLvoid utils::BuildFont(HDC hDC)								// Build Our Bitmap Font
 {
 	HFONT	font;										// Windows Font ID

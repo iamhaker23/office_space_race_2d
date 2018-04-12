@@ -50,6 +50,18 @@ string DebugInfo::getOutput() {
 	return output;
 }
 
+string DebugInfo::getMessages() {
+	string output = "";
+
+	for (string message : this->messages) {
+		output.append(message);
+		output.append("\n");
+	}
+	this->messages.clear();
+
+	return output;
+}
+
 double DebugInfo::getAverageFrameRate() {
 	double total = 0.0;
 

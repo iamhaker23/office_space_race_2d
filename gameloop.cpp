@@ -162,6 +162,10 @@ void GameLoop::display() {
 
 	GameObject::setWorldToCameraTransform(camera->getTransformation());
 
+
+	int NUM_TRACK_SEGMENTS = scene.at(0)->countCollisionRadii()-1;
+	int TRACK_SEGMENT_STEP = 1;
+
 	for (GameObject* obj : scene) {
 
 		//double now = debugger->getTime();
@@ -172,20 +176,115 @@ void GameLoop::display() {
 		obj->draw();
 		obj->resolveCollisions(scene);
 		if (obj->isAI()) {
-			GameObject::doAIControl(obj, scene.at(0));
+			GameObject::doAIControl(obj, scene.at(0), TRACK_SEGMENT_STEP);
 		}
 
+		if (obj->isRacer()){
+			if (obj->getRaceData() != NULL) {
+
+				//TODO: better way of accessing track object
+				//get the index of the closest segment
+				int segmentOn = scene.at(0)->getIndexOfClosestRadiiTo(obj->getWorldPosition());
+
+				RaceData* rd = obj->getRaceData();
+				//index-currentsegment <= 2 to tolerate some skipping forward
+				//70 - 1
+				//69 - 70 - 1
+
+				int SKIPPABLE = 4;
+
+				int segDelta = (segmentOn - rd->getCurrentSegment());
+
+				//NOTE: if player reverses by one lap, you'll hit where you were supposed to be and will pass to the next segment,
+				//deliberately allowing player to continue from there, since they've already lost a lap.
+
+				segDelta = (segDelta >= SKIPPABLE) ? segDelta - NUM_TRACK_SEGMENTS : segDelta;
+
+				if (segDelta > 0 && segDelta <= SKIPPABLE) {
+					//complete a lap or move to next segment
+					if (rd->hasCompletedSegments(NUM_TRACK_SEGMENTS-1)) {
+						rd->incrementLaps();
+						rd->setCurrentSegment(1);
+						rd->setSegmentsCompleted(1);
+					}
+					else{
+						rd->setCurrentSegment(segmentOn);
+						rd->incrementSegmentsCompleted();
+					}
+
+				}else if (segDelta == 0) {
+					//Player is on the same segment, but perhaps some progress has been made
+
+					//NOTE:
+					//progress on current segment is 0.0f - 1.0f but as the player moves forwards there are two possibilities
+					//we have reached 100% of the track segment OR we progress to the next segment because we closer to it's CollisionRadii centre
+					//hence the player may start a segment at an arbitrary progress (e.g. 40%)
+					//and the player may leave a segment on an arbitrary progress (e.g. 75%)
+					//Entry and Exit percentages are not combinant because they are ratios between different segment lengths
+					//on a uniform track they would be combinant
+
+					rd->setProgressOnCurrentSegment(scene.at(0)->getProgressAcrossTrackSegment(segmentOn, obj->getWorldPosition(), TRACK_SEGMENT_STEP));
+				}
+
+			}
+			else {
+				obj->initRaceData();
+			}
+		}
 		//}
 
 	}
 
+
 	glPopMatrix();
+
+	int playerPosition = 0;
+	float playerDistance = 0.0f;
+	int playerLaps = 0;
+	float playerProgress = 0.0f;
+	int TOTAL_LAPS = 5;
+
+	for (GameObject* obj : scene) {
+		if (obj->getName() == "Player" && obj->getRaceData() != NULL) {
+			RaceData* rd = obj->getRaceData();
+			playerDistance = (float)(rd->getLaps() * NUM_TRACK_SEGMENTS) + (float)rd->getCurrentSegment() + rd->getProgressOnCurrentSegment();
+			playerLaps = rd->getLaps();
+			playerProgress = (float)rd->getSegmentsCompleted() / ((float)NUM_TRACK_SEGMENTS);
+		}
+	}
+
+	for (GameObject* obj : scene) {
+		if (obj->isRacer() && obj->getRaceData() != NULL) {
+			//racer with race data
+
+			if (obj->getName() != "Player") {
+				//competitor
+				RaceData* rd = obj->getRaceData();
+				float competitorDistance = (float)(rd->getLaps() * NUM_TRACK_SEGMENTS) + (float)rd->getCurrentSegment() + rd->getProgressOnCurrentSegment();
+				if (playerDistance <= competitorDistance) {
+					playerPosition += 1;
+				}
+			}
+
+		}
+	}
+
+	vector<string> positions = {"1st", "2nd", "3rd", "4th"};
+
+	debugger->addMessage(positions.at(playerPosition));
+	debugger->addMessage(utils::lapsLabel(playerLaps, TOTAL_LAPS));
+	debugger->addMessage(utils::intLabel("Progress:", (int)(playerProgress*100.0f), "/100"));
 
 	if (debugger != NULL) {
 
 		Color4f textColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
 		Color4f boxColor = Color4f(0.1f, 0.1f, 0.1f, 0.8f);
-		drawTextBox(*fonts.front(), debugger->getOutput(), -200.0f, -200.0f, 200.0f, 200.0f, textColor, boxColor);
+		if (GameObject::getDebugMode()) {
+			drawTextBox(*fonts.front(), debugger->getOutput(), -200.0f, -200.0f, 200.0f, 200.0f, textColor, boxColor);
+		}
+		else {
+			drawTextBox(*fonts.front(), debugger->getMessages(), -200.0f, -200.0f, 200.0f, 200.0f, textColor, boxColor);
+		}
 
 	}
 }

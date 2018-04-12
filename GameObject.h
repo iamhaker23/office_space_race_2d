@@ -8,6 +8,7 @@
 
 #include "InputStates.h"
 #include "DebugInfo.h"
+#include "RaceData.h"
 
 #ifndef GAME_OBJECT_H
 
@@ -72,13 +73,17 @@ class GameObject {
 		bool steering;
 		bool collided;
 
+		bool racer;
+		RaceData* raceData;
+
 	public:
 		static void setDebugMode(bool flag);
+		static bool getDebugMode();
 		static void setDebugger(DebugInfo* _debugger);
 		static void setWorldToCameraTransform(Matrix3f* wtc);
 		static void freeData();
 		static void toggleDebugMode();
-		static void doAIControl(GameObject* me, GameObject* track);
+		static void doAIControl(GameObject* me, GameObject* track, int trackStep);
 		static float getAngleBetweenPositions(Vect4f* a, Vect4f* b);
 
 		~GameObject();
@@ -141,10 +146,16 @@ class GameObject {
 		CollisionRadii* getNextCollisionRadiiFor(Vect4f* otherPosition, int step);
 		int getIndexOfClosestRadiiTo(Vect4f* otherPosition);
 		bool isAI();
+		bool isRacer();
 		float getAngleToPosition(Vect4f* position);
 		float getAngleFromX();
 
 		Matrix3f* getNewPosition();
+		RaceData* getRaceData(); 
+		void initRaceData();
+		int countCollisionRadii();
+		float getProgressAcrossTrackSegment(int segIndex, Vect4f* worldPosition, int step);
+		
 };
 
 

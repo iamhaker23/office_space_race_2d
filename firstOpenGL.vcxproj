@@ -124,6 +124,7 @@
     <ClInclude Include="kgeUtils.h" />
     <ClInclude Include="kgeVect.h" />
     <ClInclude Include="Main.h" />
+    <ClInclude Include="RaceData.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Image_Loading\nvImage.h" />
     <ClInclude Include="win32_window.h" />

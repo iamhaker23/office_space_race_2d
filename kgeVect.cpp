@@ -16,7 +16,7 @@ Vect4f::Vect4f() {
 	this->x = 0.0f;
 	this->y = 0.0f;
 	this->z = 0.0f;
-	this->w = 0.0f;
+	this->w = 1.0f;
 }
 Vect4f* Vect4f::add(Vect4f* other) {
 	return new Vect4f(other->x + this->x, other->y + this->y, other->z + this->z, other->w + this->w);
@@ -66,4 +66,14 @@ float Vect4f::getY() {
 
 float Vect4f::getZ() {
 	return this->z / this->w;
+}
+
+Vect4f* Vect4f::subtract(Vect4f* other) {
+	Vect4f* output = new Vect4f();
+	output->x = this->getX() - other->getX();
+	output->y = this->getY() - other->getY();
+	output->z = this->getZ() - other->getZ();
+	//w is left as 1.0f
+
+	return output;
 }

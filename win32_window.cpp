@@ -57,6 +57,7 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 
 	//TODO: toggle pause and display a menu via a scenemanager
 	bool paused = false;
+	bool pauseMessageDisplayed = false;
 
 	while (!done){
 		// Loop That Runs While done=FALSE
@@ -87,6 +88,8 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 				paused = inputs->keys[VK_BACK];
 
 				if (!paused) {
+
+					pauseMessageDisplayed = false;
 					localFrameCount++;
 
 					//if it's been a second since last tic, update framesamples
@@ -100,6 +103,10 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 				}
 				else {
 					GameLoop::writeMessage("Paused.");
+					if (!pauseMessageDisplayed) {
+						pauseMessageDisplayed = true;
+						SwapBuffers(hDC);
+					}
 				}
 			}
 		}

@@ -27,6 +27,7 @@ public:
 	float getX();
 	float getY();
 	float getZ();
+	Vect4f* subtract(Vect4f* other);
 };
 
 #endif

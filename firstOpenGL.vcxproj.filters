@@ -27,6 +27,7 @@
     <ClInclude Include="GameLoop.h" />
     <ClInclude Include="kgeMatrix.h" />
     <ClInclude Include="kgeVect.h" />
+    <ClInclude Include="RaceData.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="firstOpenGL.rc" />

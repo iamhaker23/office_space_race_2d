@@ -28,8 +28,8 @@
 			void addMessage(string message);
 			void reset();
 			string getOutput();
+			string getMessages();
 			double getAverageFrameRate();
-			void setTime(double time);
 			void setDuration(duration<double> _cDuration);
 
 	};
