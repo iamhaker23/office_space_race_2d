@@ -64,10 +64,12 @@ string DebugInfo::getMessages() {
 
 double DebugInfo::getAverageFrameRate() {
 	double total = 0.0;
+	int sampleCount = 0;
 
 	for (int sample : this->frameSamples) {
+		sampleCount++;
 		total = total + (double)sample;
 	}
 
-	return (this->frameSamples.size() > 0) ? (total / ((double)this->frameSamples.size())) : -1.0;
+	return (sampleCount > 0) ? (total / ((double)sampleCount)) : -1.0;
 }

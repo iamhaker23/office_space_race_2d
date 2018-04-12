@@ -84,7 +84,7 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 	car->setCollisionBounds(bounds);
 	ai->setCollisionBounds(bounds);
 
-	GameObject* track = new GameObject("Track", trackSprites, planeMesh, 0, new Color4f(1.0f,1.0f,1.0f, 1.0f));
+	GameObject* track = new GameObject("Track", trackSprites, planeMesh, 0, new Color4f(1.0f, 1.0f, 1.0f, 1.0f));
 	track->setCollisionBounds(generateTrackBounds("office_container.txt"));
 	track->setCollider(true);
 	track->setPhysicsContainer(true);

@@ -58,6 +58,8 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 	//TODO: toggle pause and display a menu via a scenemanager
 	bool paused = false;
 	bool pauseMessageDisplayed = false;
+	
+	int oldTicks = -1;
 
 	while (!done){
 		// Loop That Runs While done=FALSE
@@ -81,7 +83,6 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 			if (!done) {
 
 				system_clock::time_point cNow = system_clock::now();
-				WIN_CTIME = cNow;
 				duration<double> duration = cNow - START_CTIME;
 				debugger->setDuration(duration);
 
@@ -90,16 +91,24 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 				if (!paused) {
 
 					pauseMessageDisplayed = false;
-					localFrameCount++;
 
-					//if it's been a second since last tic, update framesamples
-					if (std::chrono::duration_cast<std::chrono::milliseconds>(cNow-WIN_CTIME).count() >= 1000) {
-						debugger->addFrameSample(localFrameCount);
-						localFrameCount = 0;
+					//Every other tick of the given frequency render a frame
+					//std::ratio<1, 100> gives 50Hz
+					//std::ratio<1, 120> gives 60Hz
+					//std::ratio<1, 60> gives 30Hz
+					int ticks = (int)(std::chrono::duration<float, std::ratio<1, 100>>(cNow - WIN_CTIME).count());
+
+					if ((ticks % 2 == 1) && ticks != oldTicks) {
+
+						oldTicks = ticks;
+						localFrameCount+=1;
+
+						GameLoop::display();	// Draw The Scene
+						SwapBuffers(hDC);				// Swap Buffers (Double Buffering)
+
 					}
 
-					GameLoop::display();	// Draw The Scene
-					SwapBuffers(hDC);				// Swap Buffers (Double Buffering)
+
 				}
 				else {
 					GameLoop::writeMessage("Paused.");
@@ -107,6 +116,14 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 						pauseMessageDisplayed = true;
 						SwapBuffers(hDC);
 					}
+				}
+
+				//if it's been a second since last tic, update framesamples
+				if (std::chrono::duration_cast<std::chrono::milliseconds>(cNow - WIN_CTIME).count() >= 1000) {
+					
+					debugger->addFrameSample(localFrameCount);
+					localFrameCount = 0;
+					WIN_CTIME = cNow;
 				}
 			}
 		}
