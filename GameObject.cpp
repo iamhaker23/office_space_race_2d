@@ -6,7 +6,10 @@ Matrix3f* GameObject::worldToCamera = NULL;
 bool GameObject::drawDebug = false;
 
 void GameObject::freeData() {
-	delete GameObject::worldToCamera;
+	//TODO: cannot free these via Loop Manager without causing crash
+
+	//delete GameObject::debugger; 
+	//delete GameObject::worldToCamera;
 }
 
 GameObject::~GameObject() {
@@ -15,6 +18,7 @@ GameObject::~GameObject() {
 		c->radii.clear();
 	}
 	this->collisionBounds.clear();
+	
 }
 
 nv::Image* GameObject::defaultSprite = utils::loadPNG("resources/images/default-sprite.png");
@@ -401,7 +405,7 @@ Vect4f* GameObject::getScreenPosition() {
 }
 
 Vect4f* GameObject::getWorldPosition() {
-	if (GameObject::worldToCamera != NULL) {
+	/*if (GameObject::worldToCamera != NULL) {
 		//return (this->worldSpaceTransform->Multiply(GameObject::worldToCamera))->getPosition();
 		//return (this->worldSpaceTransform)->Add(GameObject::worldToCamera)->getPosition();
 		
@@ -409,9 +413,9 @@ Vect4f* GameObject::getWorldPosition() {
 
 		//return GameObject::worldToCamera->getPosition();
 	}
-	else {
+	else {*/
 		return this->worldSpaceTransform->getPosition();
-	}
+	//}
 	
 }
 
@@ -708,7 +712,7 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 						//distance = (distance >= 0.6f) ? 0.6f : distance;
 						//if (other->hasPhysics()) other->translate(cosf((angleToOther-180.0f)*(3.1415926f / 180.0f))*distance, sinf((angleToOther - 180.0f)*(3.1415926f / 180.0f)*distance), 0.0f);
 						if (!this->isGhost() && !other->isGhost()) {
-							float factor = 0.09f;
+							float factor = 0.15f;
 							float torque = (angleToOther <= 270.0f && angleToOther >= 90.0f) ? -1.4f : 1.4f;
 							bool bothPhysics = this->hasPhysics() && other->hasPhysics();
 
@@ -731,7 +735,7 @@ void GameObject::resolveCollisions(vector<GameObject*> others) {
 					//	(theyContain && (theirRad*theirRad <= (distanceSqrd+(0.25f*myRad*myRad))))) {
 					else if ((iContain && ((myRad*myRad) < (distanceSqrd ))) ||
 							(theyContain && ((theirRad*theirRad) < (distanceSqrd )))) {
-						float factor = 0.09f;
+						float factor = 0.1f;
 						float torque = (angleToOther <= 270.0f && angleToOther >= 90.0f) ? -1.4f : 1.4f;
 						bool bothPhysics = this->hasPhysics() && other->hasPhysics();
 

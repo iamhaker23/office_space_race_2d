@@ -11,8 +11,13 @@
 
 	private:
 		vector<GameObject*> scene;
-		static vector<CollisionRadii*> generateTrackBounds(char* filename);
 		nv::Image* backgroundPNG;
+
+		bool finished;
+		double startTimeOutClock;
+
+		static vector<CollisionRadii*> generateTrackBounds(char* filename);
+		void initGame();
 			
 	public:
 		
@@ -22,8 +27,8 @@
 		void init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs);
 		void display();
 		void freeData();
-
-
+		void handleActivation();
+		
 	};
 
 #endif

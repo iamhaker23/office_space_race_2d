@@ -20,6 +20,7 @@ class LoopManager {
 
 		void setLoops(vector<Loop*> loops);
 		
+		int getActiveLoopIndex();
 		Loop* getActiveLoop();
 		void setActiveLoop(int loopIdx);
 

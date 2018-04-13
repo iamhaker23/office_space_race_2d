@@ -81,6 +81,6 @@ void Loop::freeStaticData() {
 
 	Loop::fonts.clear();
 	delete Loop::camera;
-	GameObject::freeData();
+
 
 }

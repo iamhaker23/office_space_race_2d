@@ -67,3 +67,8 @@ void MenuLoop::display() {
 	}
 
 }
+
+void MenuLoop::handleActivation() {
+	//LoopManager has activated this scene
+	//MenuLoop is simple and does not require any housekeeping
+}

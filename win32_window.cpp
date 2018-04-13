@@ -99,7 +99,7 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 
 				if (!paused) {
 
-					if (timeSincePaused >= 300 && inputs->keys[VK_BACK]) {
+					if (loops->getActiveLoopIndex() != 0 && timeSincePaused >= 300 && inputs->keys[VK_BACK]) {
 						pausedAt = cNow;
 						paused = true;
 					}
@@ -130,9 +130,13 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 						pausedAt = cNow;
 						paused = false;
 					}
+					else if (inputs->keys[0x51]) {
+						loops->setActiveLoop(0);
+						paused = false;
+					}
 
 					if (!pauseMessageDisplayed && loop != NULL) {
-						loop->writeMessage("Paused.");
+						loop->writeMessage("Paused\nQ - Main Menu");
 						pauseMessageDisplayed = true;
 						SwapBuffers(hDC);
 					}

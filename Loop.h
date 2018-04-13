@@ -39,6 +39,7 @@ class Loop {
 		virtual void freeData() = 0;
 		virtual void init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs) = 0;
 		virtual void display() = 0;
+		virtual void handleActivation() = 0;
 
 
 };

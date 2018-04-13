@@ -1,11 +1,7 @@
 #include "gameloop.h"
 
 GameLoop::GameLoop() {
-
-	//reset camera
-	delete Loop::camera;
-	Loop::camera = new Camera();
-
+	
 	this->backgroundPNG = utils::loadPNG("resources/images/backgrounds/aerial_city.png");
 	this->scene = {};
 
@@ -13,12 +9,14 @@ GameLoop::GameLoop() {
 
 GameLoop::~GameLoop() {
 	this->freeData();
+	delete this->backgroundPNG;
+
 }
 
 void GameLoop::freeData() {
-
+	this->scene.clear();
 	Loop::freeStaticData();
-	delete this->backgroundPNG;
+	GameObject::freeData();
 }
 
 void GameLoop::init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs)
@@ -31,113 +29,19 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs)
 	Loop::inputs = inputs;
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
-
-	//utils::BuildFont(hDC);
-
-	fonts.clear();
-	font_data* font1 = new font_data();
-	font1->init("resources/fonts/BKANT.TTF", 16);
-	Loop::fonts.push_back(font1);
-
-	vector<Vertex> planeMesh = {
-		Vertex(0.0, 0.0, -0.5, -0.5),
-		Vertex(0.0, 1.0, -0.5, 0.5),
-		Vertex(1.0, 1.0, 0.5, 0.5),
-		Vertex(1.0, 0.0, 0.5, -0.5)
-	};
-
-	vector<nv::Image*> carSprites = { utils::loadPNG("resources/images/chair/1.png") ,utils::loadPNG("resources/images/chair/2.png") ,utils::loadPNG("resources/images/chair/3.png") };
-	vector<nv::Image*> boxSprites = { utils::loadPNG("resources/images/box/1.png"), utils::loadPNG("resources/images/box/2.png"), utils::loadPNG("resources/images/box/3.png") };
-	vector<nv::Image*> trackSprites = { utils::loadPNG("resources/images/tracks/office_1.png") };
-
-	GameObject* car = new GameObject("Player", carSprites, planeMesh, 0, new Color4f( 1.0f, 0.0f, 0.0f, 1.0f ));
-	car->scale(0.6f, true);
-	car->setPhysicalAttributes(1.4f, 1.3f, 7.5f);
-
-	//relative to X-axis
-	car->setZAngle(180.0f);
-
-	car->translate(-1.8f, -1.8f, 0.0f);
-
-	car->setPlayerControl(true);
-	car->setCollider(true);
-	car->setPhysics(true);
-
-	GameObject* ai = new GameObject("AI", carSprites, planeMesh, 0, new Color4f(0.0f, 0.5f, 1.0f, 1.0f));
-	ai->scale(0.6f, true);
-	ai->setPhysicalAttributes(1.4f, 1.3f, 7.5f);
-	ai->translate(-0.5f, -1.0f, 0.0f);
-
-	//relative to X-axis
-	ai->setZAngle(170.0f);
-
-	ai->setCollider(true);
-	ai->setPhysics(true);
-	ai->setAIControl(true);
 	
-	CollisionRadii* radii = new CollisionRadii(0.0f, 0.0f);
-	radii->addRadius(0.3f, 0.0f);
-	radii->addRadius(0.32f, 90.0f);
-	radii->addRadius(0.3f, 180.0f);
-	radii->addRadius(0.33f, 270.0f);
-	radii->addRadius(0.3f, 45.0f);
-	radii->addRadius(0.3f, 135.0f);
-	radii->addRadius(0.3f, 225.0f);
-	radii->addRadius(0.3f, 315.0f);
-	vector<CollisionRadii*> bounds = {
-		radii
-	};
-	car->setCollisionBounds(bounds);
-	ai->setCollisionBounds(bounds);
-
-	GameObject* track = new GameObject("Track", trackSprites, planeMesh, 0, new Color4f(1.0f, 1.0f, 1.0f, 1.0f));
-	track->setCollisionBounds(generateTrackBounds("resources/data/office_container.txt"));
-	track->setCollider(true);
-	track->setPhysicsContainer(true);
-	track->scale(10.0f, false);
-	track->nuScaleBounds(0.5f, 0.5f, 1.0f);
-
-	//TODO: select track by more flexible means than hard-coding it's index
-	scene.push_back(track);
-
-	CollisionRadii* bradii2 = new CollisionRadii(0.0f, 0.0f);
-	bradii2->addRadius(0.29f, 0.0f);
-	bradii2->addRadius(0.32f, 90.0f);
-	bradii2->addRadius(0.29f, 180.0f);
-	bradii2->addRadius(0.25f, 270.0f);
-	bradii2->addRadius(0.4f, 45.0f);
-	bradii2->addRadius(0.4f, 135.0f);
-	bradii2->addRadius(0.35f, 225.0f);
-	bradii2->addRadius(0.35f, 315.0f);
-	vector<CollisionRadii*> bbounds2 = {
-		bradii2
-	};
-	GameObject* box2 = new GameObject("Box2", boxSprites, planeMesh, 0, new Color4f(1.0f, 0.5f, 0.5f, 1.0f ));
-	//box2->scale(0.5f, false);
-	box2->translate(-1.0f, 1.5f, 0.0f);
-	box2->setCollider(true);
-	box2->setCollisionBounds(bbounds2);
-	box2->setPhysics(true);
-	//box2->setGhost(true);
-	//box2->setPlayerControl(true);
-	box2->setPhysicalAttributes(1.6f, 1.5f, 6.0f);
-
-	scene.push_back(box2);
-	scene.push_back(car);
-
-	scene.push_back(ai);
-
-	camera->setCameraTarget(car);
-	camera->setCameraSlowParentFactors(0.15f, 0.5f);
+	this->initGame();
 }
 
 void GameLoop::display() {
 
-	if (inputs->keys[0x51]) {
+
+	//before clearing the on screen frame
+	if (finished) {
 		Loop::requestedActiveLoop = 0;
 		return;
 	}
-
+		
 	glClear(GL_COLOR_BUFFER_BIT);
 	//glClear(GL_DEPTH_BUFFER_BIT);
 	//glClear(GL_STENCIL_BUFFER_BIT);
@@ -159,6 +63,7 @@ void GameLoop::display() {
 	
 	int NUM_TRACK_SEGMENTS = scene.at(0)->countCollisionRadii()-1;
 	int TRACK_SEGMENT_STEP = 1;
+	int TOTAL_LAPS = 1;
 
 	for (GameObject* obj : scene) {
 
@@ -199,6 +104,14 @@ void GameLoop::display() {
 				if (segDelta > 0 && segDelta <= SKIPPABLE) {
 					if (rd->hasCompletedSegments(NUM_TRACK_SEGMENTS)) {
 						rd->incrementLaps();
+						if (rd->getLaps() == TOTAL_LAPS) {
+							if (obj->getName() != "Player") {
+								startTimeOutClock = debugger->getTime();
+							}
+							else {
+								finished = true;
+							}
+						}
 					}
 					rd->setCurrentSegment(segmentOn);
 				}
@@ -240,7 +153,6 @@ void GameLoop::display() {
 	float playerDistance = 0.0f;
 	int playerLaps = 0;
 	float playerProgress = 0.0f;
-	int TOTAL_LAPS = 5;
 
 	for (GameObject* obj : scene) {
 		if (obj->getName() == "Player" && obj->getRaceData() != NULL) {
@@ -275,6 +187,19 @@ void GameLoop::display() {
 	//can pass format string and variables if needed
 	debugger->addMessage(utils::intLabel("Progress:", (int)(playerProgress*100.0f), "%%"));
 
+	//after everything else is drawn
+	double MAX_TIME = 15.0;
+	if (startTimeOutClock >= 0.0) {
+		double timeout = debugger->getTime() - startTimeOutClock;
+		if (timeout >= MAX_TIME) {
+			finished = true;
+			return;
+		}
+		else {
+			Loop::drawTextBox(*fonts.at(0), utils::floatLabel("", (float)(MAX_TIME - timeout), "s before DNF"), 0.0f, 80.0f, 180.0f, 50.0f, Color4f(), Color4f(1.0f, 0.2f, 0.2f, 0.8f));
+		}
+	}
+	
 	if (debugger != NULL) {
 
 		Color4f textColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -313,4 +238,119 @@ vector<CollisionRadii*> GameLoop::generateTrackBounds(char* filename){
 	
 	return tbounds;
 
+}
+
+
+void GameLoop::handleActivation() {
+	//LoopManager has activated this scene
+
+	this->initGame();
+
+}
+
+
+void GameLoop::initGame() {
+
+	this->freeData();
+
+	this->startTimeOutClock = -1.0;
+	this->finished = false;
+
+	Loop::camera = new Camera();
+	
+	font_data* font1 = new font_data();
+	font1->init("resources/fonts/BKANT.TTF", 16);
+	Loop::fonts.push_back(font1);
+
+	vector<Vertex> planeMesh = {
+		Vertex(0.0, 0.0, -0.5, -0.5),
+		Vertex(0.0, 1.0, -0.5, 0.5),
+		Vertex(1.0, 1.0, 0.5, 0.5),
+		Vertex(1.0, 0.0, 0.5, -0.5)
+	};
+
+	vector<nv::Image*> carSprites = { utils::loadPNG("resources/images/chair/1.png") ,utils::loadPNG("resources/images/chair/2.png") ,utils::loadPNG("resources/images/chair/3.png") };
+	vector<nv::Image*> boxSprites = { utils::loadPNG("resources/images/box/1.png"), utils::loadPNG("resources/images/box/2.png"), utils::loadPNG("resources/images/box/3.png") };
+	vector<nv::Image*> trackSprites = { utils::loadPNG("resources/images/tracks/office_1.png") };
+
+	GameObject* car = new GameObject("Player", carSprites, planeMesh, 0, new Color4f(1.0f, 0.0f, 0.0f, 1.0f));
+	car->scale(0.6f, true);
+	car->setPhysicalAttributes(1.4f, 1.3f, 7.5f);
+
+	//relative to X-axis
+	car->setZAngle(180.0f);
+
+	car->translate(-1.8f, -1.8f, 0.0f);
+
+	car->setPlayerControl(true);
+	car->setCollider(true);
+	car->setPhysics(true);
+
+	GameObject* ai = new GameObject("AI", carSprites, planeMesh, 0, new Color4f(0.0f, 0.5f, 1.0f, 1.0f));
+	ai->scale(0.6f, true);
+	ai->setPhysicalAttributes(1.4f, 1.3f, 7.5f);
+	ai->translate(-0.5f, -1.0f, 0.0f);
+
+	//relative to X-axis
+	ai->setZAngle(170.0f);
+
+	ai->setCollider(true);
+	ai->setPhysics(true);
+	ai->setAIControl(true);
+
+	CollisionRadii* radii = new CollisionRadii(0.0f, 0.0f);
+	radii->addRadius(0.3f, 0.0f);
+	radii->addRadius(0.32f, 90.0f);
+	radii->addRadius(0.3f, 180.0f);
+	radii->addRadius(0.33f, 270.0f);
+	radii->addRadius(0.3f, 45.0f);
+	radii->addRadius(0.3f, 135.0f);
+	radii->addRadius(0.3f, 225.0f);
+	radii->addRadius(0.3f, 315.0f);
+	vector<CollisionRadii*> bounds = {
+		radii
+	};
+	car->setCollisionBounds(bounds);
+	ai->setCollisionBounds(bounds);
+
+	GameObject* track = new GameObject("Track", trackSprites, planeMesh, 0, new Color4f(1.0f, 1.0f, 1.0f, 1.0f));
+	track->setCollisionBounds(generateTrackBounds("resources/data/office_container.txt"));
+	track->setCollider(true);
+	track->setPhysicsContainer(true);
+	track->scale(10.0f, false);
+	track->nuScaleBounds(0.5f, 0.5f, 1.0f);
+
+	//TODO: select track by more flexible means than hard-coding it's index
+	scene.push_back(track);
+
+	CollisionRadii* bradii2 = new CollisionRadii(0.0f, 0.0f);
+	bradii2->addRadius(0.29f, 0.0f);
+	bradii2->addRadius(0.32f, 90.0f);
+	bradii2->addRadius(0.29f, 180.0f);
+	bradii2->addRadius(0.25f, 270.0f);
+	bradii2->addRadius(0.4f, 45.0f);
+	bradii2->addRadius(0.4f, 135.0f);
+	bradii2->addRadius(0.35f, 225.0f);
+	bradii2->addRadius(0.35f, 315.0f);
+	vector<CollisionRadii*> bbounds2 = {
+		bradii2
+	};
+	GameObject* box2 = new GameObject("Box2", boxSprites, planeMesh, 0, new Color4f(1.0f, 0.5f, 0.5f, 1.0f));
+	//box2->scale(0.5f, false);
+	box2->translate(-1.0f, 1.5f, 0.0f);
+	box2->setCollider(true);
+	box2->setCollisionBounds(bbounds2);
+	box2->setPhysics(true);
+	//box2->setGhost(true);
+	//box2->setPlayerControl(true);
+	box2->setPhysicalAttributes(1.6f, 1.5f, 6.0f);
+
+	scene.push_back(box2);
+	scene.push_back(car);
+
+	scene.push_back(ai);
+
+	camera->setCameraTarget(car);
+	camera->setCameraSlowParentFactors(0.15f, 0.5f);
+	
 }

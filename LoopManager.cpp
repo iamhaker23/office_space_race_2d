@@ -21,9 +21,16 @@ Loop* LoopManager::getActiveLoop() {
 	return this->loops.at(this->active);
 }
 
+int LoopManager::getActiveLoopIndex() {
+	return this->active;
+}
+
 void LoopManager::setActiveLoop(int loopIdx) {
 	if (loopIdx < (int)this->loops.size()) {
 		this->active = loopIdx;
+		
+		this->loops.at(this->active)->handleActivation();
+		
 		this->loopChanged = true;
 	}
 }
