@@ -386,21 +386,13 @@ void GameObject::processInputs(InputStates* inputs) {
 			}
 		}
 
-		this->setSprite(sprite);
 		//Animations after auto-animation
 		if (inputs->LeftPressed) {
-			this->animate(AnimationLogic::LOOPEND);
+			this->animate(AnimationLogic::PINGPONG);
 		}
-	}
-}
-
-Vect4f* GameObject::getScreenPosition() {
-	
-	if (GameObject::worldToCamera != NULL) {
-		return this->worldSpaceTransform->Add(GameObject::worldToCamera)->getPosition();
-	}
-	else {
-		return this->worldSpaceTransform->getPosition();
+		else {
+			this->setSprite(sprite);
+		}
 	}
 }
 

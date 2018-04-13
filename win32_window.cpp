@@ -413,17 +413,17 @@ void win32_window::reshape(int width, int height)		// Resize the OpenGL window
 
 	double heightRatio = (double)height / (double)width;
 	
-	//stretch the co-ordinate system resulting in proportional viewport FOV
-	double scaleFactor = (heightRatio <= 1.0) ? width / 1000 : 1.0;
-	
-	// set the coordinate system for the window
+	//Do I really want this?
+	double scale = (width < 1000.0) ? 1.0 : ((double)width / 1000.0);
+
+	// set the coordinate system for the window, effectively tweaking aspect ratio
 	if (heightRatio <= 1.0) {
 		//height is squeezed
-		gluOrtho2D(-1.0*scaleFactor, 1.0*scaleFactor, -heightRatio*scaleFactor, heightRatio*scaleFactor);
+		gluOrtho2D(-1.0*scale, 1.0*scale, -heightRatio*scale, heightRatio*scale);
 	}
 	else {
 		//width is squeezed
-		gluOrtho2D((-1.0 / heightRatio)*scaleFactor, (1.0 / heightRatio)*scaleFactor, -1.0*scaleFactor, 1.0*scaleFactor);
+		gluOrtho2D((-1.0 / heightRatio), (1.0 / heightRatio), -1.0, 1.0);
 	}
 	
 

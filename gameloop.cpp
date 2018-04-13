@@ -5,6 +5,10 @@ GameLoop::GameLoop() {
 	this->backgroundPNG = utils::loadPNG("resources/images/backgrounds/aerial_city.png");
 	this->scene = {};
 
+	//racers
+	//track
+	//objects
+
 }
 
 GameLoop::~GameLoop() {
@@ -43,11 +47,7 @@ void GameLoop::display() {
 	}
 		
 	glClear(GL_COLOR_BUFFER_BIT);
-	//glClear(GL_DEPTH_BUFFER_BIT);
-	//glClear(GL_STENCIL_BUFFER_BIT);
-
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 	glEnable(GL_BLEND);
 
 	Loop::drawBackground(this->backgroundPNG, 4, Color4f());
@@ -156,6 +156,7 @@ void GameLoop::display() {
 
 	for (GameObject* obj : scene) {
 		if (obj->getName() == "Player" && obj->getRaceData() != NULL) {
+
 			RaceData* rd = obj->getRaceData();
 			playerDistance = (float)(rd->getLaps() * NUM_TRACK_SEGMENTS) + (float)rd->getCurrentSegment() + rd->getProgressOnCurrentSegment();
 			playerLaps = rd->getLaps();
@@ -185,10 +186,10 @@ void GameLoop::display() {
 	debugger->addMessage(utils::lapsLabel(playerLaps, TOTAL_LAPS));
 	//escape percent because string is actually a format string
 	//can pass format string and variables if needed
-	debugger->addMessage(utils::intLabel("Progress:", (int)(playerProgress*100.0f), "%%"));
+	debugger->addMessage(utils::intLabel("", (int)(playerProgress*100.0f), "%%"));
 
-	//after everything else is drawn
-	double MAX_TIME = 15.0;
+	//after everything else is drawn, print the DNF timer
+	double MAX_TIME = 10.0;
 	if (startTimeOutClock >= 0.0) {
 		double timeout = debugger->getTime() - startTimeOutClock;
 		if (timeout >= MAX_TIME) {
@@ -196,7 +197,7 @@ void GameLoop::display() {
 			return;
 		}
 		else {
-			Loop::drawTextBox(*fonts.at(0), utils::floatLabel("", (float)(MAX_TIME - timeout), "s before DNF"), 0.0f, 80.0f, 180.0f, 50.0f, Color4f(), Color4f(1.0f, 0.2f, 0.2f, 0.8f));
+			Loop::drawTextBox(*fonts.at(0), utils::floatLabel("DNF in ", (float)(MAX_TIME - timeout), "s"), 0.0f, 80.0f, 180.0f, 50.0f, Color4f(), Color4f(1.0f, 0.2f, 0.2f, 0.8f));
 		}
 	}
 	
@@ -255,11 +256,10 @@ void GameLoop::initGame() {
 
 	this->startTimeOutClock = -1.0;
 	this->finished = false;
-
 	Loop::camera = new Camera();
 	
 	font_data* font1 = new font_data();
-	font1->init("resources/fonts/BKANT.TTF", 16);
+	font1->init("resources/fonts/HANDA.TTF", 20);
 	Loop::fonts.push_back(font1);
 
 	vector<Vertex> planeMesh = {
@@ -276,12 +276,8 @@ void GameLoop::initGame() {
 	GameObject* car = new GameObject("Player", carSprites, planeMesh, 0, new Color4f(1.0f, 0.0f, 0.0f, 1.0f));
 	car->scale(0.6f, true);
 	car->setPhysicalAttributes(1.4f, 1.3f, 7.5f);
-
-	//relative to X-axis
 	car->setZAngle(180.0f);
-
 	car->translate(-1.8f, -1.8f, 0.0f);
-
 	car->setPlayerControl(true);
 	car->setCollider(true);
 	car->setPhysics(true);
@@ -290,10 +286,7 @@ void GameLoop::initGame() {
 	ai->scale(0.6f, true);
 	ai->setPhysicalAttributes(1.4f, 1.3f, 7.5f);
 	ai->translate(-0.5f, -1.0f, 0.0f);
-
-	//relative to X-axis
 	ai->setZAngle(170.0f);
-
 	ai->setCollider(true);
 	ai->setPhysics(true);
 	ai->setAIControl(true);
@@ -320,9 +313,6 @@ void GameLoop::initGame() {
 	track->scale(10.0f, false);
 	track->nuScaleBounds(0.5f, 0.5f, 1.0f);
 
-	//TODO: select track by more flexible means than hard-coding it's index
-	scene.push_back(track);
-
 	CollisionRadii* bradii2 = new CollisionRadii(0.0f, 0.0f);
 	bradii2->addRadius(0.29f, 0.0f);
 	bradii2->addRadius(0.32f, 90.0f);
@@ -336,21 +326,18 @@ void GameLoop::initGame() {
 		bradii2
 	};
 	GameObject* box2 = new GameObject("Box2", boxSprites, planeMesh, 0, new Color4f(1.0f, 0.5f, 0.5f, 1.0f));
-	//box2->scale(0.5f, false);
 	box2->translate(-1.0f, 1.5f, 0.0f);
 	box2->setCollider(true);
 	box2->setCollisionBounds(bbounds2);
 	box2->setPhysics(true);
-	//box2->setGhost(true);
-	//box2->setPlayerControl(true);
 	box2->setPhysicalAttributes(1.6f, 1.5f, 6.0f);
 
+	//TODO: select track by more flexible means than hard-coding it's index
+	scene.push_back(track);
 	scene.push_back(box2);
 	scene.push_back(car);
-
 	scene.push_back(ai);
 
 	camera->setCameraTarget(car);
 	camera->setCameraSlowParentFactors(0.15f, 0.5f);
-	
 }
