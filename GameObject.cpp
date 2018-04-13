@@ -17,7 +17,7 @@ GameObject::~GameObject() {
 	this->collisionBounds.clear();
 }
 
-nv::Image* GameObject::defaultSprite = utils::loadPNG("default-sprite.png");
+nv::Image* GameObject::defaultSprite = utils::loadPNG("resources/images/default-sprite.png");
 
 GameObject::GameObject() {
 
@@ -457,6 +457,12 @@ float GameObject::getZAngle() {
 	//0..PI = anticlockwise 180 (facing left)
 	//0..-PI = clockwise 180 (facing right)
 	return this->worldSpaceTransform->getZAngle();
+}
+
+
+void GameObject::setZAngle(float angle) {
+	this->worldSpaceTransform = this->worldSpaceTransform->RotateRadians((angle+270.0f) * (3.1415926f / 180.0f));
+
 }
 
 float GameObject::getAngleFromX() {
@@ -1043,10 +1049,10 @@ bool GameObject::isRacer() {
 
 Matrix3f* GameObject::getNewPosition() {
 	Matrix3f* transform = (new Matrix3f(0.0f, this->forces[0], this->forces[1], this->forces[2], 1.0f))->Multiply(
-		((new Matrix3f(this->zTorque*(3.1415926f / 180.0f), 0.0f, 0.0f, 0.0f, 1.0f))->Multiply(
-			new Matrix3f(0.0f, 0.0f, 0.0f, 0.0f, this->scales[0], this->scales[1], this->scales[2])
+		((new Matrix3f(0.0f, 0.0f, 0.0f, 0.0f, this->scales[0], this->scales[1], this->scales[2])
+			)->Multiply(new Matrix3f(this->zTorque*(3.1415926f / 180.0f), 0.0f, 0.0f, 0.0f, 1.0f)
 		)
-			));
+	));
 
 	return this->worldSpaceTransform->Multiply(transform);
 }

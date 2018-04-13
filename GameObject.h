@@ -107,6 +107,7 @@ class GameObject {
 		Vect4f* getWorldPosition();
 		Vect4f* getScreenPosition();
 		float getZAngle();
+		void setZAngle(float angle);
 		void setPlayerControl(bool playerControl);
 		string getName();
 		void resetModifiers();

@@ -135,7 +135,10 @@ void utils::enableTextureBlending() {
 }
 
 vector<string> utils::getFileContents(char* filename) {
-	FILE* fptr = fopen(filename, "r");
+	
+	FILE* fptr = NULL;
+	fopen_s(&fptr, filename, "r");
+
 	if (!fptr) {
 		MessageBox(NULL, "Could not load data file.", "ERROR", MB_OK | MB_ICONINFORMATION);
 		return {};

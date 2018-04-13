@@ -1,7 +1,9 @@
 #pragma once
 
 #include <windows.h>		// Header File For Windows
-#include "gameloop.h"
+
+#include "LoopManagerOSR.h"
+
 #include "DebugInfo.h"
 #include <chrono>
 #include <time.h>
@@ -20,12 +22,13 @@ public:
 	static void KillGLWindow();									// releases and destroys the window
 	static bool CreateGLWindow(char* title, int width, int height); //creates the window
 	static int WINAPI WinMainHandler(HINSTANCE, HINSTANCE, LPSTR, int, char*);  // Win32 main function
-	static void reshape(int width, int height);
-	static int getScreenHeight();
-	static int getScreenWidth();
 	static bool isLeftPressed();
 	static InputStates* getInputs();
+	
 	static void printMessage(string message);
+	void setActiveLoop(int index);
+	static void reshape(int width, int height);
+
 };
 
 

@@ -14,6 +14,8 @@
     <ProjectGuid>{262F9B9E-A002-4899-BFE4-FD55DB3E9B2F}</ProjectGuid>
     <RootNamespace>firstOpenGL</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>OfficeSpaceRace</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -52,6 +54,9 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -109,7 +114,10 @@
     <ClCompile Include="kgeMatrix.cpp" />
     <ClCompile Include="kgeUtils.cpp" />
     <ClCompile Include="kgeVect.cpp" />
+    <ClCompile Include="Loop.cpp" />
+    <ClCompile Include="LoopManager.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MenuLoop.cpp" />
     <ClCompile Include="win32_window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -123,7 +131,11 @@
     <ClInclude Include="kgeMatrix.h" />
     <ClInclude Include="kgeUtils.h" />
     <ClInclude Include="kgeVect.h" />
+    <ClInclude Include="Loop.h" />
+    <ClInclude Include="LoopManager.h" />
+    <ClInclude Include="LoopManagerOSR.h" />
     <ClInclude Include="Main.h" />
+    <ClInclude Include="MenuLoop.h" />
     <ClInclude Include="RaceData.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Image_Loading\nvImage.h" />

@@ -5,5 +5,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		hPrevInstance,		
 		lpCmdLine,			
 		nCmdShow,
-		"KAGE v1.0");
+		"OfficeSpaceRace");
 }

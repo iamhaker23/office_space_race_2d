@@ -15,14 +15,10 @@ DebugInfo* debugger = new DebugInfo();
 bool	active = TRUE;		// Window Active Flag Set To TRUE By Default
 bool	fullscreen = TRUE;	// Fullscreen Flag Set To Fullscreen Mode By Default
 
-int screenWidth = 800, screenHeight = 800;
+LoopManager* loops = new LoopManagerOSR();
+Loop* loop = NULL;
 
-int win32_window::getScreenHeight() {
-	return screenHeight;
-}
-int win32_window::getScreenWidth() {
-	return screenWidth;
-}
+int screenWidth = 800, screenHeight = 800;
 
 bool win32_window::isLeftPressed() {
 	return inputs->LeftPressed;
@@ -57,7 +53,10 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 
 	//TODO: toggle pause and display a menu via a scenemanager
 	bool paused = false;
+	system_clock::time_point pausedAt = START_CTIME;
 	bool pauseMessageDisplayed = false;
+
+	bool DISABLE_FRAMERATE_CAP = false;
 	
 	int oldTicks = -1;
 
@@ -80,15 +79,30 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 		{
 			if (inputs->keys[VK_ESCAPE]) done = true; //close game
 
-			if (!done) {
+			if (loop != NULL){
+				int requestedActiveLoop = loop->requestedActiveLoop;
+				if (requestedActiveLoop != -1) {
+					loops->setActiveLoop(requestedActiveLoop);
+					loop->requestedActiveLoop = -1;
+				}
+			}
 
+			if (!done && loops->hasLoopChanged()) loop = loops->getActiveLoop();
+
+			if (!done && loop != NULL) {
+								
 				system_clock::time_point cNow = system_clock::now();
 				duration<double> duration = cNow - START_CTIME;
 				debugger->setDuration(duration);
 
-				paused = inputs->keys[VK_BACK];
+				int timeSincePaused = (int)std::chrono::duration_cast<std::chrono::milliseconds>(cNow - pausedAt).count();
 
 				if (!paused) {
+
+					if (timeSincePaused >= 300 && inputs->keys[VK_BACK]) {
+						pausedAt = cNow;
+						paused = true;
+					}
 
 					pauseMessageDisplayed = false;
 
@@ -96,14 +110,14 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 					//std::ratio<1, 100> gives 50Hz
 					//std::ratio<1, 120> gives 60Hz
 					//std::ratio<1, 60> gives 30Hz
-					int ticks = (int)(std::chrono::duration<float, std::ratio<1, 100>>(cNow - WIN_CTIME).count());
+					int ticks = (int)(std::chrono::duration<float, std::ratio<1, 60>>(cNow - WIN_CTIME).count());
 
-					if ((ticks % 2 == 1) && ticks != oldTicks) {
+					if (DISABLE_FRAMERATE_CAP || ((ticks % 2 == 1) && ticks != oldTicks)) {
 
 						oldTicks = ticks;
 						localFrameCount+=1;
 
-						GameLoop::display();	// Draw The Scene
+						loop->display();	// Draw The Scene
 						SwapBuffers(hDC);				// Swap Buffers (Double Buffering)
 
 					}
@@ -111,11 +125,18 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 
 				}
 				else {
-					GameLoop::writeMessage("Paused.");
-					if (!pauseMessageDisplayed) {
+
+					if (timeSincePaused >= 300 && inputs->keys[VK_BACK]) {
+						pausedAt = cNow;
+						paused = false;
+					}
+
+					if (!pauseMessageDisplayed && loop != NULL) {
+						loop->writeMessage("Paused.");
 						pauseMessageDisplayed = true;
 						SwapBuffers(hDC);
 					}
+
 				}
 
 				//if it's been a second since last tic, update framesamples
@@ -236,7 +257,7 @@ void win32_window::KillGLWindow()								// Properly Kill The Window
 	//Free variables.
 	delete debugger;
 	delete inputs;
-	GameLoop::freeData();
+	loops->freeData();
 }
 
 /*	This Code Creates Our OpenGL Window.  Parameters Are:					*
@@ -359,11 +380,14 @@ bool win32_window::CreateGLWindow(char* title, int width, int height)
 	ShowWindow(hWnd, SW_SHOW);						// Show The Window
 	SetForegroundWindow(hWnd);						// Slightly Higher Priority
 	SetFocus(hWnd);									// Sets Keyboard Focus To The Window
+	
+	if (hDC != NULL) {
+		loops->init(hDC, debugger, inputs);
+		loop = loops->getActiveLoop();
+	}
+	
 	win32_window::reshape(width, height);					// Set Up Our Perspective GL Screen
-
-	if (hDC != NULL)
-		GameLoop::init(hDC, debugger);
-
+	
 	return true;									// Success
 }
 
@@ -372,6 +396,12 @@ void win32_window::reshape(int width, int height)		// Resize the OpenGL window
 	screenWidth = width; screenHeight = height;           // to ensure the mouse coordinates match 
 														  // we will use these values to set the coordinate system
 
+	//notify loop
+	if (loop != NULL) {
+		loop->screenHeight = (float)screenHeight;
+		loop->screenWidth = (float)screenWidth;
+	}
+
 	glViewport(0, 0, width, height);						// Reset The Current Viewport
 
 	glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
@@ -379,10 +409,18 @@ void win32_window::reshape(int width, int height)		// Resize the OpenGL window
 
 	double heightRatio = (double)height / (double)width;
 	
+	//stretch the co-ordinate system resulting in proportional viewport FOV
+	double scaleFactor = (heightRatio <= 1.0) ? width / 1000 : 1.0;
+	
 	// set the coordinate system for the window
 	if (heightRatio <= 1.0) {
-		gluOrtho2D(-1.0, 1.0, -heightRatio, heightRatio);  
-	}else gluOrtho2D(-1.0/heightRatio, 1.0/heightRatio, -1.0, 1.0);
+		//height is squeezed
+		gluOrtho2D(-1.0*scaleFactor, 1.0*scaleFactor, -heightRatio*scaleFactor, heightRatio*scaleFactor);
+	}
+	else {
+		//width is squeezed
+		gluOrtho2D((-1.0 / heightRatio)*scaleFactor, (1.0 / heightRatio)*scaleFactor, -1.0*scaleFactor, 1.0*scaleFactor);
+	}
 	
 
 	glMatrixMode(GL_MODELVIEW);							// Select The Modelview Matrix

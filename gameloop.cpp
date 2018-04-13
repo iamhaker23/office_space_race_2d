@@ -1,45 +1,43 @@
 #include "gameloop.h"
 
+GameLoop::GameLoop() {
 
-//Initialise static members
-int GameLoop::frame = 0;
-HDC GameLoop::hDC = NULL;
-DebugInfo* GameLoop::debugger = NULL;
-vector<font_data*> GameLoop::fonts;
-Camera* GameLoop::camera = new Camera();
+	//reset camera
+	delete Loop::camera;
+	Loop::camera = new Camera();
 
-nv::Image* GameLoop::backgroundPNG = utils::loadPNG("bg.png");
-vector<nv::Image*> GameLoop::bgSprites;
-int GameLoop::bgSpriteIndex = -1;
+	this->backgroundPNG = utils::loadPNG("resources/images/backgrounds/aerial_city.png");
+	this->scene = {};
 
-double LastFrameTime = 0.0;
-
-InputStates* GameLoop::inputs = NULL;
-vector<GameObject*> scene;
-
-void GameLoop::freeData() {
-	GameLoop::fonts.clear();
-	delete GameLoop::camera;
-	delete GameLoop::backgroundPNG;
-	GameObject::freeData();
 }
 
-void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
+GameLoop::~GameLoop() {
+	this->freeData();
+}
+
+void GameLoop::freeData() {
+
+	Loop::freeStaticData();
+	delete this->backgroundPNG;
+}
+
+void GameLoop::init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs)
 {
 	hDC = _hDC;
 	debugger = _debugger;
 
 	GameObject::setDebugger(_debugger);
 	
-	GameLoop::inputs = win32_window::getInputs();
+	Loop::inputs = inputs;
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 
 	//utils::BuildFont(hDC);
 
+	fonts.clear();
 	font_data* font1 = new font_data();
-	font1->init("BKANT.TTF", 16);
-	fonts.push_back(font1);
+	font1->init("resources/fonts/BKANT.TTF", 16);
+	Loop::fonts.push_back(font1);
 
 	vector<Vertex> planeMesh = {
 		Vertex(0.0, 0.0, -0.5, -0.5),
@@ -48,16 +46,19 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 		Vertex(1.0, 0.0, 0.5, -0.5)
 	};
 
-	GameLoop::bgSprites = { utils::loadPNG("animbg/bg_1.png") };
-
-	vector<nv::Image*> carSprites = { utils::loadPNG("chair/1.png") ,utils::loadPNG("chair/2.png") ,utils::loadPNG("chair/3.png") };
-	vector<nv::Image*> boxSprites = { utils::loadPNG("box/1.png"), utils::loadPNG("box/2.png"), utils::loadPNG("box/3.png") };
-	vector<nv::Image*> trackSprites = { utils::loadPNG("office_1.png") };
+	vector<nv::Image*> carSprites = { utils::loadPNG("resources/images/chair/1.png") ,utils::loadPNG("resources/images/chair/2.png") ,utils::loadPNG("resources/images/chair/3.png") };
+	vector<nv::Image*> boxSprites = { utils::loadPNG("resources/images/box/1.png"), utils::loadPNG("resources/images/box/2.png"), utils::loadPNG("resources/images/box/3.png") };
+	vector<nv::Image*> trackSprites = { utils::loadPNG("resources/images/tracks/office_1.png") };
 
 	GameObject* car = new GameObject("Player", carSprites, planeMesh, 0, new Color4f( 1.0f, 0.0f, 0.0f, 1.0f ));
 	car->scale(0.6f, true);
 	car->setPhysicalAttributes(1.4f, 1.3f, 7.5f);
-	car->translate(-1.0f, -1.0f, 0.0f);
+
+	//relative to X-axis
+	car->setZAngle(180.0f);
+
+	car->translate(-1.8f, -1.8f, 0.0f);
+
 	car->setPlayerControl(true);
 	car->setCollider(true);
 	car->setPhysics(true);
@@ -65,6 +66,11 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 	GameObject* ai = new GameObject("AI", carSprites, planeMesh, 0, new Color4f(0.0f, 0.5f, 1.0f, 1.0f));
 	ai->scale(0.6f, true);
 	ai->setPhysicalAttributes(1.4f, 1.3f, 7.5f);
+	ai->translate(-0.5f, -1.0f, 0.0f);
+
+	//relative to X-axis
+	ai->setZAngle(170.0f);
+
 	ai->setCollider(true);
 	ai->setPhysics(true);
 	ai->setAIControl(true);
@@ -85,7 +91,7 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 	ai->setCollisionBounds(bounds);
 
 	GameObject* track = new GameObject("Track", trackSprites, planeMesh, 0, new Color4f(1.0f, 1.0f, 1.0f, 1.0f));
-	track->setCollisionBounds(generateTrackBounds("office_container.txt"));
+	track->setCollisionBounds(generateTrackBounds("resources/data/office_container.txt"));
 	track->setCollider(true);
 	track->setPhysicsContainer(true);
 	track->scale(10.0f, false);
@@ -127,6 +133,11 @@ void GameLoop::init(HDC _hDC, DebugInfo* _debugger)
 
 void GameLoop::display() {
 
+	if (inputs->keys[0x51]) {
+		Loop::requestedActiveLoop = 0;
+		return;
+	}
+
 	glClear(GL_COLOR_BUFFER_BIT);
 	//glClear(GL_DEPTH_BUFFER_BIT);
 	//glClear(GL_STENCIL_BUFFER_BIT);
@@ -135,34 +146,17 @@ void GameLoop::display() {
 
 	glEnable(GL_BLEND);
 
-	drawBackground(4, Color4f());
-
-
+	Loop::drawBackground(this->backgroundPNG, 4, Color4f());
+	
 	for (GameObject* obj : scene) {
 		obj->resetCollisionFlags();
 	}
 
 	glPushMatrix();
 
-	GameObject* camTarget = camera->getCameraTarget();
-
-	if (camTarget != NULL) {
-		Vect4f* follow = camTarget->getWorldPosition();
-		Vect4f* camPos = camera->getCameraPosition();
-
-		float movDamp = camera->getSlowFactorMov();
-		camera->setCameraPosition(camPos->x + ((follow->x - camPos->x) * movDamp), camPos->y + ((follow->y - camPos->y) * movDamp), 0.0f);
-
-		//TODO: account for damping
-		//float rotDamp = camera->getSlowFactorRot();
-		//camera->setCameraZAngle(camera->getCameraZAngle() + ((camTarget->getZAngle() - camera->getCameraZAngle()) * rotDamp));
-		camera->setCameraZAngle(camera->getCameraZAngle() + ((camTarget->getZAngle() - camera->getCameraZAngle())));
-
-	}
-
+	//Calculate Camera Transform
 	GameObject::setWorldToCameraTransform(camera->getTransformation());
-
-
+	
 	int NUM_TRACK_SEGMENTS = scene.at(0)->countCollisionRadii()-1;
 	int TRACK_SEGMENT_STEP = 1;
 
@@ -193,26 +187,27 @@ void GameLoop::display() {
 
 				int SKIPPABLE = 4;
 
-				int segDelta = (segmentOn - rd->getCurrentSegment());
-
-				//NOTE: if player reverses by one lap, you'll hit where you were supposed to be and will pass to the next segment,
-				//deliberately allowing player to continue from there, since they've already lost a lap.
-
-				segDelta = (segDelta >= SKIPPABLE) ? segDelta - NUM_TRACK_SEGMENTS : segDelta;
+				int segDelta = segmentOn - rd->getCurrentSegment();
+				
+				//wrap forwards
+				segDelta = (segDelta == -NUM_TRACK_SEGMENTS) ? segmentOn + 1 : segDelta;
+				
+				//will give cheat alert if you SKIP TOO MANY SEGMENTS
+				//e.g. exploiting a hole in the track boundaries
+				//e.g. trying to reverse and go forwards over the finish line
 
 				if (segDelta > 0 && segDelta <= SKIPPABLE) {
-					//complete a lap or move to next segment
-					if (rd->hasCompletedSegments(NUM_TRACK_SEGMENTS-1)) {
+					if (rd->hasCompletedSegments(NUM_TRACK_SEGMENTS)) {
 						rd->incrementLaps();
-						rd->setCurrentSegment(1);
-						rd->setSegmentsCompleted(1);
 					}
-					else{
-						rd->setCurrentSegment(segmentOn);
-						rd->incrementSegmentsCompleted();
-					}
+					rd->setCurrentSegment(segmentOn);
+				}
+				else if (segDelta > 0 && segDelta > SKIPPABLE) {
+					//unecessary to check >0 and >SKIPPABLE but just in case SKIPPABLE gets given a negative value
+					if (obj->getName() == "Player") Loop::writeMessage("CHEAT ALERT", 30.0f, 150.0f, Color4f(), Color4f(0.6f, 0.0f, 0.0f, 0.5f));
 
-				}else if (segDelta == 0) {
+				}
+				else if (segDelta == 0) {
 					//Player is on the same segment, but perhaps some progress has been made
 
 					//NOTE:
@@ -224,6 +219,9 @@ void GameLoop::display() {
 					//on a uniform track they would be combinant
 
 					rd->setProgressOnCurrentSegment(scene.at(0)->getProgressAcrossTrackSegment(segmentOn, obj->getWorldPosition(), TRACK_SEGMENT_STEP));
+				}
+				else if (segDelta < -1) {
+					if (obj->getName() == "Player") Loop::writeMessage("Wrong way!", 30.0f, 150.0f, Color4f(), Color4f(0.6f, 0.4f, 0.0f, 0.5f));
 				}
 
 			}
@@ -249,7 +247,7 @@ void GameLoop::display() {
 			RaceData* rd = obj->getRaceData();
 			playerDistance = (float)(rd->getLaps() * NUM_TRACK_SEGMENTS) + (float)rd->getCurrentSegment() + rd->getProgressOnCurrentSegment();
 			playerLaps = rd->getLaps();
-			playerProgress = (float)rd->getSegmentsCompleted() / ((float)NUM_TRACK_SEGMENTS);
+			playerProgress = (float)rd->getCurrentSegment() / ((float)NUM_TRACK_SEGMENTS);
 		}
 	}
 
@@ -273,7 +271,9 @@ void GameLoop::display() {
 
 	debugger->addMessage(positions.at(playerPosition));
 	debugger->addMessage(utils::lapsLabel(playerLaps, TOTAL_LAPS));
-	debugger->addMessage(utils::intLabel("Progress:", (int)(playerProgress*100.0f), "/100"));
+	//escape percent because string is actually a format string
+	//can pass format string and variables if needed
+	debugger->addMessage(utils::intLabel("Progress:", (int)(playerProgress*100.0f), "%%"));
 
 	if (debugger != NULL) {
 
@@ -287,73 +287,9 @@ void GameLoop::display() {
 		}
 
 	}
-}
-
-void GameLoop::writeMessage(string str) {
-	if (fonts.size() > 0) {
-		Color4f textColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
-		Color4f boxColor = Color4f(0.1f, 0.1f, 0.1f, 0.8f);
-		drawTextBox(*fonts.front(), str, 0.0f, 0.0f, 200.0f, 200.0f, textColor, boxColor);
-	}
-}
-
-void GameLoop::drawTextBox(freetype::font_data _font, string _str, float ssOffsetX, float ssOffsetY, float boxXSize, float boxYSize, Color4f textColor, Color4f boxColor) {
-	glPushMatrix();
-
-		glTranslatef(ssOffsetX, ssOffsetY, 0);
-		float centreX = (float)win32_window::getScreenWidth() / 2.0f;
-		float centreY = (float)win32_window::getScreenHeight() / 2.0f;
-
-
-		freetype::pushScreenCoordinateMatrix();
-		glPushMatrix();
-			glDisable(GL_TEXTURE_2D);
-			glColor4f(boxColor.r, boxColor.g, boxColor.b, boxColor.a);
-			glBegin(GL_QUADS);
-
-			float boxXFactor = boxXSize / 2;
-			float boxYFactor = boxYSize / 2;
-			glVertex2f(centreX - boxXFactor, centreY - boxYFactor);
-			glVertex2f(centreX - boxXFactor, centreY + boxYFactor);
-			glVertex2f(centreX + boxXFactor, centreY + boxYFactor);
-			glVertex2f(centreX + boxXFactor, centreY - boxYFactor);
-
-			glEnd();
-
-			glColor4f(textColor.r, textColor.g, textColor.b, textColor.a);
-			freetype::print(_font, centreX - boxXFactor, centreY+boxYFactor-(_font.h), _str.c_str());
-
-			glEnable(GL_TEXTURE_2D);
-		glPopMatrix();
-		freetype::pop_projection_matrix();
-	glPopMatrix();
-}
-
-void GameLoop::drawBackground(float repeat, Color4f tintColor) {
-	glPushMatrix();
-
-	glEnable(GL_TEXTURE_2D);
-
-	if ((int)GameLoop::bgSprites.size() > 0) {
-		GameLoop::bgSpriteIndex = (GameLoop::bgSpriteIndex == -1 || GameLoop::bgSpriteIndex == (int)GameLoop::bgSprites.size() - 1) ? 0 : GameLoop::bgSpriteIndex + 1;
-		utils::bindPNG(GameLoop::bgSprites.at(GameLoop::bgSpriteIndex));
-	}
-	else {
-		utils::bindPNG(backgroundPNG);
-	}
-
-	glColor4f(tintColor.r, tintColor.g, tintColor.b, tintColor.a);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0, 0.0); glVertex2f(-repeat, -repeat);
-	glTexCoord2f(0.0, repeat); glVertex2f(-repeat, repeat);
-	glTexCoord2f(repeat, repeat); glVertex2f(repeat, repeat);
-	glTexCoord2f(repeat, 0.0); glVertex2f(repeat, -repeat);
-	glEnd();
-	glPopMatrix();
-
-	glDisable(GL_TEXTURE_2D);
-
-	
+	/*
+	END BLOCK COMMENT
+	*/
 }
 
 vector<CollisionRadii*> GameLoop::generateTrackBounds(char* filename){

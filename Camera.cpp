@@ -10,7 +10,10 @@ GameObject* Camera::getCameraTarget() {
 }
 void Camera::setCameraTarget(GameObject* obj) {
 	this->cameraTarget = obj;
+	setCameraPosition(obj->getWorldPosition()->x, obj->getWorldPosition()->y, obj->getWorldPosition()->z);
+	this->setCameraZAngle(this->cameraTarget->getZAngle());
 }
+
 float Camera::getCameraZAngle() {
 	return this->zAngle;
 }
@@ -39,30 +42,20 @@ void Camera::setCameraSlowParentFactors(float movement, float rotation) {
 }
 
 Matrix3f* Camera::getTransformation() {
-	
-	//On second thought, don't FORCE camera transform on all objects because it destroys world-space
-	//I.E. world space becomes locked to camera space!
-	
-	//glMatrixMode(GL_PROJECTION);
-	//glTranslatef(-cameraPos[0], -cameraPos[1], -cameraPos[2]);
-	//glRotatef(-zAngle, 0.0f, 0.0f, 1.0f);
 
-	//this->cameraTransform = (new Matrix3f(0.0f, -cameraPos[0], -cameraPos[1], -cameraPos[2], 0.0f))->RotateRadians(-zAngle);
-	
+	if (this->cameraTarget != NULL) {
+		Vect4f* follow = this->cameraTarget->getWorldPosition();
+		Vect4f* camPos = getCameraPosition();
+
+		float movDamp = this->getSlowFactorMov();
+		this->setCameraPosition(camPos->x + ((follow->x - camPos->x) * movDamp), camPos->y + ((follow->y - camPos->y) * movDamp), 0.0f);
+		this->setCameraZAngle(this->cameraTarget->getZAngle());
+
+	}
+
 	this->cameraTransform = (new Matrix3f(-zAngle, 0.0f, 0.0f, 0.0f, 1.0f));
-	//this->cameraTransform = (new Matrix3f(0.0f, 0.0f, 0.0f, 0.0f, 1.0f));
+	this->cameraTransform = this->cameraTransform->Multiply(new Matrix3f(0.0f, 0.0f, 0.0f, 0.0f, 0.5f));
 	this->cameraTransform = this->cameraTransform->Multiply(new Matrix3f(0.0f, -cameraPos->x, -cameraPos->y, -cameraPos->z, 1.0f));
-	//this->cameraTransform = (new Matrix3f(0.0f, -cameraPos[0], -cameraPos[1], -cameraPos[2], 1.0f));
-	//this->cameraTransform = this->cameraTransform->Multiply(new Matrix3f(-zAngle, 0.0f, 0.0f, 0.0f, 1.0f));
-	//this->cameraTransform = (new Matrix3f(-zAngle, 0.0f, 0.0f, 0.0f, 1.0f))->Translate(-cameraPos[0], -cameraPos[1], -cameraPos[2]);
-	//glMultMatrixf(this->cameraTransform->values);
-	
-	/*
-	zAngle = 0.0f;
-	cameraPos[0] = 0.0f;
-	cameraPos[1] = 0.0f;
-	cameraPos[2] = 0.0f;
-	*/
 
 	return this->cameraTransform;
 }

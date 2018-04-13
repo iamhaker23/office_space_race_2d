@@ -210,8 +210,8 @@ void pop_projection_matrix() {
 	glPopAttrib();
 }
 
-///Much like Nehe's glPrint function, but modified to work
-///with freetype fonts.
+//Much like Nehe's glPrint function, but modified to work
+//with freetype fonts.
 void print(const font_data &ft_font, float x, float y, const char *fmt, ...)  {
 	
 	// We want a coordinate system where things coresponding to window pixels.

@@ -139,7 +139,7 @@ Matrix3f* Matrix3f::RotateRadians(float angle) {
 			0.0f,
 			0.0f,
 			0.0f,
-			1.0f))->Add(this);
+			1.0f))->Multiply(this);
 }
 Matrix3f* Matrix3f::Translate(float x, float y, float z) {
 	return

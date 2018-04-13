@@ -11,6 +11,9 @@
     <ClCompile Include="GameLoop.cpp" />
     <ClCompile Include="kgeMatrix.cpp" />
     <ClCompile Include="kgeVect.cpp" />
+    <ClCompile Include="Loop.cpp" />
+    <ClCompile Include="MenuLoop.cpp" />
+    <ClCompile Include="LoopManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FreeType.h" />
@@ -28,6 +31,10 @@
     <ClInclude Include="kgeMatrix.h" />
     <ClInclude Include="kgeVect.h" />
     <ClInclude Include="RaceData.h" />
+    <ClInclude Include="Loop.h" />
+    <ClInclude Include="MenuLoop.h" />
+    <ClInclude Include="LoopManager.h" />
+    <ClInclude Include="LoopManagerOSR.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="firstOpenGL.rc" />

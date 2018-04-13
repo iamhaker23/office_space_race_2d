@@ -6,7 +6,6 @@ using std::string;
 
 struct RaceData {
 	private:
-		int segmentsCompleted;
 		int currentSegment;
 		int laps;
 		
@@ -18,7 +17,6 @@ struct RaceData {
 		inline RaceData() {
 			this->laps = 0;
 			this->currentSegment = 0;
-			this->segmentsCompleted = 0;
 
 			this->progressOnCurrentSegment = 0.0f;
 			this->position = -1;
@@ -57,20 +55,9 @@ struct RaceData {
 		inline int getLaps() {
 			return this->laps;
 		}
-		inline int getSegmentsCompleted() {
-			return this->segmentsCompleted;
-		}
-
-		inline void setSegmentsCompleted(int completed) {
-			this->segmentsCompleted = completed;
-		}
-
-		inline void incrementSegmentsCompleted() {
-			this->segmentsCompleted += 1;;
-		}
 
 		inline bool hasCompletedSegments(int total) {
-			return ((this->segmentsCompleted) == total);
+			return (this->currentSegment == total);
 		}
 
 
