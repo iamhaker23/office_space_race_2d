@@ -8,7 +8,7 @@ struct RaceData {
 	private:
 		int currentSegment;
 		int laps;
-		
+		string name;
 		float progressOnCurrentSegment;
 		int position;
 
@@ -17,12 +17,19 @@ struct RaceData {
 		inline RaceData() {
 			this->laps = 0;
 			this->currentSegment = 0;
-
+			this->name = "UNKNOWN";
 			this->progressOnCurrentSegment = 0.0f;
 			this->position = -1;
 		}
 
+		inline void setName(string name) {
+			this->name = name;
+		}
 
+		inline string getName() {
+			return this->name;
+		}
+		
 		inline void setPosition(int position) {
 			this->position = position;
 		}

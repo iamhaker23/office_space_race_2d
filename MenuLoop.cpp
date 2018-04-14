@@ -6,7 +6,7 @@ MenuLoop::MenuLoop() : Loop() {
 	delete Loop::camera;
 	Loop::camera = new Camera();
 
-	this->backgroundPNG = utils::loadPNG("resources/images/backgrounds/osr.png");
+	this->backgroundPNG = utils::loadPNG("resources/images/backgrounds/menu.png");
 	this->scene = {};
 
 }
@@ -16,19 +16,14 @@ MenuLoop::~MenuLoop() {
 }
 
 void MenuLoop::freeData() {
-
+	Loop::freeData();
 	Loop::freeStaticData();
-	delete this->backgroundPNG;
 }
 
 void MenuLoop::init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs)
 {
-	hDC = _hDC;
-	debugger = _debugger;
-
+	Loop::init(_hDC, _debugger, inputs);
 	GameObject::setDebugger(_debugger);
-
-	Loop::inputs = inputs;
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	
@@ -42,11 +37,11 @@ void MenuLoop::display() {
 
 	Loop::drawBackground(this->backgroundPNG, 1, Color4f());
 
-	if (inputs->keys[VK_RETURN]) {
-		Loop::requestedActiveLoop = 1;
-	}
-	else {
-		writeMessage("Press enter to start.", 50.0f, 250.0f);
+	if (this->UI.back()->clicked) {
+		if (this->UI.front()->value != "") {
+			this->globals->playerName = this->UI.front()->value;
+		}
+		Loop::requestedActiveLoop = 2;
 	}
 
 }
@@ -55,10 +50,13 @@ void MenuLoop::handleActivation() {
 	//LoopManager has activated this scene
 	//MenuLoop is simple and does not require any housekeeping
 
+	Loop::freeData();
 
 	fonts.clear();
 	font_data* font1 = new font_data();
 	font1->init("resources/fonts/BKANT.TTF", 20);
 	Loop::fonts.push_back(font1);
 
+	this->addUI(new Vect4f(0.0f, 80.0f, 0.0f), new Vect4f(200.0f, 60.0f, 0.0f), "", UIType::TEXTBOX, Loop::fonts.back());
+	this->addUI(new Vect4f(0.0f, -80.0f, 0.0f), new Vect4f(200.0f, 60.0f, 0.0f), "Start Race", UIType::BUTTON, Loop::fonts.back());
 }

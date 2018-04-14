@@ -55,7 +55,7 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 	bool paused = false;
 	system_clock::time_point pausedAt = START_CTIME;
 	bool pauseMessageDisplayed = false;
-
+	int pauseKey = VK_TAB;
 	bool DISABLE_FRAMERATE_CAP = false;
 	
 	int oldTicks = -1;
@@ -97,9 +97,10 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 
 				int timeSincePaused = (int)std::chrono::duration_cast<std::chrono::milliseconds>(cNow - pausedAt).count();
 
+
 				if (!paused) {
 
-					if (loops->getActiveLoopIndex() != 0 && timeSincePaused >= 300 && inputs->keys[VK_BACK]) {
+					if (loops->isActivePausable() && timeSincePaused >= 300 && inputs->keys[pauseKey]) {
 						pausedAt = cNow;
 						paused = true;
 					}
@@ -118,6 +119,8 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 						localFrameCount+=1;
 
 						loop->display();	// Draw The Scene
+
+						loop->drawUI();
 						SwapBuffers(hDC);				// Swap Buffers (Double Buffering)
 
 					}
@@ -126,22 +129,24 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 				}
 				else {
 
-					if (timeSincePaused >= 300 && inputs->keys[VK_BACK]) {
+					if (timeSincePaused >= 300 && inputs->keys[pauseKey]) {
 						pausedAt = cNow;
 						paused = false;
 					}
 					else if (inputs->keys[0x51]) {
-						loops->setActiveLoop(0);
+						loops->setActiveLoop(3);
 						paused = false;
 					}
 
 					if (!pauseMessageDisplayed && loop != NULL) {
 						loop->writeMessage("Paused\nQ - Main Menu");
 						pauseMessageDisplayed = true;
+
 						SwapBuffers(hDC);
 					}
 
 				}
+
 
 				//if it's been a second since last tic, update framesamples
 				if (std::chrono::duration_cast<std::chrono::milliseconds>(cNow - WIN_CTIME).count() >= 1000) {
@@ -183,8 +188,7 @@ LRESULT CALLBACK win32_window::WndProc(HWND	hWnd,			// Handle For This Window
 
 	case WM_LBUTTONDOWN:
 	{
-		inputs->mouse_x = LOWORD(lParam);
-		inputs->mouse_y = screenHeight - HIWORD(lParam);
+
 		inputs->LeftPressed = true;
 	}
 	break;
@@ -197,8 +201,8 @@ LRESULT CALLBACK win32_window::WndProc(HWND	hWnd,			// Handle For This Window
 
 	case WM_MOUSEMOVE:
 	{
-		inputs->mouse_x = LOWORD(lParam);
-		inputs->mouse_y = screenHeight - HIWORD(lParam);
+		inputs->mouse_x = LOWORD(lParam) - (screenWidth / 2);
+		inputs->mouse_y = (screenHeight / 2) - HIWORD(lParam);
 	}
 	break;
 	case WM_KEYDOWN:							// Is A Key Being Held Down?
@@ -216,6 +220,14 @@ LRESULT CALLBACK win32_window::WndProc(HWND	hWnd,			// Handle For This Window
 		inputs->keys[wParam] = false;					// If So, Mark It As FALSE
 
 		return 0;								// Jump Back
+	}
+	case WM_CHAR:
+	{
+		if ((wParam > 64 && wParam < 91) || (wParam > 96 && wParam < 123)) {
+			inputs->character = (char)wParam;
+			inputs->characterIsNew = true;
+		}
+		return 0;
 	}
 	break;
 	}

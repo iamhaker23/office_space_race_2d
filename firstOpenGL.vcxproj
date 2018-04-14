@@ -108,6 +108,7 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DebugInfo.cpp" />
+    <ClCompile Include="FinishLoop.cpp" />
     <ClCompile Include="FreeType.cpp" />
     <ClCompile Include="GameLoop.cpp" />
     <ClCompile Include="GameObject.cpp" />
@@ -119,11 +120,14 @@
     <ClCompile Include="LoopManager.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MenuLoop.cpp" />
+    <ClCompile Include="SplashLoop.cpp" />
     <ClCompile Include="win32_window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="FinishLoop.h" />
     <ClInclude Include="FreeType.h" />
+    <ClInclude Include="GameData.h" />
     <ClInclude Include="GameLoop.h" />
     <ClInclude Include="DebugInfo.h" />
     <ClInclude Include="GameObject.h" />
@@ -143,6 +147,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Image_Loading\nvImage.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="SplashLoop.h" />
     <ClInclude Include="win32_window.h" />
   </ItemGroup>
   <ItemGroup>

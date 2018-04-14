@@ -9,24 +9,19 @@ GameLoop::GameLoop() : Loop() {
 
 GameLoop::~GameLoop() {
 	this->freeData();
-	delete this->backgroundPNG;
-
 }
 
 void GameLoop::freeData() {
 	scene->freeData();
+	Loop::freeData();
 	Loop::freeStaticData();
 	GameObject::freeData();
 }
 
 void GameLoop::init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs)
 {
-	hDC = _hDC;
-	debugger = _debugger;
-
+	Loop::init(_hDC, _debugger, inputs);
 	GameObject::setDebugger(_debugger);
-	
-	Loop::inputs = inputs;
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	
@@ -37,7 +32,19 @@ void GameLoop::display() {
 
 	//before clearing the on screen frame
 	if (finished) {
-		Loop::requestedActiveLoop = 0;
+		Loop::requestedActiveLoop = 3;
+		if (!Loop::globals->updated) {
+			Loop::globals->updated = true;
+			Loop::globals->player = scene->getPlayer()->getRaceData();
+			/*vector<RaceData*> racers = {};
+			for (GO_Racer* r : scene->getRacers()) {
+				if (r != NULL && r->getRaceData() != NULL) {
+					racers.push_back(r->getRaceData());
+				}
+			}
+			Loop::globals->others = racers;*/
+		}
+
 		return;
 	}
 		
@@ -140,6 +147,7 @@ void GameLoop::display() {
 			}
 		}
 	}
+	rd->setPosition(playerPosition);
 
 	debugger->addMessage(utils::getPositionLabel(playerPosition));
 	debugger->addMessage(utils::lapsLabel(playerLaps, TOTAL_LAPS));
@@ -157,7 +165,7 @@ void GameLoop::display() {
 			Loop::drawTextBox(*fonts.at(0), utils::floatLabel("DNF in ", (float)(MAX_TIME - timeout), "s"), 0.0f, 80.0f, 180.0f, 50.0f, Color4f(), Color4f(1.0f, 0.2f, 0.2f, 0.8f));
 		}
 	}
-
+	debugger->addMessage(this->globals->playerName);
 	if (debugger != NULL) {
 
 		Color4f textColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -198,7 +206,7 @@ vector<CollisionRadii*> GameLoop::generateTrackBounds(char* filename){
 
 void GameLoop::handleActivation() {
 	//LoopManager has activated this scene
-
+	Loop::freeData();
 	this->initGame();
 
 }
@@ -211,10 +219,11 @@ void GameLoop::initGame() {
 	this->startTimeOutClock = -1.0;
 	this->finished = false;
 	Loop::camera = new Camera();
-	
+
 	font_data* font1 = new font_data();
 	font1->init("resources/fonts/HANDA.TTF", 20);
 	Loop::fonts.push_back(font1);
+
 
 	vector<nv::Image*> trackSprites = { utils::loadPNG("resources/images/tracks/office_1.png") };
 
@@ -330,7 +339,7 @@ vector<GameObject*> GameLoop::generateObjects() {
 	};
 	for (int i = 0; i < 5; i++) {
 		GameObject* box = new GameObject(utils::intLabel("Box", i,""), boxSprites, generatePlaneMesh(), 0, new Color4f(1.0f, 0.5f, 0.5f, 1.0f));
-		box->translate(-1.0f, 1.5f, 0.0f);
+		box->translate(-1.0f, 1.5f + (i*0.1f), 0.0f);
 		box->scale(0.5f, true);
 		box->setCollider(true);
 		box->setCollisionBounds(bbounds2);

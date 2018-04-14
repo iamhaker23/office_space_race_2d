@@ -8,7 +8,8 @@ using namespace std::chrono;
 struct InputStates{
 
 
-
+	char character;
+	bool characterIsNew;
 	int	mouse_x;
 	int mouse_y;
 	bool LeftPressed;
@@ -17,6 +18,10 @@ struct InputStates{
 
 	public:
 		inline InputStates() {
+
+			this->character = NULL;
+			this->characterIsNew = false;
+
 			this->LeftPressed = false;
 			this->mouse_x = 0;
 			this->mouse_y = 0;

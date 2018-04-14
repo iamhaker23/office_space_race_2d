@@ -31,6 +31,7 @@ GO_Racer::GO_Racer(string name, vector<nv::Image*> sprites, vector<Vertex> mesh,
 	aiControl = false;
 	racer = true;
 	raceData = new RaceData();
+	raceData->setName(name);
 
 }
 
@@ -59,12 +60,13 @@ void GO_Racer::doAIControl(GameObject* track, int trackStep) {
 	if (angle > 180.0f) angle -= 360.0f;
 	if (angle < -180.0f) angle += 360.0f;
 
-	if (abs(angle) > 0.02f || (distSqrd) > 0.001f) {
+	if (this->steering) {
+		if (abs(angle) > 0.02f || (distSqrd) > 0.001f) {
 
-		this->zTorque += 0.02f*angle;
-		this->addForce(0.00f, 0.09f, 0.0f);
+			this->zTorque += 0.02f*angle;
+			this->addForce(0.00f, 0.09f, 0.0f);
+		}
 	}
-
 }
 
 bool GO_Racer::isAI() {
@@ -171,6 +173,10 @@ vector<CollisionResult> GO_Racer::resolveCollision(vector<GameObject*> objs) {
 		for (CollisionResult r : results) {
 			if (r.distanceSqrd < 0.5f) {
 				steering = false;
+				GO_Racer* other = dynamic_cast<GO_Racer*>(r.other);
+				if (other != NULL) {
+					other->steering = false;
+				}
 			}
 		}
 		this->steering = steering;

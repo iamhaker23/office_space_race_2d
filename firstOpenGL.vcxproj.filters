@@ -15,6 +15,8 @@
     <ClCompile Include="MenuLoop.cpp" />
     <ClCompile Include="LoopManager.cpp" />
     <ClCompile Include="GO_Racer.cpp" />
+    <ClCompile Include="SplashLoop.cpp" />
+    <ClCompile Include="FinishLoop.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FreeType.h" />
@@ -39,6 +41,9 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="RaceScene.h" />
     <ClInclude Include="GO_Racer.h" />
+    <ClInclude Include="SplashLoop.h" />
+    <ClInclude Include="GameData.h" />
+    <ClInclude Include="FinishLoop.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="firstOpenGL.rc" />

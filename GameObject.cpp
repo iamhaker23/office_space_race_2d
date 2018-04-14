@@ -491,6 +491,8 @@ vector<CollisionResult> GameObject::resolveCollisions(vector<GameObject*> others
 						
 						this->collided = true;
 						other->collided = true;
+						result.other = other;
+
 
 						//regular collision
 						if (GameObject::drawDebug) {
@@ -522,6 +524,7 @@ vector<CollisionResult> GameObject::resolveCollisions(vector<GameObject*> others
 
 						this->collided = true;
 						other->collided = true;
+						result.other = other;
 
 						//short circuit optimisation?
 						if (bothPhysics || (other->hasPhysics() && !this->isGhost())) {
@@ -543,6 +546,7 @@ vector<CollisionResult> GameObject::resolveCollisions(vector<GameObject*> others
 
 						this->collided = false;
 						other->collided = false;
+						result.other = NULL;
 
 						//no collision
 						if (GameObject::drawDebug) {

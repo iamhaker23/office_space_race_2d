@@ -5,6 +5,7 @@
 
 #include "kgeMatrix.h"
 #include "kgeVect.h"
+#include "kgeUtils.h"
 
 #ifndef KGE_GEOMETRY
 
@@ -13,14 +14,17 @@
 using std::vector;
 using std::string;
 
+class GameObject;
+
 struct CollisionResult {
 
 public:
 	inline CollisionResult() {
 		this->distanceSqrd = 0.0f;
 		this->point = Vect4f();
+		this->other = NULL;
 	}
-	
+	GameObject* other;
 	float distanceSqrd;
 	Vect4f point;
 
@@ -402,5 +406,42 @@ public:
 };
 
 
+enum UIType {
+	BUTTON = 1, TEXTBOX = 2, LABEL = 3
+};
+struct UIElement {
+public:
+	Vect4f* location;
+	Vect4f* size;
+	string value;
+	Color4f* textColor;
+	Color4f* boxColor;
+	Color4f* altColor;
+	bool enabled;
+	bool focused;
+	UIType type;
+	bool focusedColor;
+	font_data* font;
+	bool clicked;
+
+	UIElement(Vect4f* location, Vect4f* size, string value, UIType type, font_data* font) {
+		this->location = location;
+		this->size = size;
+		this->value = value;
+		this->type = type;
+
+		this->textColor = new Color4f();
+		this->boxColor = new Color4f(0.1f, 0.1f, 0.1f, 0.4f);
+		this->altColor = new Color4f(0.5f, 0.5f, 0.5f, 0.4f);
+		this->enabled = true;
+		this->focused = false;
+		this->focusedColor = false;
+		this->font = font;
+		this->clicked = false;
+	}
+	void setValue(string value) {
+		this->value = value;
+	}
+};
 
 #endif

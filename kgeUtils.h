@@ -6,6 +6,7 @@
 #include "Image_Loading\nvImage.h"
 #include <gl\gl.h>			// Header File For The OpenGL32 Library
 #include <gl\glu.h>			// Header File For The GLu32 Library
+#include "freetype.h"
 
 #ifndef KGE_UTILS
 
@@ -14,6 +15,7 @@
 	using std::fixed;
 	using std::stringstream;
 	using std::vector;
+	using freetype::font_data;
 
 	class utils {
 		private:

@@ -13,6 +13,10 @@ void LoopManager::setLoops(vector<Loop*> loops) {
 	this->loops = loops;
 }
 
+bool LoopManager::isActivePausable() {
+	return true;
+}
+
 Loop* LoopManager::getActiveLoop() {
 	//handle activation in the call that will get the
 	if (this->loopChanged) this->loops.at(this->active)->handleActivation();

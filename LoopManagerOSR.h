@@ -13,12 +13,19 @@ class LoopManagerOSR : public LoopManager {
 		inline void init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs) {
 
 			setLoops({
+				new SplashLoop(),
 				new MenuLoop(),
-				new GameLoop()
+				new GameLoop(),
+				new FinishLoop()
 			});
 
 			initLoops(_hDC, _debugger, inputs);
 			
+		}
+
+		inline bool isActivePausable() override{
+			//In Office Space Racer, only Loop 2, GameLoop, is pausable.
+			return this->getActiveLoopIndex() == 2;
 		}
 		
 };

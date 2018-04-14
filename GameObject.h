@@ -85,7 +85,7 @@ class GameObject {
 		GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite, Color4f* objectColor);
 		
 		void animate(AnimationLogic al);
-		void draw();
+		virtual void draw();
 
 		string toString();
 		string getName();
@@ -134,6 +134,7 @@ class GameObject {
 		float getProgressAcrossTrackSegment(int segIndex, Vect4f* worldPosition, int step);
 		
 };
+
 
 
 #endif
