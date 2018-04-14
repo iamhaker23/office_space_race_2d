@@ -13,6 +13,19 @@
 using std::vector;
 using std::string;
 
+struct CollisionResult {
+
+public:
+	inline CollisionResult() {
+		this->distanceSqrd = 0.0f;
+		this->point = Vect4f();
+	}
+	
+	float distanceSqrd;
+	Vect4f point;
+
+};
+
 struct Color4f {
 public:
 	float r;

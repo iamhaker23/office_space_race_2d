@@ -110,7 +110,7 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 					//std::ratio<1, 100> gives 50Hz
 					//std::ratio<1, 120> gives 60Hz
 					//std::ratio<1, 60> gives 30Hz
-					int ticks = (int)(std::chrono::duration<float, std::ratio<1, 60>>(cNow - WIN_CTIME).count());
+					int ticks = (int)(std::chrono::duration<float, std::ratio<1, 100>>(cNow - WIN_CTIME).count());
 
 					if (DISABLE_FRAMERATE_CAP || ((ticks % 2 == 1) && ticks != oldTicks)) {
 

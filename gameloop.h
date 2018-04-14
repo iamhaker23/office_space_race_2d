@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Loop.h"
+#include "RaceScene.h"
 
 #ifndef GAMELOOP_H
 
@@ -10,7 +11,7 @@
 		
 
 	private:
-		vector<GameObject*> scene;
+		RaceScene* scene;
 		nv::Image* backgroundPNG;
 
 		bool finished;
@@ -18,6 +19,11 @@
 
 		static vector<CollisionRadii*> generateTrackBounds(char* filename);
 		void initGame();
+
+		static vector<GO_Racer*> generateRacers(int numAI); 
+		static GO_Racer* generatePlayer();
+		static vector<GameObject*> generateObjects();
+		static vector<Vertex> generatePlaneMesh();
 			
 	public:
 		

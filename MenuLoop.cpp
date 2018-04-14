@@ -1,6 +1,6 @@
 #include "MenuLoop.h"
 
-MenuLoop::MenuLoop() {
+MenuLoop::MenuLoop() : Loop() {
 
 	//reset camera
 	delete Loop::camera;
@@ -31,24 +31,7 @@ void MenuLoop::init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs)
 	Loop::inputs = inputs;
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
-
-	fonts.clear();
-	font_data* font1 = new font_data();
-	font1->init("resources/fonts/HANDA.TTF", 20);
-	Loop::fonts.push_back(font1);
 	
-	/*
-	vector<Vertex> planeMesh = {
-		Vertex(0.0, 0.0, -0.5, -0.5),
-		Vertex(0.0, 1.0, -0.5, 0.5),
-		Vertex(1.0, 1.0, 0.5, 0.5),
-		Vertex(1.0, 0.0, 0.5, -0.5)
-	};
-
-	scene.push_back(ai);
-	camera->setCameraTarget(car);
-	camera->setCameraSlowParentFactors(0.15f, 0.5f);
-	*/
 }
 
 void MenuLoop::display() {
@@ -71,4 +54,11 @@ void MenuLoop::display() {
 void MenuLoop::handleActivation() {
 	//LoopManager has activated this scene
 	//MenuLoop is simple and does not require any housekeeping
+
+
+	fonts.clear();
+	font_data* font1 = new font_data();
+	font1->init("resources/fonts/BKANT.TTF", 20);
+	Loop::fonts.push_back(font1);
+
 }

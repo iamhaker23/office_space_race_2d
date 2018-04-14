@@ -23,7 +23,7 @@ enum AnimationLogic {
 };
 
 class GameObject {
-	private:
+	protected:
 
 		static nv::Image* defaultSprite;
 		static DebugInfo* debugger;
@@ -60,18 +60,13 @@ class GameObject {
 		bool physicsContainer;
 		vector<string> collidedWithThisFrame;
 
-		bool steering;
 		bool physics;
 		GLfloat forces[3];
 		GLfloat zTorque;
 		GLfloat friction;
 		GLfloat angularDamping;
-
-		bool playerControl;
-		bool aiControl;
 		float topSpeed;
-		bool racer;
-		RaceData* raceData;
+
 
 	public:
 		static void setDebugMode(bool flag);
@@ -91,7 +86,6 @@ class GameObject {
 		
 		void animate(AnimationLogic al);
 		void draw();
-		void processInputs(InputStates* inputs);
 
 		string toString();
 		string getName();
@@ -100,6 +94,7 @@ class GameObject {
 		void setPhysics(bool flag); 
 		void setSprite(int index);
 
+		Matrix3f* getNewPosition();
 		Vect4f* getWorldPosition();
 		float getZAngle();
 		void setZAngle(float angle);
@@ -116,7 +111,7 @@ class GameObject {
 
 		int countCollisionRadii();
 		void setCollisionBounds(vector<CollisionRadii*> bounds);
-		void resolveCollisions(vector<GameObject*> others);
+		vector<CollisionResult> resolveCollisions(vector<GameObject*> others);
 		bool isCollider();
 		void resetModifiers(); 
 		void setCollider(bool flag);
@@ -136,15 +131,8 @@ class GameObject {
 		void setPhysicsContainer(bool flag);
 		bool isPhysicsContainer();
 
-		void setAIControl(bool flag);
-		void setPlayerControl(bool playerControl);
-		bool isAI();
-		bool isRacer();
-		Matrix3f* getNewPosition();
-		RaceData* getRaceData(); 
-		void initRaceData();
 		float getProgressAcrossTrackSegment(int segIndex, Vect4f* worldPosition, int step);
-		static void doAIControl(GameObject* me, GameObject* track, int trackStep);
+		
 };
 
 

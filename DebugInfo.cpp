@@ -35,11 +35,8 @@ void DebugInfo::reset() {
 string DebugInfo::getOutput() {
 	string output = "";
 
-	output.append("Current Time:\n");
-	output.append(utils::doubleToString(cDuration.count()));
-	output.append("\nAvg. Framerate:\n");
-	output.append(utils::doubleToString(getAverageFrameRate()));
-	output.append("\nMessages:\n");
+	output.append(utils::floatLabel("Time:", (float)cDuration.count(), "s\n"));
+	output.append(utils::floatLabel("", (float)getAverageFrameRate(), "fps\n"));
 
 	for (string message : this->messages) {
 		output.append(message);

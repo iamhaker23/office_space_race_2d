@@ -5,7 +5,6 @@
 #include "kgeUtils.h"
 #include "freetype.h"		// Header for font library.
 #include <windows.h>
-#include "GameObject.h"
 #include "Camera.h"
 //#include "win32_window.h"
 

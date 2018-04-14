@@ -44,6 +44,18 @@ string utils::lapsLabel(int completed, int laps) {
 	return ss.str();
 }
 
+string utils::getPositionLabel(int val) {
+	char* suffix = "th";
+	if (val <= 10 || val >= 20) {
+		int remainder = val % 10;
+		suffix = (remainder == 1) ? "st" : suffix;
+		suffix = (remainder == 2) ? "nd" : suffix;
+		suffix = (remainder == 3) ? "rd" : suffix;
+	}
+
+	return intLabel("", val, suffix);
+}
+
 GLvoid utils::BuildFont(HDC hDC)								// Build Our Bitmap Font
 {
 	HFONT	font;										// Windows Font ID

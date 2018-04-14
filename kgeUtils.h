@@ -37,7 +37,7 @@
 			static vector<string> getFileContents(char* filename);
 			static vector<string> readLines(FILE* fptr);
 			static vector<string> splitString(string input, char delimiter);
-
+			static string utils::getPositionLabel(int val);
 
 
 	};

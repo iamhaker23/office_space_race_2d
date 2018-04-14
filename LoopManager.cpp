@@ -14,6 +14,9 @@ void LoopManager::setLoops(vector<Loop*> loops) {
 }
 
 Loop* LoopManager::getActiveLoop() {
+	//handle activation in the call that will get the
+	if (this->loopChanged) this->loops.at(this->active)->handleActivation();
+	
 	this->loopChanged = false;
 	if (this->active >= (int)this->loops.size()) {
 		return NULL;
@@ -28,9 +31,6 @@ int LoopManager::getActiveLoopIndex() {
 void LoopManager::setActiveLoop(int loopIdx) {
 	if (loopIdx < (int)this->loops.size()) {
 		this->active = loopIdx;
-		
-		this->loops.at(this->active)->handleActivation();
-		
 		this->loopChanged = true;
 	}
 }
