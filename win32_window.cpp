@@ -134,7 +134,7 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 						paused = false;
 					}
 					else if (inputs->keys[0x51]) {
-						loops->setActiveLoop(3);
+						loops->setActiveLoop(1);
 						paused = false;
 					}
 

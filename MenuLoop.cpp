@@ -6,7 +6,7 @@ MenuLoop::MenuLoop() : Loop() {
 	delete Loop::camera;
 	Loop::camera = new Camera();
 
-	this->backgroundPNG = utils::loadPNG("resources/images/backgrounds/menu.png");
+	this->backgroundPNG = utils::initTexture(utils::loadPNG("resources/images/backgrounds/menu.png"));
 	this->scene = {};
 
 }

@@ -21,7 +21,7 @@ public:
 
 	~GO_Racer();
 	GO_Racer(); 
-	GO_Racer(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite, Color4f* objectColor);
+	GO_Racer(string name, vector<GLuint> sprites, vector<Vertex> mesh, int activeSprite, Color4f* objectColor);
 	GO_Racer(const GO_Racer &copy);
 
 	void draw();

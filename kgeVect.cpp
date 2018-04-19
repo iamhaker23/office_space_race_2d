@@ -18,6 +18,7 @@ Vect4f::Vect4f() {
 	this->z = 0.0f;
 	this->w = 1.0f;
 }
+
 Vect4f* Vect4f::add(Vect4f* other) {
 	return new Vect4f(other->x + this->x, other->y + this->y, other->z + this->z, other->w + this->w);
 }
@@ -76,4 +77,8 @@ Vect4f* Vect4f::subtract(Vect4f* other) {
 	//w is left as 1.0f
 
 	return output;
+}
+
+Vect4f::~Vect4f() {
+
 }

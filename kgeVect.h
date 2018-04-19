@@ -17,9 +17,12 @@ public:
 	float y;
 	float z;
 	float w;
+
 	Vect4f(float x, float y, float z, float w);
 	Vect4f(float x, float y, float z);
 	Vect4f();
+	~Vect4f();
+
 	Vect4f* add(Vect4f* other);
 	Vect4f* transform(Matrix3f* space);
 	Vect4f* scale(float x, float y, float z);
@@ -28,6 +31,8 @@ public:
 	float getY();
 	float getZ();
 	Vect4f* subtract(Vect4f* other);
+
+
 };
 
 #endif

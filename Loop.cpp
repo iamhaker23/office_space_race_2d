@@ -58,7 +58,7 @@ void Loop::drawTextBox(freetype::font_data _font, string _str, float ssOffsetX, 
 	glPopMatrix();
 }
 
-void Loop::drawBackground(nv::Image* image, float repeat, Color4f tintColor) {
+void Loop::drawBackground(GLuint image, float repeat, Color4f tintColor) {
 
 	if (image == NULL) return;
 
@@ -66,7 +66,7 @@ void Loop::drawBackground(nv::Image* image, float repeat, Color4f tintColor) {
 
 	glEnable(GL_TEXTURE_2D);
 
-	utils::bindPNG(image);
+	utils::bindTexture(image);
 
 	glColor4f(tintColor.r, tintColor.g, tintColor.b, tintColor.a);
 	glBegin(GL_QUADS);
@@ -84,7 +84,7 @@ void Loop::drawBackground(nv::Image* image, float repeat, Color4f tintColor) {
 void Loop::freeStaticData() {
 	
 	Loop::fonts.clear();
-	delete Loop::camera;
+	Loop::camera->freeData();
 
 }
 

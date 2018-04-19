@@ -30,7 +30,7 @@ class Loop {
 		static void writeMessage(string str, float h, float w);
 		static void writeMessage(string str, float h, float w, Color4f textColor, Color4f boxColor);
 		static void drawTextBox(freetype::font_data _font, string _str, float ssOffsetX, float ssOffsetY, float boxXSize, float boxYSize, Color4f textColor, Color4f boxColor);
-		static void drawBackground(nv::Image* image, float repeat, Color4f tintColor);
+		static void drawBackground(GLuint image, float repeat, Color4f tintColor);
 		static void freeStaticData();
 
 		double loopStarted;

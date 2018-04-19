@@ -20,6 +20,7 @@
 	class utils {
 		private:
 			static GLuint base;
+			static GLuint textureCount;
 
 		public:
 			static string doubleToString(double val);
@@ -33,8 +34,11 @@
 			static GLvoid BuildFont(HDC hDC);
 			static GLvoid KillFont(GLvoid);
 			static GLvoid glPrint(string fmt);
+
 			static nv::Image* loadPNG(std::string name);
-			static void bindPNG(nv::Image* img);
+			static GLuint utils::initTexture(nv::Image* img);
+			static void utils::bindTexture(GLuint tex);
+
 			static void utils::enableTextureBlending();
 			static vector<string> getFileContents(char* filename);
 			static vector<string> readLines(FILE* fptr);

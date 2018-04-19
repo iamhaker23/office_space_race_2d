@@ -5,6 +5,13 @@
 Camera::Camera() {
 	this->cameraTarget = NULL;
 }
+
+
+void Camera::freeData() {
+	this->cameraTransform->freeData();
+
+}
+
 GameObject* Camera::getCameraTarget() {
 	return this->cameraTarget;
 }

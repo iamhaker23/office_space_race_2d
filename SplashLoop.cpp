@@ -6,7 +6,7 @@ SplashLoop::SplashLoop() : Loop() {
 	delete Loop::camera;
 	Loop::camera = new Camera();
 
-	this->backgroundPNG = utils::loadPNG("resources/images/backgrounds/splash.png");
+	this->backgroundPNG = utils::initTexture(utils::loadPNG("resources/images/backgrounds/splash.png"));
 	this->scene = {};
 
 }

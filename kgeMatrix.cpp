@@ -1,7 +1,7 @@
 #include "kgeMatrix.h"
 
 Matrix3f::~Matrix3f() {
-	delete[](GLfloat*)values;
+	freeData();
 }
 
 Matrix3f::Matrix3f() {
@@ -175,4 +175,8 @@ void Matrix3f::loadMatrix(GLfloat* _values) {
 	for (int i = 0; i < 16; i++) {
 		this->values[i] = _values[i];
 	}
+}
+
+void Matrix3f::freeData() {
+	delete [] this->values;
 }

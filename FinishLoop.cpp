@@ -6,7 +6,7 @@ FinishLoop::FinishLoop() : Loop() {
 	delete Loop::camera;
 	Loop::camera = new Camera();
 
-	this->backgroundPNG = utils::loadPNG("resources/images/backgrounds/finished.png");
+	this->backgroundPNG = utils::initTexture(utils::loadPNG("resources/images/backgrounds/finished.png"));
 	this->scene = {};
 
 }
@@ -38,7 +38,7 @@ void FinishLoop::display() {
 	Loop::drawBackground(this->backgroundPNG, 1, Color4f());
 
 	if (this->UI.front()->clicked) {
-		Loop::requestedActiveLoop = 0;
+		Loop::requestedActiveLoop = 1;
 	}
 	else {
 

@@ -12,7 +12,7 @@
 
 	private:
 		RaceScene* scene;
-		nv::Image* backgroundPNG;
+		GLuint backgroundPNG;
 
 		bool finished;
 		double startTimeOutClock;

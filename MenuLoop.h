@@ -10,7 +10,7 @@ class MenuLoop : public Loop {
 
 private:
 	vector<GameObject*> scene;
-	nv::Image* backgroundPNG;
+	GLuint backgroundPNG;
 
 public:
 

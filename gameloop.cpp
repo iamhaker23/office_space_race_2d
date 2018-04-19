@@ -2,7 +2,7 @@
 
 GameLoop::GameLoop() : Loop() {
 	
-	this->backgroundPNG = utils::loadPNG("resources/images/backgrounds/aerial_city.png");
+	this->backgroundPNG = utils::initTexture(utils::loadPNG("resources/images/backgrounds/aerial_city.png"));
 	this->scene = new RaceScene();
 
 }
@@ -225,7 +225,7 @@ void GameLoop::initGame() {
 	Loop::fonts.push_back(font1);
 
 
-	vector<nv::Image*> trackSprites = { utils::loadPNG("resources/images/tracks/office_1.png") };
+	vector<GLuint> trackSprites = { utils::initTexture(utils::loadPNG("resources/images/tracks/office_1.png")) };
 
 	vector<GO_Racer*> racers = GameLoop::generateRacers(3);
 	vector<GameObject*> objects = GameLoop::generateObjects();
@@ -254,7 +254,9 @@ void GameLoop::initGame() {
 
 GO_Racer* GameLoop::generatePlayer() {
 
-	vector<nv::Image*> carSprites = { utils::loadPNG("resources/images/chair/1.png") ,utils::loadPNG("resources/images/chair/2.png") ,utils::loadPNG("resources/images/chair/3.png") };
+	vector<GLuint> carSprites = { utils::initTexture(utils::loadPNG("resources/images/chair/1.png")) 
+		,utils::initTexture(utils::loadPNG("resources/images/chair/2.png")) 
+		,utils::initTexture(utils::loadPNG("resources/images/chair/3.png")) };
 
 	GO_Racer* player = new GO_Racer("Player", carSprites, generatePlaneMesh(), 0, new Color4f(1.0f, 0.0f, 0.0f, 1.0f));
 	player->scale(0.6f, true);
@@ -285,7 +287,9 @@ GO_Racer* GameLoop::generatePlayer() {
 vector<GO_Racer*> GameLoop::generateRacers(int numAI) {
 
 	vector<GO_Racer*> output = {}; 
-	vector<nv::Image*> carSprites = { utils::loadPNG("resources/images/chair/1.png") ,utils::loadPNG("resources/images/chair/2.png") ,utils::loadPNG("resources/images/chair/3.png") };
+	vector<GLuint> carSprites = { utils::initTexture(utils::loadPNG("resources/images/chair/1.png"))
+		,utils::initTexture(utils::loadPNG("resources/images/chair/2.png")) 
+		,utils::initTexture(utils::loadPNG("resources/images/chair/3.png")) };
 	
 	//effectively instancing for bounds (i.e. change one, change all).
 	CollisionRadii* radii = new CollisionRadii(0.0f, 0.0f);
@@ -323,7 +327,7 @@ vector<GameObject*> GameLoop::generateObjects() {
 
 	vector<GameObject*> output = {};
 
-	vector<nv::Image*> boxSprites = { utils::loadPNG("resources/images/box/1.png")};
+	vector<GLuint> boxSprites = { utils::initTexture(utils::loadPNG("resources/images/box/1.png")) };
 	
 	CollisionRadii* bradii2 = new CollisionRadii(0.0f, 0.0f);
 	bradii2->addRadius(0.29f, 0.0f);

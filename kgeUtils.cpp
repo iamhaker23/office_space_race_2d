@@ -1,6 +1,7 @@
 #include "kgeUtils.h"
 
 GLuint utils::base = 0;
+GLuint utils::textureCount = 0;
 
 string utils::doubleToString(double val) {
 	stringstream ss;
@@ -117,18 +118,14 @@ nv::Image* utils::loadPNG(std::string name)
 }
 
 
-void utils::bindPNG(nv::Image* img) {
+GLuint utils::initTexture(nv::Image* img) {
 
-	GLuint myTextureID = 0;
+	GLuint myTextureID = textureCount++;
 
 	if (img != NULL) {
-		
-		//URGENT TODO
-		//Commentting ruins text
-		//Uncommenting results in constant memory usage increase
-		//glGenTextures(1, &myTextureID);
-		glBindTexture(GL_TEXTURE_2D, myTextureID);
 
+		glBindTexture(GL_TEXTURE_2D, myTextureID);
+		
 		glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 		glTexImage2D(GL_TEXTURE_2D, 0, img->getInternalFormat(), img->getWidth(), img->getHeight(), 0, img->getFormat(), img->getType(), img->getLevel(0));
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -138,7 +135,13 @@ void utils::bindPNG(nv::Image* img) {
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
 	}
 
-	//return myTextureID;
+	return myTextureID;
+}
+
+void utils::bindTexture(GLuint tex) {
+
+	glBindTexture(GL_TEXTURE_2D, tex);
+
 }
 
 void utils::enableTextureBlending() {

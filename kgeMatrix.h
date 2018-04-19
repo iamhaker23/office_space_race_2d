@@ -29,6 +29,8 @@ public:
 	~Matrix3f();
 	Matrix3f();
 	Matrix3f(const Matrix3f &copy);
+
+	void freeData();
 	void initValues();
 	Matrix3f(float radians, float x, float y, float z, float scale);
 	Matrix3f(float radians, float x, float y, float z, float scalex, float scaley, float scalez);

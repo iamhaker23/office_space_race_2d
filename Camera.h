@@ -18,6 +18,7 @@ private:
 
 public:
 	Camera();
+	void freeData();
 	GameObject* getCameraTarget();
 	void setCameraTarget(GameObject* obj);
 	float getCameraZAngle();

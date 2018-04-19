@@ -25,7 +25,7 @@ enum AnimationLogic {
 class GameObject {
 	protected:
 
-		static nv::Image* defaultSprite;
+		static GLuint defaultSprite;
 		static DebugInfo* debugger;
 		//Matrix to convert world to camera space
 		static Matrix3f* worldToCamera;
@@ -35,7 +35,7 @@ class GameObject {
 
 		int pingPongDirection;
 		int activeSpriteIndex;
-		vector<nv::Image*> sprites;
+		vector<GLuint> sprites;
 
 		Color4f* objectColor;
 
@@ -82,7 +82,7 @@ class GameObject {
 		~GameObject();
 		GameObject();
 		GameObject(const GameObject &copy);
-		GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite, Color4f* objectColor);
+		GameObject(string name, vector<GLuint> sprites, vector<Vertex> mesh, int activeSprite, Color4f* objectColor);
 		
 		void animate(AnimationLogic al);
 		virtual void draw();

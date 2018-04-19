@@ -24,7 +24,7 @@ GO_Racer::GO_Racer(const GO_Racer &copy) : GameObject(copy) {
 
 }
 
-GO_Racer::GO_Racer(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite, Color4f* objectColor) : GameObject(name, sprites, mesh, activeSprite, objectColor) {
+GO_Racer::GO_Racer(string name, vector<GLuint> sprites, vector<Vertex> mesh, int activeSprite, Color4f* objectColor) : GameObject(name, sprites, mesh, activeSprite, objectColor) {
 
 	steering = true;
 	playerControl = false;

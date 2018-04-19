@@ -4,6 +4,7 @@
 DebugInfo* GameObject::debugger = NULL;
 Matrix3f* GameObject::worldToCamera = NULL;
 bool GameObject::drawDebug = false;
+GLuint GameObject::defaultSprite = utils::initTexture(utils::loadPNG("resources/images/default-sprite.png"));
 
 void GameObject::freeData() {
 	//TODO: cannot free these via Loop Manager without causing crash
@@ -21,10 +22,10 @@ GameObject::~GameObject() {
 	
 }
 
-nv::Image* GameObject::defaultSprite = utils::loadPNG("resources/images/default-sprite.png");
 
 GameObject::GameObject() {
 
+	this->sprites = {};
 	this->sprites.push_back(GameObject::defaultSprite);
 	this->objectColor = new Color4f();
 
@@ -93,7 +94,7 @@ GameObject::GameObject(const GameObject &copy) {
 
 }
 
-GameObject::GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> mesh, int activeSprite,  Color4f* objectColor) {
+GameObject::GameObject(string name, vector<GLuint> sprites, vector<Vertex> mesh, int activeSprite,  Color4f* objectColor) {
 	
 	this->name = name;
 	this->mesh = mesh;
@@ -133,7 +134,7 @@ GameObject::GameObject(string name, vector<nv::Image*> sprites, vector<Vertex> m
 void GameObject::draw() {
 
 	if ((int)this->sprites.size() > 0) {
-		utils::bindPNG(this->sprites[this->activeSpriteIndex]);
+		utils::bindTexture(this->sprites[this->activeSpriteIndex]);
 		glEnable(GL_TEXTURE_2D);
 	}
 	else {
