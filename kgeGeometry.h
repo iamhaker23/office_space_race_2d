@@ -24,6 +24,18 @@ public:
 		this->point = Vect4f();
 		this->other = NULL;
 	}
+
+	inline ~CollisionResult() {
+		//no longer reference the given object and leave it in memory
+		this->other = NULL;
+	}
+
+	inline CollisionResult(const CollisionResult &copy){
+		this->distanceSqrd = copy.distanceSqrd;
+		this->other = copy.other;
+		this->point = copy.point;
+	}
+
 	GameObject* other;
 	float distanceSqrd;
 	Vect4f point;
@@ -81,9 +93,30 @@ public:
 	vector<float> radii;
 	vector<float> angles;
 	Color4f* drawColor;
-	int lastSelected[2] = { -1, -1 };
 
 	~CollisionRadii() {
+		this->radii.clear();
+		this->angles.clear();
+		delete drawColor;
+	}
+	
+	inline CollisionRadii(const CollisionRadii &copy) {
+		
+		this->radii = {};
+		this->angles = {};
+
+		if (copy.radii.size() == copy.angles.size()) {
+			for (int i = 0; i < (int)copy.radii.size(); i++) {
+				this->angles.push_back(copy.angles.at(i));
+				this->radii.push_back(copy.radii.at(i));
+			}
+		}
+
+		this->drawColor = new Color4f(copy.drawColor->r, copy.drawColor->g, copy.drawColor->b, copy.drawColor->a);
+		this->centreX = copy.centreX;
+		this->centreY = copy.centreY;
+		this->trigonometricInterpolation = copy.trigonometricInterpolation;
+
 	}
 
 	CollisionRadii(float x, float y) {
@@ -104,14 +137,6 @@ public:
 
 		trigonometricInterpolation = false;
 		drawColor = new Color4f();
-	}
-	inline void setLastSelected(int lasta, int lastb) {
-		this->lastSelected[0] = lasta;
-		this->lastSelected[1] = lastb;
-	}
-
-	inline int* getLastSelected() {
-		return this->lastSelected;
 	}
 
 	inline void CollisionRadii::setDrawColor(float r, float g, float b, float a) {
@@ -391,8 +416,6 @@ public:
 			/ (mutingC + mutingS);
 
 			*/
-		this->lastSelected[0] = first;
-		this->lastSelected[1] = second;
 
 		//cache?
 		//if close-to-between two other radii
@@ -424,9 +447,31 @@ public:
 	font_data* font;
 	bool clicked;
 
-	UIElement(Vect4f* location, Vect4f* size, string value, UIType type, font_data* font) {
-		this->location = location;
-		this->size = size;
+	inline ~UIElement() {
+		
+		delete location;
+		delete size;
+		delete textColor;
+		delete boxColor;
+		delete altColor;
+	}
+
+	inline UIElement(const UIElement &copy) {
+		this->location = new Vect4f(copy.location->x, copy.location->y, copy.location->z, copy.location->w);
+		Vect4f* size = new Vect4f(copy.size->x, copy.size->y, copy.size->z, copy.size->w);
+		string value = copy.value;
+
+		this->textColor = new Color4f(copy.textColor->r, copy.textColor->g, copy.textColor->b, copy.textColor->a);
+		this->boxColor = new Color4f(copy.boxColor->r, copy.boxColor->g, copy.boxColor->b, copy.boxColor->a);
+		this->altColor = new Color4f(copy.altColor->r, copy.altColor->g, copy.altColor->b, copy.altColor->a);
+		this->font = copy.font;
+		
+	}
+
+	//font is not copy-assigned so must be a persistent object that UIElement can store reference to, i.e. an element in Loop::fonts
+	UIElement(Vect4f &location, Vect4f &size, string value, UIType type, font_data &font) {
+		this->location = new Vect4f(location);
+		this->size = new Vect4f(size);
 		this->value = value;
 		this->type = type;
 
@@ -436,7 +481,10 @@ public:
 		this->enabled = true;
 		this->focused = false;
 		this->focusedColor = false;
-		this->font = font;
+
+		//Don't copy font because it is should be referenced, e.g. from the static Loop::font vector
+		this->font = &font;
+
 		this->clicked = false;
 	}
 	void setValue(string value) {

@@ -35,13 +35,13 @@ public:
 	Matrix3f(float radians, float x, float y, float z, float scale);
 	Matrix3f(float radians, float x, float y, float z, float scalex, float scaley, float scalez);
 
-	Vect4f* getPosition();
-	Matrix3f* Add(Matrix3f* other);
-	Matrix3f* Multiply(Matrix3f* other);
-	Matrix3f* RotateRadians(float angle);
-	Matrix3f* Translate(float x, float y, float z);
-	Matrix3f* Scale(float x, float y, float z);
-	Matrix3f* inverse();
+	Vect4f getPosition();
+	Matrix3f Add(Matrix3f &other);
+	Matrix3f Multiply(Matrix3f &other);
+	Matrix3f RotateRadians(float angle);
+	Matrix3f Translate(float x, float y, float z);
+	Matrix3f Scale(float x, float y, float z);
+	Matrix3f inverse();
 	float getZAngle();
 	void loadMatrix(GLfloat* _values);
 };

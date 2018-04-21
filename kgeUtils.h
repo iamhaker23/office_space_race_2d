@@ -38,6 +38,7 @@
 			static nv::Image* loadPNG(std::string name);
 			static GLuint utils::initTexture(nv::Image* img);
 			static void utils::bindTexture(GLuint tex);
+			static void utils::freeTexture(GLuint tex);
 
 			static void utils::enableTextureBlending();
 			static vector<string> getFileContents(char* filename);

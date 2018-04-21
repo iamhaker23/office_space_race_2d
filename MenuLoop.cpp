@@ -2,12 +2,9 @@
 
 MenuLoop::MenuLoop() : Loop() {
 
-	//reset camera
-	delete Loop::camera;
-	Loop::camera = new Camera();
-
-	this->backgroundPNG = utils::initTexture(utils::loadPNG("resources/images/backgrounds/menu.png"));
+	this->backgroundPNG = 0;
 	this->scene = {};
+
 
 }
 
@@ -16,17 +13,17 @@ MenuLoop::~MenuLoop() {
 }
 
 void MenuLoop::freeData() {
+	this->scene.clear();
+	utils::freeTexture(this->backgroundPNG);
 	Loop::freeData();
-	Loop::freeStaticData();
 }
 
-void MenuLoop::init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs)
-{
-	Loop::init(_hDC, _debugger, inputs);
-	GameObject::setDebugger(_debugger);
-
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-	
+void MenuLoop::resetData() {
+	Loop::resetData(true);
+	this->loopStarted = debugger->getTime();
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	this->backgroundPNG = utils::initTexture(utils::loadPNG("resources/images/backgrounds/menu.png"));
+	this->scene = {};
 }
 
 void MenuLoop::display() {
@@ -37,26 +34,27 @@ void MenuLoop::display() {
 
 	Loop::drawBackground(this->backgroundPNG, 1, Color4f());
 
-	if (this->UI.back()->clicked) {
+	if (((int)this->UI.size() > 0 && this->UI.back()->clicked)) {
 		if (this->UI.front()->value != "") {
 			this->globals->playerName = this->UI.front()->value;
 		}
-		Loop::requestedActiveLoop = 2;
+		Loop::requestedActiveLoop = 0;
 	}
 
 }
 
 void MenuLoop::handleActivation() {
 	//LoopManager has activated this scene
-	//MenuLoop is simple and does not require any housekeeping
+	this->resetData();
 
-	Loop::freeData();
-
-	fonts.clear();
 	font_data* font1 = new font_data();
 	font1->init("resources/fonts/BKANT.TTF", 20);
 	Loop::fonts.push_back(font1);
 
-	this->addUI(new Vect4f(0.0f, 80.0f, 0.0f), new Vect4f(200.0f, 60.0f, 0.0f), "", UIType::TEXTBOX, Loop::fonts.back());
-	this->addUI(new Vect4f(0.0f, -80.0f, 0.0f), new Vect4f(200.0f, 60.0f, 0.0f), "Start Race", UIType::BUTTON, Loop::fonts.back());
+	string name = (this->globals->playerName != "") ? this->globals->playerName : "Player";
+
+	this->addUI(Vect4f(0.0f, 80.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), name, UIType::TEXTBOX, *Loop::fonts.back());
+	this->addUI(Vect4f(0.0f, -80.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), "Start Race", UIType::BUTTON, *Loop::fonts.back());
+
+
 }

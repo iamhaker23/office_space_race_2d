@@ -2,12 +2,9 @@
 
 FinishLoop::FinishLoop() : Loop() {
 
-	//reset camera
-	delete Loop::camera;
-	Loop::camera = new Camera();
-
-	this->backgroundPNG = utils::initTexture(utils::loadPNG("resources/images/backgrounds/finished.png"));
+	this->backgroundPNG = 0;
 	this->scene = {};
+
 
 }
 
@@ -16,18 +13,23 @@ FinishLoop::~FinishLoop() {
 }
 
 void FinishLoop::freeData() {
+	this->scene.clear();
+	utils::freeTexture(this->backgroundPNG);
 	Loop::freeData();
-	Loop::freeStaticData();
-}
-
-void FinishLoop::init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs)
-{
-	Loop::init(_hDC, _debugger, inputs);
-	GameObject::setDebugger(_debugger);
-
-	glClearColor(0.0, 0.0, 0.0, 0.0);
 
 }
+
+void FinishLoop::resetData() {
+	this->freeData();
+	Loop::resetData(true);
+
+	this->loopStarted = debugger->getTime();
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	this->backgroundPNG = utils::initTexture(utils::loadPNG("resources/images/backgrounds/finished.png"));
+	this->scene = {};
+}
+
+
 
 void FinishLoop::display() {
 
@@ -42,11 +44,14 @@ void FinishLoop::display() {
 	}
 	else {
 
-		if (this->globals->updated) {
+		if (this->globals != NULL && this->globals->updated) {
 			this->globals->updated = false;
 			RaceData* r = this->globals->player;
+			
+			//playerName is used to communicate intended input between scenes, and player->getName is the actual name of the player
 			string stats = r->getName().append(" - ").append(utils::getPositionLabel(r->getPosition()));
-			this->addUI(new Vect4f(0.0f, 100.0f, 0.0f), new Vect4f(200.0f, 60.0f, 0.0f), stats, UIType::LABEL, Loop::fonts.back());
+			
+			this->addUI(Vect4f(0.0f, 100.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), stats, UIType::LABEL, *Loop::fonts.back());
 			/*
 			POSITIONS AREN'T CALCULATED FOR OTHER RACERS, SO NOTHING TO DISPLAY
 			int count = 0;
@@ -61,13 +66,11 @@ void FinishLoop::display() {
 
 void FinishLoop::handleActivation() {
 	//LoopManager has activated this scene
-	//MenuLoop is simple and does not require any housekeeping
-	fonts.clear();
+	this->resetData();
+	
 	font_data* font1 = new font_data();
 	font1->init("resources/fonts/BKANT.TTF", 20);
 	Loop::fonts.push_back(font1);
 
-	Loop::freeData();
-
-	this->addUI(new Vect4f(150.0f, 0.0f, 0.0f), new Vect4f(200.0f, 60.0f, 0.0f), "Main Menu", UIType::BUTTON, Loop::fonts.back());
+	this->addUI(Vect4f(150.0f, 0.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), "Main Menu", UIType::BUTTON, *Loop::fonts.back());
 }

@@ -10,26 +10,28 @@ HINSTANCE	hInstance = NULL;		// Holds The Instance Of The Application
 
 system_clock::time_point START_CTIME;
 system_clock::time_point WIN_CTIME;
-InputStates* inputs = new InputStates();
-DebugInfo* debugger = new DebugInfo();
 bool	active = TRUE;		// Window Active Flag Set To TRUE By Default
 bool	fullscreen = TRUE;	// Fullscreen Flag Set To Fullscreen Mode By Default
 
-LoopManager* loops = new LoopManagerOSR();
 Loop* loop = NULL;
+
+InputStates inputs = InputStates();
+DebugInfo debugger = DebugInfo();
+LoopManager* loops = new LoopManagerOSR();
+
 
 int screenWidth = 800, screenHeight = 800;
 
 bool win32_window::isLeftPressed() {
-	return inputs->LeftPressed;
+	return inputs.LeftPressed;
 }
 
-InputStates* win32_window::getInputs() {
+InputStates win32_window::getInputs() {
 	return inputs;
 }
 
 void win32_window::printMessage(string message) {
-	debugger->addMessage(message);
+	debugger.addMessage(message);
 }
 
 int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
@@ -77,30 +79,24 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 		}
 		else										// If There Are No Messages
 		{
-			if (inputs->keys[VK_ESCAPE]) done = true; //close game
+			if (inputs.keys[VK_ESCAPE]) done = true; //close game
 
-			if (loop != NULL){
-				int requestedActiveLoop = loop->requestedActiveLoop;
-				if (requestedActiveLoop != -1) {
-					loops->setActiveLoop(requestedActiveLoop);
-					loop->requestedActiveLoop = -1;
-				}
+			if (!done && loops->hasLoopChanged()) {
+				loop = loops->getActiveLoop();
 			}
-
-			if (!done && loops->hasLoopChanged()) loop = loops->getActiveLoop();
 
 			if (!done && loop != NULL) {
 								
 				system_clock::time_point cNow = system_clock::now();
 				duration<double> duration = cNow - START_CTIME;
-				debugger->setDuration(duration);
+				debugger.setDuration(duration);
 
 				int timeSincePaused = (int)std::chrono::duration_cast<std::chrono::milliseconds>(cNow - pausedAt).count();
 
 
 				if (!paused) {
 
-					if (loops->isActivePausable() && timeSincePaused >= 300 && inputs->keys[pauseKey]) {
+					if (loops->isActivePausable() && timeSincePaused >= 300 && inputs.keys[pauseKey]) {
 						pausedAt = cNow;
 						paused = true;
 					}
@@ -108,10 +104,11 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 					pauseMessageDisplayed = false;
 
 					//Every other tick of the given frequency render a frame
-					//std::ratio<1, 100> gives 50Hz
-					//std::ratio<1, 120> gives 60Hz
-					//std::ratio<1, 60> gives 30Hz
-					int ticks = (int)(std::chrono::duration<float, std::ratio<1, 100>>(cNow - WIN_CTIME).count());
+					//std::ratio<1, 120> gives 60fps
+					//std::ratio<1, 100> gives 50fps
+					//std::ratio<1, 60> gives 30fps
+					//std::ratio<1, 70> gives 35fps
+					int ticks = (int)(std::chrono::duration<float, std::ratio<1, 70>>(cNow - WIN_CTIME).count());
 
 					if (DISABLE_FRAMERATE_CAP || ((ticks % 2 == 1) && ticks != oldTicks)) {
 
@@ -129,11 +126,11 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 				}
 				else {
 
-					if (timeSincePaused >= 300 && inputs->keys[pauseKey]) {
+					if (timeSincePaused >= 300 && inputs.keys[pauseKey]) {
 						pausedAt = cNow;
 						paused = false;
 					}
-					else if (inputs->keys[0x51]) {
+					else if (inputs.keys[0x51]) {
 						loops->setActiveLoop(1);
 						paused = false;
 					}
@@ -141,7 +138,7 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 					if (!pauseMessageDisplayed && loop != NULL) {
 						loop->writeMessage("Paused\nQ - Main Menu");
 						pauseMessageDisplayed = true;
-
+						//show pause message
 						SwapBuffers(hDC);
 					}
 
@@ -151,7 +148,7 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 				//if it's been a second since last tic, update framesamples
 				if (std::chrono::duration_cast<std::chrono::milliseconds>(cNow - WIN_CTIME).count() >= 1000) {
 					
-					debugger->addFrameSample(localFrameCount);
+					debugger.addFrameSample(localFrameCount);
 					localFrameCount = 0;
 					WIN_CTIME = cNow;
 				}
@@ -189,27 +186,27 @@ LRESULT CALLBACK win32_window::WndProc(HWND	hWnd,			// Handle For This Window
 	case WM_LBUTTONDOWN:
 	{
 
-		inputs->LeftPressed = true;
+		inputs.LeftPressed = true;
 	}
 	break;
 
 	case WM_LBUTTONUP:
 	{
-		inputs->LeftPressed = false;
+		inputs.LeftPressed = false;
 	}
 	break;
 
 	case WM_MOUSEMOVE:
 	{
-		inputs->mouse_x = LOWORD(lParam) - (screenWidth / 2);
-		inputs->mouse_y = (screenHeight / 2) - HIWORD(lParam);
+		inputs.mouse_x = LOWORD(lParam) - (screenWidth / 2);
+		inputs.mouse_y = (screenHeight / 2) - HIWORD(lParam);
 	}
 	break;
 	case WM_KEYDOWN:							// Is A Key Being Held Down?
 	{
 		
 		
-		inputs->keys[wParam] = true;					// If So, Mark It As TRUE
+		inputs.keys[wParam] = true;					// If So, Mark It As TRUE
 		//inputs->keysActivated[wParam] = WIN_CTIME;
 
 		return 0;								// Jump Back
@@ -217,15 +214,15 @@ LRESULT CALLBACK win32_window::WndProc(HWND	hWnd,			// Handle For This Window
 	break;
 	case WM_KEYUP:								// Has A Key Been Released?
 	{
-		inputs->keys[wParam] = false;					// If So, Mark It As FALSE
+		inputs.keys[wParam] = false;					// If So, Mark It As FALSE
 
 		return 0;								// Jump Back
 	}
 	case WM_CHAR:
 	{
 		if ((wParam > 64 && wParam < 91) || (wParam > 96 && wParam < 123)) {
-			inputs->character = (char)wParam;
-			inputs->characterIsNew = true;
+			inputs.character = (char)wParam;
+			inputs.characterIsNew = true;
 		}
 		return 0;
 	}
@@ -270,10 +267,8 @@ void win32_window::KillGLWindow()								// Properly Kill The Window
 		hInstance = NULL;									// Set hInstance To NULL
 	}
 
-	//Free variables.
-	delete debugger;
-	delete inputs;
-	loops->freeData();
+	//Free data from game loops
+	delete loops;
 }
 
 /*	This Code Creates Our OpenGL Window.  Parameters Are:					*
@@ -413,10 +408,8 @@ void win32_window::reshape(int width, int height)		// Resize the OpenGL window
 														  // we will use these values to set the coordinate system
 
 	//notify loop
-	if (loop != NULL) {
-		loop->screenHeight = (float)screenHeight;
-		loop->screenWidth = (float)screenWidth;
-	}
+	Loop::screenHeight = (float)screenHeight;
+	Loop::screenWidth = (float)screenWidth;
 
 	glViewport(0, 0, width, height);						// Reset The Current Viewport
 

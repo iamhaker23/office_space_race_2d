@@ -21,7 +21,7 @@ inline int next_p2 ( int a )
 }
 
 ///Create a display list coresponding to the give character.
-void make_dlist ( FT_Face face, char ch, GLuint list_base, GLuint * tex_base ) {
+void make_dlist ( FT_Face &face, char ch, GLuint list_base, GLuint * tex_base ) {
 
 	//The first thing we do is get FreeType to render our character
 	//into a bitmap.  This actually requires a couple of FreeType commands:
@@ -132,6 +132,9 @@ void make_dlist ( FT_Face face, char ch, GLuint list_base, GLuint * tex_base ) {
 
 	//Finnish the display list
 	glEndList();
+
+	FT_Done_Glyph(glyph);
+	
 }
 
 
@@ -170,6 +173,7 @@ void font_data::init(const char * fname, unsigned int h) {
 	glGenTextures( 128, textures );
 
 	//This is where we actually create each of the fonts display lists.
+	
 	for(unsigned char i=0;i<128;i++)
 		make_dlist(face,i,list_base,textures);
 

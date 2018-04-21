@@ -22,6 +22,18 @@ struct RaceData {
 			this->position = -1;
 		}
 
+		inline ~RaceData() {
+			this->name.clear();
+		}
+
+		inline RaceData(const RaceData &copy) {
+			this->name = copy.name;
+			this->laps = copy.laps;
+			this->progressOnCurrentSegment = copy.progressOnCurrentSegment;
+			this->position = copy.position;
+			this->currentSegment = copy.currentSegment;
+		}
+
 		inline void setName(string name) {
 			this->name = name;
 		}

@@ -11,7 +11,7 @@
 
 class LoopManager {
 
-	private:
+	protected:
 		vector<Loop*> loops;
 		int active;
 		bool loopChanged;
@@ -19,18 +19,16 @@ class LoopManager {
 	public:
 		LoopManager();
 		~LoopManager();
-
-		void setLoops(vector<Loop*> loops);
-		
+				
 		int getActiveLoopIndex();
 		Loop* getActiveLoop();
 		void setActiveLoop(int loopIdx);
 
 		bool hasLoopChanged();
 
-		virtual void init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs) = 0;
+		virtual void init(HDC &_hDC, DebugInfo &_debugger, InputStates &inputs) = 0;
 		virtual bool isActivePausable();
-		void initLoops(HDC _hDC, DebugInfo* _debugger, InputStates* inputs);
+		void initLoops(HDC &_hDC, DebugInfo &_debugger, InputStates &inputs);
 		
 
 		void freeData();

@@ -1,15 +1,60 @@
 #include "Loop.h"
 
 //init static members
-HDC Loop::hDC = NULL;
+HDC* Loop::hDC = NULL;
 DebugInfo* Loop::debugger = NULL;
 InputStates* Loop::inputs = NULL;
-Camera* Loop::camera = new Camera();
+Camera* Loop::camera = NULL;
 vector<font_data*> Loop::fonts = {};
 float Loop::screenHeight = -1;
 float Loop::screenWidth = -1;
 int Loop::requestedActiveLoop = -1;
-GameData* Loop::globals = new GameData();
+GameData* Loop::globals = NULL;
+
+void Loop::resetData(bool retainGlobals) {
+	for (UIElement* u : this->UI) {
+		delete u;
+	}
+	this->UI.clear();
+	for (font_data* f : Loop::fonts) {
+		f->clean();
+		delete f;
+	}
+	Loop::fonts.clear();
+
+	if (Loop::camera != NULL) {
+		Loop::camera->freeData();
+		delete Loop::camera;
+		Loop::camera = new Camera();
+	}
+	if (!retainGlobals) {
+		if (Loop::globals != NULL) {
+			Loop::globals->freeData();
+			delete Loop::globals;
+			Loop::globals = new GameData();
+		}
+	}
+}
+
+void Loop::freeData() {
+	for (UIElement* u : this->UI) {
+		delete u;
+	}
+	this->UI.clear();
+}
+
+void Loop::freeAllStaticData() {
+	for (font_data* f : Loop::fonts) {
+		f->clean();
+		delete f;
+	}
+	Loop::fonts.clear();
+
+	Loop::camera->freeData();
+	Loop::globals->freeData();
+	delete Loop::camera;
+	delete Loop::globals;
+}
 
 void Loop::writeMessage(string str) {
 	Loop::writeMessage(str, 200.0f, 200.0f);
@@ -20,13 +65,13 @@ void Loop::writeMessage(string str, float h, float w) {
 	Loop::writeMessage(str, h, w, textColor, boxColor);
 }
 
-void Loop::writeMessage(string str, float h, float w, Color4f textColor, Color4f boxColor) {
+void Loop::writeMessage(string str, float h, float w, Color4f &textColor, Color4f &boxColor) {
 	if (fonts.size() > 0) {
 		drawTextBox(*fonts.front(), str, 0.0f, 0.0f, w, h, textColor, boxColor);
 	}
 }
 
-void Loop::drawTextBox(freetype::font_data _font, string _str, float ssOffsetX, float ssOffsetY, float boxXSize, float boxYSize, Color4f textColor, Color4f boxColor) {
+void Loop::drawTextBox(freetype::font_data &_font, string _str, float ssOffsetX, float ssOffsetY, float boxXSize, float boxYSize, Color4f &textColor, Color4f &boxColor) {
 	glPushMatrix();
 
 	glTranslatef(ssOffsetX, ssOffsetY, 0);
@@ -58,7 +103,7 @@ void Loop::drawTextBox(freetype::font_data _font, string _str, float ssOffsetX, 
 	glPopMatrix();
 }
 
-void Loop::drawBackground(GLuint image, float repeat, Color4f tintColor) {
+void Loop::drawBackground(GLuint &image, float repeat, Color4f &tintColor) {
 
 	if (image == NULL) return;
 
@@ -81,18 +126,7 @@ void Loop::drawBackground(GLuint image, float repeat, Color4f tintColor) {
 
 }
 
-void Loop::freeStaticData() {
-	
-	Loop::fonts.clear();
-	Loop::camera->freeData();
-
-}
-
-void Loop::freeData() {
-	this->UI.clear();
-}
-
-void Loop::addUI(Vect4f* location, Vect4f* size, string value, UIType type, font_data* font) {
+void Loop::addUI(Vect4f &location, Vect4f &size, string value, const UIType &type, font_data &font) {
 	this->UI.push_back(new UIElement(location, size, value, type, font));
 }
 
@@ -168,11 +202,20 @@ void Loop::drawUI() {
 	}
 }
 
-void Loop::init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs) {
-	Loop::hDC = _hDC;
-	Loop::debugger = _debugger;
-	Loop::inputs = inputs;
-	this->loopStarted = debugger->getTime();
+void Loop::init(HDC &_hDC, DebugInfo &_debugger, InputStates &inputs) {
+	
+	if (Loop::hDC == NULL) Loop::hDC = &_hDC;
+	if (Loop::debugger == NULL) Loop::debugger = &_debugger;
+	if (Loop::inputs == NULL) Loop::inputs = &inputs;
+
+	//if (Loop::camera != NULL) delete Loop::camera; 
+	//if (Loop::globals != NULL) delete Loop::globals;
+
+	if (Loop::camera == NULL) Loop::camera = new Camera();
+	if (Loop::globals == NULL) Loop::globals = new GameData();
+
+	GameObject::setDebugger(_debugger);
+	
 }
 
 Loop::Loop() {

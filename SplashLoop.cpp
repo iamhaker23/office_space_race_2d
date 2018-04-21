@@ -2,13 +2,9 @@
 
 SplashLoop::SplashLoop() : Loop() {
 
-	//reset camera
-	delete Loop::camera;
-	Loop::camera = new Camera();
-
-	this->backgroundPNG = utils::initTexture(utils::loadPNG("resources/images/backgrounds/splash.png"));
+	this->backgroundPNG = 0;
 	this->scene = {};
-
+	
 }
 
 SplashLoop::~SplashLoop() {
@@ -16,18 +12,21 @@ SplashLoop::~SplashLoop() {
 }
 
 void SplashLoop::freeData() {
+	this->scene.clear();
+	utils::freeTexture(this->backgroundPNG);
 	Loop::freeData();
-	Loop::freeStaticData();
 }
 
-void SplashLoop::init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs)
-{
-	Loop::init(_hDC, _debugger, inputs);
-	GameObject::setDebugger(_debugger);
+void SplashLoop::resetData() {
+	Loop::resetData(false);
 
-	glClearColor(0.0, 0.0, 0.0, 0.0);
+	this->loopStarted = debugger->getTime();
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	this->backgroundPNG = utils::initTexture(utils::loadPNG("resources/images/backgrounds/splash.png"));
+	this->scene = {};
 
 }
+
 
 void SplashLoop::display() {
 
@@ -50,15 +49,10 @@ void SplashLoop::display() {
 
 void SplashLoop::handleActivation() {
 	//LoopManager has activated this scene
-	
-	fonts.clear();
+	this->resetData();
+
 	font_data* font1 = new font_data();
 	font1->init("resources/fonts/BKANT.TTF", 20);
 	Loop::fonts.push_back(font1);
-
-	Loop::freeData();
-
-	//less annoying to only use the delay once...
-	//this->loopStarted = debugger->getTime();
 
 }

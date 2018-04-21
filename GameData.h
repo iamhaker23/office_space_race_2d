@@ -16,11 +16,30 @@ public:
 	vector<RaceData*> others;
 	bool updated;
 
-	GameData() {
+	inline GameData() {
 		this->player = NULL;
 		this->others = {};
 		this->playerName = "Player";
 		this->updated = false;
+	}
+
+	inline void freeData() {
+		for (RaceData* o : others) {
+			if (o != NULL) delete o;
+		}
+		this->others.clear();
+		if (player != NULL) delete this->player;
+	}
+
+	inline ~GameData() {
+		freeData();
+	}
+
+	inline GameData(const GameData &copy) {
+		this->player = copy.player;
+		this->others = copy.others;
+		this->playerName = copy.playerName;
+		this->updated = copy.updated;
 	}
 };
 

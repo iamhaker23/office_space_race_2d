@@ -23,10 +23,10 @@ public:
 	static bool CreateGLWindow(char* title, int width, int height); //creates the window
 	static int WINAPI WinMainHandler(HINSTANCE, HINSTANCE, LPSTR, int, char*);  // Win32 main function
 	static bool isLeftPressed();
-	static InputStates* getInputs();
+	static InputStates getInputs();
 	
 	static void printMessage(string message);
-	void setActiveLoop(int index);
+
 	static void reshape(int width, int height);
 
 };

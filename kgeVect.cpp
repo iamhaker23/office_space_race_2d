@@ -18,41 +18,31 @@ Vect4f::Vect4f() {
 	this->z = 0.0f;
 	this->w = 1.0f;
 }
-
-Vect4f* Vect4f::add(Vect4f* other) {
-	return new Vect4f(other->x + this->x, other->y + this->y, other->z + this->z, other->w + this->w);
+Vect4f::Vect4f(const Vect4f &copy) {
+	this->x = copy.x;
+	this->y = copy.y;
+	this->z = copy.z;
+	this->w = copy.w;
 }
-Vect4f* Vect4f::transform(Matrix3f* space) {
-	return space->Multiply((new Matrix3f(0.0f, this->x, this->y, this->z, 1.0f)))->getPosition();
-	
-	/*Vect4f* output = new Vect4f(this->x, this->y, this->z, 1.0f);
 
-	output->x = (output->x * space->values[0]) + (output->y * space->values[4]);
-	output->y = (output->x * space->values[1]) + (output->y * space->values[5]);
+Vect4f Vect4f::add(Vect4f &other) {
+	return Vect4f(other.x + this->x, other.y + this->y, other.z + this->z, other.w + this->w);
+}
+Vect4f Vect4f::transform(Matrix3f &space) {
+	return space.Multiply(Matrix3f(0.0f, this->x, this->y, this->z, 1.0f)).getPosition();
 
-	output->x += (output->x * space->scalex);
-	output->y += (output->y * space->scaley);
-	output->z += (output->z * space->scalez);
-
-	output->x += (output->w * space->values[12]);
-	output->y += (output->w * space->values[13]);
-	output->z +=  (output->w * space->values[14]);
-	
-	
-	return output;*/
 }
 
 float Vect4f::getXYMagnitude() {
 	return sqrt((getX() * getX()) + (getY() * getY()));
 }
 
-Vect4f* Vect4f::scale(float x, float y, float z) {
-	//return space->Multiply((new Matrix3f(0.0f, this->x, this->y, this->z, 1.0f)))->getPosition();
-	Vect4f* output = new Vect4f(this->x, this->y, this->z, 1.0f);
+Vect4f Vect4f::scale(float x, float y, float z) {
+	Vect4f output = Vect4f(this->x, this->y, this->z, 1.0f);
 
-	output->x = (output->x * x);
-	output->y = (output->y * y);
-	output->z = (output->z * z);
+	output.x = (output.x * x);
+	output.y = (output.y * y);
+	output.z = (output.z * z);
 
 	return output;
 }
@@ -69,11 +59,11 @@ float Vect4f::getZ() {
 	return this->z / this->w;
 }
 
-Vect4f* Vect4f::subtract(Vect4f* other) {
-	Vect4f* output = new Vect4f();
-	output->x = this->getX() - other->getX();
-	output->y = this->getY() - other->getY();
-	output->z = this->getZ() - other->getZ();
+Vect4f Vect4f::subtract(Vect4f &other) {
+	Vect4f output = Vect4f();
+	output.x = this->getX() - other.getX();
+	output.y = this->getY() - other.getY();
+	output.z = this->getZ() - other.getZ();
 	//w is left as 1.0f
 
 	return output;

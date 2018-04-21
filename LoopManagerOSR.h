@@ -9,15 +9,15 @@
 class LoopManagerOSR : public LoopManager {
 
 	public:
+		
+		inline void init(HDC &_hDC, DebugInfo &_debugger, InputStates &inputs) {
 
-		inline void init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs) {
-
-			setLoops({
+			this->loops = {
 				new SplashLoop(),
 				new MenuLoop(),
 				new GameLoop(),
 				new FinishLoop()
-			});
+			};
 
 			initLoops(_hDC, _debugger, inputs);
 			

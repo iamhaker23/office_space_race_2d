@@ -13,8 +13,8 @@ struct InputStates{
 	int	mouse_x;
 	int mouse_y;
 	bool LeftPressed;
-	bool	keys[256];
-	system_clock::time_point keysActivated[256];
+	bool*	keys = new bool[256];
+	system_clock::time_point* keysActivated = new system_clock::time_point[256];
 
 	public:
 		inline InputStates() {
@@ -36,6 +36,11 @@ struct InputStates{
 				keysActivated[i] = n;
 			}
 
+		}
+
+		inline ~InputStates() {
+			delete[] keys;
+			delete[] keysActivated;
 		}
 
 		inline std::chrono::milliseconds timeSinceKey(int vkey) {

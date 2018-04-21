@@ -120,6 +120,7 @@ nv::Image* utils::loadPNG(std::string name)
 
 GLuint utils::initTexture(nv::Image* img) {
 
+	//TODO:does this risk overwriting font lists?
 	GLuint myTextureID = textureCount++;
 
 	if (img != NULL) {
@@ -141,6 +142,11 @@ GLuint utils::initTexture(nv::Image* img) {
 void utils::bindTexture(GLuint tex) {
 
 	glBindTexture(GL_TEXTURE_2D, tex);
+
+}
+void utils::freeTexture(GLuint tex) {
+
+	glDeleteTextures(1, &tex);
 
 }
 

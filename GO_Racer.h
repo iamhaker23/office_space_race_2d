@@ -23,14 +23,15 @@ public:
 	GO_Racer(); 
 	GO_Racer(string name, vector<GLuint> sprites, vector<Vertex> mesh, int activeSprite, Color4f* objectColor);
 	GO_Racer(const GO_Racer &copy);
+	void freeData() override;
 
-	void draw();
+	void draw() override;
+	vector<CollisionResult> GO_Racer::resolveCollisions(const vector <GameObject*> &objs) override;
 
 	bool isAI();
 	bool isRacer();
 	RaceData* getRaceData();
 
-	vector<CollisionResult> GO_Racer::resolveCollision(vector <GameObject*> objs);
 
 	void setAIControl(bool flag);
 	void doAIControl(GameObject* track, int trackStep);

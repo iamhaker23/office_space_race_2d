@@ -13,6 +13,11 @@ private:
 	GO_Racer* player;
 	vector<GO_Racer*> racers;
 
+	inline void addCompetitor(GO_Racer* competitor) {
+		addObject(competitor);
+		racers.push_back(competitor);
+	}
+
 public:
 
 	RaceScene() : Scene() {
@@ -21,19 +26,22 @@ public:
 		this->track = NULL;
 	}
 
-	inline void setTrack(GameObject* track) {
-		addObject(track);
-		this->track = track;
+	inline void setTrack(GameObject &track) {
+		GameObject* ntrack = new GameObject(track);
+		addObject(ntrack);
+		this->track = ntrack;
 	}
 
-	inline void setPlayer(GO_Racer* player) {
-		addCompetitor(player);
-		this->player = player;
+	inline void setPlayer(GO_Racer &player) {
+		GO_Racer* nplayer = new GO_Racer(player);
+		addCompetitor(nplayer);
+		this->player = nplayer;
 	}
 
-	inline void addCompetitor(GO_Racer* competitor) {
-		addObject(competitor);
-		this->racers.push_back(competitor);
+	inline void addCompetitor(GO_Racer &competitor) {
+		GO_Racer* ncompetitor = new GO_Racer(competitor);
+		addObject(ncompetitor);
+		this->racers.push_back(ncompetitor);
 	}
 
 	inline GameObject* getTrack() {
@@ -48,6 +56,21 @@ public:
 		return this->racers;
 	}
 
+	inline void freeData() override {
+		for (GameObject* o : this->scene) {
+			if (o != NULL) {
+				//free textures only when scene is deloaded, not in object default constructor
+				o->freeTextures();
+				delete o;
+			}
+		}
+		this->scene.clear();
+		this->racers.clear();
+	}
+
+	~RaceScene() {
+		this->freeData();
+	}
 
 };
 

@@ -71,88 +71,83 @@ Matrix3f::Matrix3f(float radians, float x, float y, float z, float scalex, float
 
 }
 
-Vect4f* Matrix3f::getPosition() {
-	return new Vect4f(this->values[12], this->values[13], this->values[14], this->values[15]);
+Vect4f Matrix3f::getPosition() {
+	return Vect4f(this->values[12], this->values[13], this->values[14], this->values[15]);
 }
 
-Matrix3f* Matrix3f::Add(Matrix3f* other) {
-	Vect4f* myPos = this->getPosition();
-	Vect4f* otherPos = other->getPosition();
+Matrix3f Matrix3f::Add(Matrix3f &other) {
+	Vect4f myPos = this->getPosition();
+	Vect4f otherPos = other.getPosition();
 
 	return 
-		new Matrix3f(
-			this->getZAngle() + other->getZAngle(),
-			myPos->x + otherPos->x,
-			myPos->y + otherPos->y,
-			myPos->z + otherPos->z,
-			this->scalex + other->scalex,
-			this->scaley + other->scaley,
-			this->scalez + other->scalez
+		Matrix3f(
+			this->getZAngle() + other.getZAngle(),
+			myPos.x + otherPos.x,
+			myPos.y + otherPos.y,
+			myPos.z + otherPos.z,
+			this->scalex + other.scalex,
+			this->scaley + other.scaley,
+			this->scalez + other.scalez
 		);
-	/*
-	return (new Matrix3f(0.0f, myPos->x + otherPos->x, myPos->y + otherPos->y, myPos->z + otherPos->z, 1.0f))->Multiply(
-		((new Matrix3f(this->getZAngle() + other->getZAngle(), 0.0f, 0.0f, 0.0f, 1.0f))->Multiply(
-			new Matrix3f(0.0f, 0.0f, 0.0f, 0.0f, this->scalex + other->scalex, this->scaley + other->scaley, this->scalez + other->scalez)
-		)
-	));*/
 
 }
 
-Matrix3f* Matrix3f::Multiply(Matrix3f* other) {
-	Matrix3f* output = new Matrix3f();
+Matrix3f Matrix3f::Multiply(Matrix3f &other) {
+	Matrix3f output = Matrix3f();
 
 	for (int i = 0; i < 4; i++) {
 		//|0, 4, 8,  12|
 		//|1, 5, 9,  13|
 		//|2, 6, 10, 14|
 		//|3, 7, 11, 15|
-		output->values[i] =
-			(this->values[i] * other->values[0]) +
-			(this->values[i + 4] * other->values[1]) +
-			(this->values[i + 8] * other->values[2]) +
-			(this->values[i + 12] * other->values[3]);
-		output->values[i + 4] =
-			(this->values[i] * other->values[4]) +
-			(this->values[i + 4] * other->values[5]) +
-			(this->values[i + 8] * other->values[6]) +
-			(this->values[i + 12] * other->values[7]);
-		output->values[i + 8] =
-			(this->values[i] * other->values[8]) +
-			(this->values[i + 4] * other->values[9]) +
-			(this->values[i + 8] * other->values[10]) +
-			(this->values[i + 12] * other->values[11]);
-		output->values[i + 12] =
-			(this->values[i] * other->values[12]) +
-			(this->values[i + 4] * other->values[13]) +
-			(this->values[i + 8] * other->values[14]) +
-			(this->values[i + 12] * other->values[15]);
+		output.values[i] =
+			(this->values[i] * other.values[0]) +
+			(this->values[i + 4] * other.values[1]) +
+			(this->values[i + 8] * other.values[2]) +
+			(this->values[i + 12] * other.values[3]);
+		output.values[i + 4] =
+			(this->values[i] * other.values[4]) +
+			(this->values[i + 4] * other.values[5]) +
+			(this->values[i + 8] * other.values[6]) +
+			(this->values[i + 12] * other.values[7]);
+		output.values[i + 8] =
+			(this->values[i] * other.values[8]) +
+			(this->values[i + 4] * other.values[9]) +
+			(this->values[i + 8] * other.values[10]) +
+			(this->values[i + 12] * other.values[11]);
+		output.values[i + 12] =
+			(this->values[i] * other.values[12]) +
+			(this->values[i + 4] * other.values[13]) +
+			(this->values[i + 8] * other.values[14]) +
+			(this->values[i + 12] * other.values[15]);
 	}
 
 	return output;
 }
 
-Matrix3f* Matrix3f::RotateRadians(float angle) {
-	Vect4f* myPos = this->getPosition();
+Matrix3f Matrix3f::RotateRadians(float angle) {
+
 	return
-		(new Matrix3f(
+		Matrix3f(
 			angle,
 			0.0f,
 			0.0f,
 			0.0f,
-			1.0f))->Multiply(this);
+			1.0f).Multiply(*this);
 }
-Matrix3f* Matrix3f::Translate(float x, float y, float z) {
+
+Matrix3f Matrix3f::Translate(float x, float y, float z) {
 	return
-		(this)->Add(new Matrix3f(
+		(this)->Add(Matrix3f(
 			0.0f,
 			x,
 			y,
 			z,
 			0.0f));
 }
-Matrix3f* Matrix3f::Scale(float x, float y, float z) {
+Matrix3f Matrix3f::Scale(float x, float y, float z) {
 	return
-		(this)->Add(new Matrix3f(
+		(this)->Add(Matrix3f(
 			0.0f, 0.0f, 0.0f, 0.0f,
 			x,
 			y,
@@ -160,9 +155,9 @@ Matrix3f* Matrix3f::Scale(float x, float y, float z) {
 }
 
 
-Matrix3f* Matrix3f::inverse() {
-	Vect4f* pos = this->getPosition();
-	return new Matrix3f(this->getZAngle()*-1.0f, pos->x*-1.0f, pos->y*-1.0f, pos->z*-1.0f, 1.0f / this->scalex, 1.0f / this->scaley, 1.0f / this->scalez);
+Matrix3f Matrix3f::inverse() {
+	Vect4f pos = this->getPosition();
+	return Matrix3f(this->getZAngle()*-1.0f, pos.x*-1.0f, pos.y*-1.0f, pos.z*-1.0f, 1.0f / this->scalex, 1.0f / this->scaley, 1.0f / this->scalez);
 
 }
 
@@ -178,5 +173,5 @@ void Matrix3f::loadMatrix(GLfloat* _values) {
 }
 
 void Matrix3f::freeData() {
-	delete [] this->values;
+	//delete [] &this->values;
 }

@@ -23,6 +23,9 @@
 
 		public:
 			DebugInfo();
+			~DebugInfo();
+			DebugInfo(const DebugInfo &copy);
+
 			double getTime();
 			void addFrameSample(int sample);
 			void addMessage(string message);

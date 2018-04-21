@@ -70,3 +70,13 @@ double DebugInfo::getAverageFrameRate() {
 
 	return (sampleCount > 0) ? (total / ((double)sampleCount)) : -1.0;
 }
+
+
+DebugInfo::~DebugInfo() {
+	this->reset();
+}
+
+DebugInfo::DebugInfo(const DebugInfo &copy) {
+	this->sampleSize = copy.sampleSize;
+	
+}

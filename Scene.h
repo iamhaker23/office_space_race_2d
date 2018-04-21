@@ -8,8 +8,11 @@
 
 class Scene {
 
-private:
+protected:
 	vector<GameObject*> scene;
+	inline void addObject(GameObject* obj) {
+		scene.push_back(obj);
+	}
 	
 public:
 	Scene() {
@@ -20,13 +23,11 @@ public:
 		return this->scene;
 	}
 
-	inline void addObject(GameObject* obj) {
-		scene.push_back(obj);
+	inline void addObject(GameObject &obj) {
+		this->addObject(new GameObject(obj));
 	}
 
-	inline void freeData() {
-		scene.clear();
-	}
+	inline virtual void freeData() = 0;
 };
 
 

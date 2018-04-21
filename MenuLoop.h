@@ -17,9 +17,9 @@ public:
 	MenuLoop();
 	~MenuLoop();
 
-	void init(HDC _hDC, DebugInfo* _debugger, InputStates* inputs);
 	void display();
-	void freeData();
+	void freeData() override;
+	void resetData();
 	void handleActivation();
 
 };

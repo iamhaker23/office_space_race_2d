@@ -28,7 +28,7 @@ class GameObject {
 		static GLuint defaultSprite;
 		static DebugInfo* debugger;
 		//Matrix to convert world to camera space
-		static Matrix3f* worldToCamera;
+		static Matrix3f worldToCamera;
 		static bool drawDebug;
 
 		string name;
@@ -67,15 +67,15 @@ class GameObject {
 		GLfloat angularDamping;
 		float topSpeed;
 
+		void setCollisionBounds(const vector<CollisionRadii*> &bounds);
 
 	public:
 		static void setDebugMode(bool flag);
 		static bool getDebugMode();
-		static void setDebugger(DebugInfo* _debugger);
-		static void setWorldToCameraTransform(Matrix3f* wtc);
-		static void freeData();
+		static void setDebugger(DebugInfo &_debugger);
+		static void setWorldToCameraTransform(Matrix3f &wtc);
 		static void toggleDebugMode();
-		static float getAngleBetweenPositions(Vect4f* a, Vect4f* b);
+		static float getAngleBetweenPositions(Vect4f &a, Vect4f &b);
 		static void drawCircle(float x, float y, float radius, Color4f* col);
 		static void drawLine(float x1, float y1, float x2, float y2);
 
@@ -83,9 +83,12 @@ class GameObject {
 		GameObject();
 		GameObject(const GameObject &copy);
 		GameObject(string name, vector<GLuint> sprites, vector<Vertex> mesh, int activeSprite, Color4f* objectColor);
+		virtual void freeData();
+		void freeTextures();
 		
 		void animate(AnimationLogic al);
 		virtual void draw();
+		virtual vector<CollisionResult> resolveCollisions(const vector<GameObject*> &others);
 
 		string toString();
 		string getName();
@@ -94,12 +97,12 @@ class GameObject {
 		void setPhysics(bool flag); 
 		void setSprite(int index);
 
-		Matrix3f* getNewPosition();
-		Vect4f* getWorldPosition();
+		Matrix3f getNewPosition();
+		Vect4f getWorldPosition();
 		float getZAngle();
 		void setZAngle(float angle);
-		Vect4f* localToWorldSpace(Vect4f localCoords);
-		Vect4f* boundSpaceToObjectSpace(Vect4f localCoords);
+		Vect4f localToWorldSpace(Vect4f &localCoords);
+		Vect4f boundSpaceToObjectSpace(Vect4f &localCoords);
 		float radius2DToObjectSpace(float radius, float angle);
 		float radius2DToWorldSpace(float radius, float angle);
 		void applyBoundsScale();
@@ -109,20 +112,22 @@ class GameObject {
 		void translate(float x, float y, float z);
 		void translateBounds(float x, float y, float z);
 
-		int countCollisionRadii();
-		void setCollisionBounds(vector<CollisionRadii*> bounds);
-		vector<CollisionResult> resolveCollisions(vector<GameObject*> others);
+		int countCollisionRadii(); 
+		void setCollisionBounds(const vector<CollisionRadii> &bounds);
+		void setCollisionBounds(const CollisionRadii &bounds);
+
+
 		bool isCollider();
 		void resetModifiers(); 
 		void setCollider(bool flag);
 		bool hasResolvedWith(string name);
 		void setCollisionResolvedWith(string name);
 		void resetCollisionFlags();
-		CollisionRadii* getClosestRadiiTo(Vect4f* otherPosition);
-		CollisionRadii* getNextCollisionRadiiFor(Vect4f* otherPosition, int step);
-		int getIndexOfClosestRadiiTo(Vect4f* otherPosition);
-		float getAngleToOther(GameObject* other);
-		float getAngleToPosition(Vect4f* position);
+		CollisionRadii* getClosestRadiiTo(Vect4f &otherPosition);
+		int getIndexOfClosestRadiiTo(Vect4f &otherPosition);
+		CollisionRadii* getNextCollisionRadiiFor(Vect4f &otherPosition, int step);
+		float getAngleToOther(GameObject &other);
+		float getAngleToPosition(Vect4f &position);
 		float getAngleFromX();
 
 		void addForce(float x, float y, float z);
@@ -131,7 +136,7 @@ class GameObject {
 		void setPhysicsContainer(bool flag);
 		bool isPhysicsContainer();
 
-		float getProgressAcrossTrackSegment(int segIndex, Vect4f* worldPosition, int step);
+		float getProgressAcrossTrackSegment(int segIndex, Vect4f &worldPosition, int step);
 		
 };
 
