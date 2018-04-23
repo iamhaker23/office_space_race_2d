@@ -12,17 +12,19 @@ SplashLoop::~SplashLoop() {
 }
 
 void SplashLoop::freeData() {
+	for (GameObject* o : scene) {
+		delete o;
+	}
 	this->scene.clear();
-	utils::freeTexture(this->backgroundPNG);
-	Loop::freeData();
+	//utils::freeTexture(this->backgroundPNG);
+	Loop::resetData(false);
 }
 
 void SplashLoop::resetData() {
 	Loop::resetData(false);
-
+	freeData();
 	this->loopStarted = debugger->getTime();
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	this->backgroundPNG = utils::initTexture(utils::loadPNG("resources/images/backgrounds/splash.png"));
 	this->scene = {};
 
 }
@@ -51,8 +53,8 @@ void SplashLoop::handleActivation() {
 	//LoopManager has activated this scene
 	this->resetData();
 
-	font_data* font1 = new font_data();
-	font1->init("resources/fonts/BKANT.TTF", 20);
-	Loop::fonts.push_back(font1);
+	this->backgroundPNG = Loop::getTexture("resources/images/backgrounds/splash.png");;
+
+	Loop::addFont("resources/fonts/HANDC.TTF", 20);
 
 }

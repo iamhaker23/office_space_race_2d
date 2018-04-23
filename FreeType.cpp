@@ -87,50 +87,49 @@ void make_dlist ( FT_Face &face, char ch, GLuint list_base, GLuint * tex_base ) 
 	//So now we can create the display list
 	glNewList(list_base+ch,GL_COMPILE);
 
-	glBindTexture(GL_TEXTURE_2D,tex_base[ch]);
+		glBindTexture(GL_TEXTURE_2D,tex_base[ch]);
 
-	glPushMatrix();
+		glPushMatrix();
 
-	//first we need to move over a little so that
-	//the character has the right amount of space
-	//between it and the one before it.
-	glTranslatef(static_cast<float>(bitmap_glyph->left),0,0);
+		//first we need to move over a little so that
+		//the character has the right amount of space
+		//between it and the one before it.
+		glTranslatef(static_cast<float>(bitmap_glyph->left),0,0);
 
-	//Now we move down a little in the case that the
-	//bitmap extends past the bottom of the line 
-	//(this is only true for characters like 'g' or 'y'.
-	glTranslatef(0, static_cast<float>(bitmap_glyph->top-bitmap.rows),0);
+		//Now we move down a little in the case that the
+		//bitmap extends past the bottom of the line 
+		//(this is only true for characters like 'g' or 'y'.
+		glTranslatef(0, static_cast<float>(bitmap_glyph->top-bitmap.rows),0);
 
-	//Now we need to account for the fact that many of
-	//our textures are filled with empty padding space.
-	//We figure what portion of the texture is used by 
-	//the actual character and store that information in 
-	//the x and y variables, then when we draw the
-	//quad, we will only reference the parts of the texture
-	//that we contain the character itself.
-	float	x=(float)bitmap.width / (float)width,
-			y=(float)bitmap.rows / (float)height;
+		//Now we need to account for the fact that many of
+		//our textures are filled with empty padding space.
+		//We figure what portion of the texture is used by 
+		//the actual character and store that information in 
+		//the x and y variables, then when we draw the
+		//quad, we will only reference the parts of the texture
+		//that we contain the character itself.
+		float	x=(float)bitmap.width / (float)width,
+				y=(float)bitmap.rows / (float)height;
 
-	//Here we draw the texturemaped quads.
-	//The bitmap that we got from FreeType was not 
-	//oriented quite like we would like it to be,
-	//so we need to link the texture to the quad
-	//so that the result will be properly aligned.
-	glBegin(GL_QUADS);
-	glTexCoord2d(0,0); glVertex2f(0, static_cast<float>(bitmap.rows));
-	glTexCoord2d(0,y); glVertex2f(0,0);
-	glTexCoord2d(x,y); glVertex2f(static_cast<float>(bitmap.width),0);
-	glTexCoord2d(x,0); glVertex2f(static_cast<float>(bitmap.width), static_cast<float>(bitmap.rows));
-	glEnd();
-	glPopMatrix();
-	glTranslatef(static_cast<float>(face->glyph->advance.x >> 6) ,0,0);
+		//Here we draw the texturemaped quads.
+		//The bitmap that we got from FreeType was not 
+		//oriented quite like we would like it to be,
+		//so we need to link the texture to the quad
+		//so that the result will be properly aligned.
+		glBegin(GL_QUADS);
+		glTexCoord2d(0,0); glVertex2f(0, static_cast<float>(bitmap.rows));
+		glTexCoord2d(0,y); glVertex2f(0,0);
+		glTexCoord2d(x,y); glVertex2f(static_cast<float>(bitmap.width),0);
+		glTexCoord2d(x,0); glVertex2f(static_cast<float>(bitmap.width), static_cast<float>(bitmap.rows));
+		glEnd();
+		glPopMatrix();
+		glTranslatef(static_cast<float>(face->glyph->advance.x >> 6) ,0,0);
 
+		//increment the raster position as if we were a bitmap font.
+		//(only needed if you want to calculate text length)
+		//glBitmap(0,0,0,0,face->glyph->advance.x >> 6,0,NULL);
 
-	//increment the raster position as if we were a bitmap font.
-	//(only needed if you want to calculate text length)
-	//glBitmap(0,0,0,0,face->glyph->advance.x >> 6,0,NULL);
-
-	//Finnish the display list
+	//Finish the display list
 	glEndList();
 
 	FT_Done_Glyph(glyph);

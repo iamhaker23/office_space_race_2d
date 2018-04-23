@@ -2,9 +2,9 @@
 
 GameLoop::GameLoop() : Loop() {
 
-	this->backgroundPNG = 0;
+	this->backgrounds = {};
 	this->scene = RaceScene();
-
+	this->sprites = {};
 }
 
 GameLoop::~GameLoop() {
@@ -20,12 +20,9 @@ void GameLoop::resetData() {
 	Loop::resetData(true);
 	
 	scene.freeData();
-	scene = RaceScene();
 
 	this->loopStarted = debugger->getTime();
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	this->backgroundPNG = utils::initTexture(utils::loadPNG("resources/images/backgrounds/aerial_city.png"));
-	this->scene = RaceScene();
 }
 
 void GameLoop::display() {
@@ -52,7 +49,9 @@ void GameLoop::display() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
 
-	Loop::drawBackground(this->backgroundPNG, 4, Color4f());
+	Loop::drawBackground(this->backgrounds.at(0), 4, Color4f());
+	float factor = (float)debugger->getTime();
+	Loop::drawBackground(this->backgrounds.at(1), 4, Color4f(), Vect4f(factor/10.0f, factor/12.0f, 0.0f));
 
 	vector<GameObject*> objs = scene.getObjectList();
 
@@ -221,18 +220,18 @@ void GameLoop::initGame() {
 	
 	this->startTimeOutClock = -1.0;
 	this->finished = false;
+	
+	this->backgrounds.push_back(Loop::getTexture("resources/images/backgrounds/aerial_city.png"));
+	this->backgrounds.push_back(Loop::getTexture("resources/images/backgrounds/clouds.png"));
+	
+	Loop::addFont("resources/fonts/HANDA.TTF", 20);
 
-	font_data* font1 = new font_data();
-	font1->init("resources/fonts/HANDA.TTF", 20);
-	Loop::fonts.push_back(font1);
-
-
-	vector<GLuint> trackSprites = { utils::initTexture(utils::loadPNG("resources/images/tracks/office_1.png")) };
+	vector<GLuint> trackSprites = { Loop::getTexture("resources/images/tracks/office_1.png") };
 
 	vector<GO_Racer> racers = GameLoop::generateRacers(3);
 	vector<GameObject> objects = GameLoop::generateObjects();
 
-	GameObject track = GameObject("Track", trackSprites, generatePlaneMesh(), 0, new Color4f(1.0f, 1.0f, 1.0f, 1.0f));
+	GameObject track = GameObject("Track", trackSprites, generatePlaneMesh(), 0, Color4f(1.0f, 1.0f, 1.0f, 1.0f));
 	track.setCollisionBounds(generateTrackBounds("resources/data/office_container.txt"));
 	track.setCollider(true);
 	track.setPhysicsContainer(true);
@@ -256,11 +255,11 @@ void GameLoop::initGame() {
 
 GO_Racer GameLoop::generatePlayer(string &name) {
 
-	vector<GLuint> carSprites = { utils::initTexture(utils::loadPNG("resources/images/chair/1.png")) 
-		,utils::initTexture(utils::loadPNG("resources/images/chair/2.png")) 
-		,utils::initTexture(utils::loadPNG("resources/images/chair/3.png")) };
-
-	GO_Racer player = GO_Racer(name, carSprites, generatePlaneMesh(), 0, new Color4f(1.0f, 0.0f, 0.0f, 1.0f));
+	vector<GLuint> carSprites = { Loop::getTexture("resources/images/chair/1.png")
+		,Loop::getTexture("resources/images/chair/2.png")
+		,Loop::getTexture("resources/images/chair/3.png") };
+	
+	GO_Racer player = GO_Racer(name, carSprites, generatePlaneMesh(), 0, Color4f(1.0f, 0.0f, 0.0f, 1.0f), (Loop::globals->difficulty > 1));
 	player.scale(0.6f, true);
 	player.setPhysicalAttributes(1.6f, 1.3f, 4.0f);
 	player.setZAngle(180.0f);
@@ -287,9 +286,9 @@ GO_Racer GameLoop::generatePlayer(string &name) {
 vector<GO_Racer> GameLoop::generateRacers(int numAI) {
 
 	vector<GO_Racer> output = {}; 
-	vector<GLuint> carSprites = { utils::initTexture(utils::loadPNG("resources/images/chair/1.png"))
-		,utils::initTexture(utils::loadPNG("resources/images/chair/2.png")) 
-		,utils::initTexture(utils::loadPNG("resources/images/chair/3.png")) };
+	vector<GLuint> carSprites = { Loop::getTexture("resources/images/chair/1.png")
+		,Loop::getTexture("resources/images/chair/2.png")
+		,Loop::getTexture("resources/images/chair/3.png") };
 	
 	//effectively instancing for bounds (i.e. change one, change all).
 	CollisionRadii chairRadii = CollisionRadii(0.0f, 0.0f);
@@ -303,7 +302,7 @@ vector<GO_Racer> GameLoop::generateRacers(int numAI) {
 	chairRadii.addRadius(0.3f, 315.0f);
 
 	for (int i = 0; i < numAI; i++){
-		GO_Racer ai = GO_Racer(utils::intLabel("AI_RACER_", i, ""), carSprites, generatePlaneMesh(), 0, new Color4f(0.1f, 0.2f, 1.0f, 1.0f));
+		GO_Racer ai = GO_Racer(utils::intLabel("AI_RACER_", i, ""), carSprites, generatePlaneMesh(), 0, Color4f(0.1f, 0.2f, 1.0f, 1.0f), (Loop::globals->difficulty <= 1));
 		ai.scale(0.6f, true);
 		ai.setPhysicalAttributes(1.4f - ((float)i*0.1f), 1.3f, 6.0f+((float)i));
 		ai.translate(-0.5f, -1.0f, 0.0f);
@@ -324,7 +323,7 @@ vector<GameObject> GameLoop::generateObjects() {
 
 	vector<GameObject> output = {};
 
-	vector<GLuint> boxSprites = { utils::initTexture(utils::loadPNG("resources/images/box/1.png")) };
+	vector<GLuint> boxSprites = { Loop::getTexture("resources/images/box/1.png") };
 	
 	CollisionRadii boxRadii = CollisionRadii(0.0f, 0.0f);
 	boxRadii.addRadius(0.29f, 0.0f);
@@ -337,7 +336,7 @@ vector<GameObject> GameLoop::generateObjects() {
 	boxRadii.addRadius(0.35f, 315.0f);
 
 	for (int i = 0; i < 5; i++) {
-		GameObject box = GameObject(utils::intLabel("Box", i, ""), boxSprites, generatePlaneMesh(), 0, new Color4f(1.0f, 0.5f, 0.5f, 1.0f));
+		GameObject box = GameObject(utils::intLabel("Box", i, ""), boxSprites, generatePlaneMesh(), 0, Color4f(1.0f, 0.5f, 0.5f, 1.0f));
 		box.translate(-1.0f, 1.5f + (i*0.1f), 0.0f);
 		box.scale(0.5f, true);
 		box.setCollider(true);

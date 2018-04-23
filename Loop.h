@@ -12,10 +12,30 @@
 
 #define LOOP_H
 
+struct TextureCache {
+
+public:
+	vector<GLuint> textureIDs;
+	vector<std::string> textures;
+	TextureCache() {
+		this->textureIDs = {};
+		this->textures = {};
+	}
+	void clear() {
+		for (GLuint i : this->textureIDs) {
+			glDeleteTextures(1, &i);
+		}
+		glFinish();
+		this->textureIDs.clear();
+		this->textures.clear();
+	}
+};
+
 class Loop {
 		
 	public:
 
+		static TextureCache cache;
 		static DebugInfo* debugger;
 		static HDC* hDC;
 		static InputStates* inputs;
@@ -30,7 +50,11 @@ class Loop {
 		static void writeMessage(string str, float h, float w);
 		static void writeMessage(string str, float h, float w, Color4f &textColor, Color4f &boxColor);
 		static void drawTextBox(freetype::font_data &_font, string _str, float ssOffsetX, float ssOffsetY, float boxXSize, float boxYSize, Color4f &textColor, Color4f &boxColor);
-		static void drawBackground(GLuint &image, float repeat, Color4f &tintColor);
+		static void drawBackground(GLuint image, float repeat, Color4f &tintColor);
+		static void drawBackground(GLuint image, float repeat, Color4f &tintColor, Vect4f &ss_offset);
+
+		static GLuint initTexture(std::string name);
+		static GLuint getTexture(std::string name);
 
 		virtual void freeData();
 		static void Loop::freeAllStaticData();
@@ -41,6 +65,7 @@ class Loop {
 
 		double loopStarted;
 
+		static void Loop::addFont(const char* name, unsigned int size);
 		static void init(HDC &_hDC, DebugInfo &_debugger, InputStates &inputs);
 		virtual void display() = 0;
 

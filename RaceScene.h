@@ -59,8 +59,6 @@ public:
 	inline void freeData() override {
 		for (GameObject* o : this->scene) {
 			if (o != NULL) {
-				//free textures only when scene is deloaded, not in object default constructor
-				o->freeTextures();
 				delete o;
 			}
 		}

@@ -25,7 +25,6 @@ enum AnimationLogic {
 class GameObject {
 	protected:
 
-		static GLuint defaultSprite;
 		static DebugInfo* debugger;
 		//Matrix to convert world to camera space
 		static Matrix3f worldToCamera;
@@ -70,6 +69,7 @@ class GameObject {
 		void setCollisionBounds(const vector<CollisionRadii*> &bounds);
 
 	public:
+		static GLuint defaultSprite;
 		static void setDebugMode(bool flag);
 		static bool getDebugMode();
 		static void setDebugger(DebugInfo &_debugger);
@@ -78,13 +78,13 @@ class GameObject {
 		static float getAngleBetweenPositions(Vect4f &a, Vect4f &b);
 		static void drawCircle(float x, float y, float radius, Color4f* col);
 		static void drawLine(float x1, float y1, float x2, float y2);
-
+		
 		~GameObject();
 		GameObject();
 		GameObject(const GameObject &copy);
-		GameObject(string name, vector<GLuint> sprites, vector<Vertex> mesh, int activeSprite, Color4f* objectColor);
+		GameObject(string name, vector<GLuint> &sprites, vector<Vertex> &mesh, int activeSprite, Color4f &objectColor);
 		virtual void freeData();
-		void freeTextures();
+		//void freeTextures();
 		
 		void animate(AnimationLogic al);
 		virtual void draw();

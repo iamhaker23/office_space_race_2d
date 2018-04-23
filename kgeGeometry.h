@@ -446,6 +446,8 @@ public:
 	bool focusedColor;
 	font_data* font;
 	bool clicked;
+	double clickedAt;
+	double changedAt;
 
 	inline ~UIElement() {
 		
@@ -465,6 +467,7 @@ public:
 		this->boxColor = new Color4f(copy.boxColor->r, copy.boxColor->g, copy.boxColor->b, copy.boxColor->a);
 		this->altColor = new Color4f(copy.altColor->r, copy.altColor->g, copy.altColor->b, copy.altColor->a);
 		this->font = copy.font;
+		
 		
 	}
 
@@ -486,6 +489,8 @@ public:
 		this->font = &font;
 
 		this->clicked = false;
+		this->clickedAt = -1.0;
+		this->changedAt = -1.0;
 	}
 	void setValue(string value) {
 		this->value = value;

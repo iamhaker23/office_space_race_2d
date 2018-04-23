@@ -16,13 +16,13 @@
 	using std::stringstream;
 	using std::vector;
 	using freetype::font_data;
-
+	
 	class utils {
 		private:
 			static GLuint base;
-			static GLuint textureCount;
 
 		public:
+
 			static string doubleToString(double val);
 			static string intToString(int val);
 			static string floatToString(float val);
@@ -36,15 +36,15 @@
 			static GLvoid glPrint(string fmt);
 
 			static nv::Image* loadPNG(std::string name);
-			static GLuint utils::initTexture(nv::Image* img);
-			static void utils::bindTexture(GLuint tex);
-			static void utils::freeTexture(GLuint tex);
 
-			static void utils::enableTextureBlending();
+			static void bindTexture(GLuint tex);
+			//static void utils::freeTexture(GLuint tex);
+
+			static void enableTextureBlending();
 			static vector<string> getFileContents(char* filename);
 			static vector<string> readLines(FILE* fptr);
 			static vector<string> splitString(string input, char delimiter);
-			static string utils::getPositionLabel(int val);
+			static string getPositionLabel(int val);
 
 
 	};

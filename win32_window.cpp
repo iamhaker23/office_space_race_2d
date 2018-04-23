@@ -2,22 +2,22 @@
 
 
 //win32 global variables
-HDC			hDC = NULL;		// Private GDI Device Context
-HGLRC		hRC = NULL;		// Permanent Rendering Context
-HWND		hWnd = NULL;		// Holds Our Window Handle
-HINSTANCE	hInstance = NULL;		// Holds The Instance Of The Application
+HDC			win32_window::hDC = NULL;		// Private GDI Device Context
+HGLRC		win32_window::hRC = NULL;		// Permanent Rendering Context
+HWND		win32_window::hWnd = NULL;		// Holds Our Window Handle
+HINSTANCE	win32_window::hInstance = NULL;		// Holds The Instance Of The Application
 
 
-system_clock::time_point START_CTIME;
-system_clock::time_point WIN_CTIME;
-bool	active = TRUE;		// Window Active Flag Set To TRUE By Default
-bool	fullscreen = TRUE;	// Fullscreen Flag Set To Fullscreen Mode By Default
+system_clock::time_point win32_window::START_CTIME;
+system_clock::time_point win32_window::WIN_CTIME;
+bool	win32_window::active = TRUE;		// Window Active Flag Set To TRUE By Default
+bool	win32_window::fullscreen = TRUE;	// Fullscreen Flag Set To Fullscreen Mode By Default
 
-Loop* loop = NULL;
+Loop* win32_window::loop = NULL;
 
-InputStates inputs = InputStates();
-DebugInfo debugger = DebugInfo();
-LoopManager* loops = new LoopManagerOSR();
+InputStates win32_window::inputs = InputStates();
+DebugInfo win32_window::debugger = DebugInfo();
+LoopManagerOSR win32_window::loops = LoopManagerOSR();
 
 
 int screenWidth = 800, screenHeight = 800;
@@ -63,8 +63,7 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 	int oldTicks = -1;
 
 	while (!done){
-		// Loop That Runs While done=FALSE
-		
+
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))	// Is There A Message Waiting?
 		{
 			if (msg.message == WM_QUIT)				// Have We Received A Quit Message?
@@ -77,81 +76,80 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 				DispatchMessage(&msg);				// Dispatch The Message
 			}
 		}
-		else										// If There Are No Messages
-		{
-			if (inputs.keys[VK_ESCAPE]) done = true; //close game
 
-			if (!done && loops->hasLoopChanged()) {
-				loop = loops->getActiveLoop();
+		if (inputs.keys[VK_ESCAPE]) done = true; //close game
+
+		bool changed = loops.hasLoopChanged();
+		if (!done && changed) {
+			loop = loops.getActiveLoop();
+		}
+
+		if (!done && loop != NULL) {
+								
+			system_clock::time_point cNow = system_clock::now();
+			duration<double> duration = cNow - START_CTIME;
+			debugger.setDuration(duration);
+
+			int timeSincePaused = (int)std::chrono::duration_cast<std::chrono::milliseconds>(cNow - pausedAt).count();
+
+
+			if (!paused) {
+
+				if (loops.isActivePausable() && timeSincePaused >= 300 && inputs.keys[pauseKey]) {
+					pausedAt = cNow;
+					paused = true;
+				}
+
+				pauseMessageDisplayed = false;
+
+				//Every other tick of the given frequency render a frame
+				//std::ratio<1, 120> gives 60fps
+				//std::ratio<1, 100> gives 50fps
+				//std::ratio<1, 60> gives 30fps
+				//std::ratio<1, 70> gives 35fps
+				int ticks = (int)(std::chrono::duration<float, std::ratio<1, 70>>(cNow - WIN_CTIME).count());
+
+				if (DISABLE_FRAMERATE_CAP || ((ticks % 2 == 1) && ticks != oldTicks)) {
+
+					oldTicks = ticks;
+					localFrameCount+=1;
+
+					loop->display();	// Draw The Scene
+
+					loop->drawUI();
+					SwapBuffers(hDC);				// Swap Buffers (Double Buffering)
+
+				}
+
+
+			}
+			else {
+
+				if (timeSincePaused >= 300 && inputs.keys[pauseKey]) {
+					pausedAt = cNow;
+					paused = false;
+				}
+				else if (inputs.keys[0x51]) {
+					Loop::requestedActiveLoop = 1;
+					paused = false;
+				}
+
+				if (!pauseMessageDisplayed && loop != NULL) {
+					loop->writeMessage("Paused\nQ - Main Menu");
+					pauseMessageDisplayed = true;
+					//show pause message
+					SwapBuffers(hDC);
+				}
+
 			}
 
-			if (!done && loop != NULL) {
-								
-				system_clock::time_point cNow = system_clock::now();
-				duration<double> duration = cNow - START_CTIME;
-				debugger.setDuration(duration);
 
-				int timeSincePaused = (int)std::chrono::duration_cast<std::chrono::milliseconds>(cNow - pausedAt).count();
-
-
-				if (!paused) {
-
-					if (loops->isActivePausable() && timeSincePaused >= 300 && inputs.keys[pauseKey]) {
-						pausedAt = cNow;
-						paused = true;
-					}
-
-					pauseMessageDisplayed = false;
-
-					//Every other tick of the given frequency render a frame
-					//std::ratio<1, 120> gives 60fps
-					//std::ratio<1, 100> gives 50fps
-					//std::ratio<1, 60> gives 30fps
-					//std::ratio<1, 70> gives 35fps
-					int ticks = (int)(std::chrono::duration<float, std::ratio<1, 70>>(cNow - WIN_CTIME).count());
-
-					if (DISABLE_FRAMERATE_CAP || ((ticks % 2 == 1) && ticks != oldTicks)) {
-
-						oldTicks = ticks;
-						localFrameCount+=1;
-
-						loop->display();	// Draw The Scene
-
-						loop->drawUI();
-						SwapBuffers(hDC);				// Swap Buffers (Double Buffering)
-
-					}
-
-
-				}
-				else {
-
-					if (timeSincePaused >= 300 && inputs.keys[pauseKey]) {
-						pausedAt = cNow;
-						paused = false;
-					}
-					else if (inputs.keys[0x51]) {
-						loops->setActiveLoop(1);
-						paused = false;
-					}
-
-					if (!pauseMessageDisplayed && loop != NULL) {
-						loop->writeMessage("Paused\nQ - Main Menu");
-						pauseMessageDisplayed = true;
-						//show pause message
-						SwapBuffers(hDC);
-					}
-
-				}
-
-
-				//if it's been a second since last tic, update framesamples
-				if (std::chrono::duration_cast<std::chrono::milliseconds>(cNow - WIN_CTIME).count() >= 1000) {
+			//if it's been a second since last tic, update framesamples
+			if (std::chrono::duration_cast<std::chrono::milliseconds>(cNow - WIN_CTIME).count() >= 1000) {
 					
-					debugger.addFrameSample(localFrameCount);
-					localFrameCount = 0;
-					WIN_CTIME = cNow;
-				}
+				debugger.addFrameSample(localFrameCount);
+				localFrameCount = 0;
+				WIN_CTIME = cNow;
 			}
 		}
 	}
@@ -268,7 +266,7 @@ void win32_window::KillGLWindow()								// Properly Kill The Window
 	}
 
 	//Free data from game loops
-	delete loops;
+	//loops.freeData();
 }
 
 /*	This Code Creates Our OpenGL Window.  Parameters Are:					*
@@ -393,8 +391,7 @@ bool win32_window::CreateGLWindow(char* title, int width, int height)
 	SetFocus(hWnd);									// Sets Keyboard Focus To The Window
 	
 	if (hDC != NULL) {
-		loops->init(hDC, debugger, inputs);
-		loop = loops->getActiveLoop();
+		loops.init(hDC, debugger, inputs);
 	}
 	
 	win32_window::reshape(width, height);					// Set Up Our Perspective GL Screen

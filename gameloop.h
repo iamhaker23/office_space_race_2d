@@ -12,7 +12,8 @@
 
 	private:
 		RaceScene scene;
-		GLuint backgroundPNG;
+		vector<GLuint> backgrounds;
+		vector<GLuint> sprites;
 
 		bool finished;
 		double startTimeOutClock;

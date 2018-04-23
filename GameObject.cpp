@@ -4,18 +4,19 @@
 DebugInfo* GameObject::debugger = NULL;
 Matrix3f GameObject::worldToCamera = Matrix3f();
 bool GameObject::drawDebug = false;
-GLuint GameObject::defaultSprite = utils::initTexture(utils::loadPNG("resources/images/default-sprite.png"));
+GLuint GameObject::defaultSprite = (GLuint)0;
 
 GameObject::~GameObject() {
 	this->freeData();
 	
 }
 
+/*
 void GameObject::freeTextures() {
 	for (GLuint tex : this->sprites) {
 		utils::freeTexture(tex);
 	}
-}
+}*/
 
 void GameObject::freeData() {
 	for (CollisionRadii* c : this->collisionBounds) {
@@ -85,9 +86,21 @@ GameObject::GameObject(const GameObject &copy) {
 	this->angularDamping = copy.angularDamping;
 
 	this->activeSpriteIndex = copy.activeSpriteIndex;
+
 	this->sprites = copy.sprites;
-	this->name = copy.name;
 	this->mesh = copy.mesh;
+	/*this->sprites = {};
+	for (GLuint i : copy.sprites) {
+		this->sprites.push_back(i);
+	}
+
+	this->mesh = {};
+	for (Vertex v : copy.mesh) {
+		this->mesh.push_back(v);
+	}*/
+
+
+	this->name = copy.name;
 
 	this->scales[0] = copy.scales[0];
 	this->scales[1] = copy.scales[1];
@@ -111,15 +124,24 @@ GameObject::GameObject(const GameObject &copy) {
 
 }
 
-GameObject::GameObject(string name, vector<GLuint> sprites, vector<Vertex> mesh, int activeSprite,  Color4f* objectColor) {
+GameObject::GameObject(string name, vector<GLuint> &sprites, vector<Vertex> &mesh, int activeSprite,  Color4f &objectColor) {
 	
 	this->name = name;
-	this->mesh = mesh;
+
 	this->sprites = sprites;
+	this->mesh = mesh;
+	/*this->sprites = {};
+	for (GLuint i : sprites) {
+	this->sprites.push_back(i);
+	}
+	this->mesh = {};
+	for (Vertex v : mesh) {
+		this->mesh.push_back(v);
+	}*/
 
 	this->activeSpriteIndex = 0;
 
-	this->objectColor = objectColor;
+	this->objectColor = new Color4f(objectColor);
 
 
 	this->scales[0] = 1.0f;
@@ -155,7 +177,11 @@ GameObject::GameObject(string name, vector<GLuint> sprites, vector<Vertex> mesh,
 void GameObject::draw() {
 
 	if ((int)this->sprites.size() > 0) {
-		utils::bindTexture(this->sprites[this->activeSpriteIndex]);
+		GLuint tex = this->sprites[this->activeSpriteIndex];
+
+		GLboolean b = glIsTexture(tex);
+		utils::bindTexture(tex);
+
 		glEnable(GL_TEXTURE_2D);
 	}
 	else {

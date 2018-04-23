@@ -15,20 +15,18 @@ public:
 	RaceData* player;
 	vector<RaceData*> others;
 	bool updated;
+	int difficulty;
 
 	inline GameData() {
 		this->player = NULL;
 		this->others = {};
 		this->playerName = "Player";
 		this->updated = false;
+		this->difficulty = -1;
 	}
 
 	inline void freeData() {
-		for (RaceData* o : others) {
-			if (o != NULL) delete o;
-		}
 		this->others.clear();
-		if (player != NULL) delete this->player;
 	}
 
 	inline ~GameData() {

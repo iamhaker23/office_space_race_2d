@@ -10,8 +10,15 @@ float Loop::screenHeight = -1;
 float Loop::screenWidth = -1;
 int Loop::requestedActiveLoop = -1;
 GameData* Loop::globals = NULL;
+TextureCache Loop::cache = TextureCache();
 
 void Loop::resetData(bool retainGlobals) {
+	
+	Loop::cache.clear();
+	
+	GameObject::defaultSprite = Loop::getTexture("resources/images/default-sprite.png");
+
+	Loop::requestedActiveLoop = -1;
 	for (UIElement* u : this->UI) {
 		delete u;
 	}
@@ -103,7 +110,11 @@ void Loop::drawTextBox(freetype::font_data &_font, string _str, float ssOffsetX,
 	glPopMatrix();
 }
 
-void Loop::drawBackground(GLuint &image, float repeat, Color4f &tintColor) {
+void Loop::drawBackground(GLuint image, float repeat, Color4f &tintColor) {
+	Loop::drawBackground(image, repeat, tintColor, Vect4f(0.0f, 0.0f, 0.0f));
+}
+
+void Loop::drawBackground(GLuint image, float repeat, Color4f &tintColor, Vect4f &ss_offset) {
 
 	if (image == NULL) return;
 
@@ -115,10 +126,10 @@ void Loop::drawBackground(GLuint &image, float repeat, Color4f &tintColor) {
 
 	glColor4f(tintColor.r, tintColor.g, tintColor.b, tintColor.a);
 	glBegin(GL_QUADS);
-	glTexCoord2f(0.0, 0.0); glVertex2f(-repeat, -repeat);
-	glTexCoord2f(0.0, repeat); glVertex2f(-repeat, repeat);
-	glTexCoord2f(repeat, repeat); glVertex2f(repeat, repeat);
-	glTexCoord2f(repeat, 0.0); glVertex2f(repeat, -repeat);
+	glTexCoord2f(0.0+ss_offset.getX(), 0.0 + ss_offset.getY()); glVertex2f(-repeat, -repeat);
+	glTexCoord2f(0.0 + ss_offset.getX(), repeat + ss_offset.getY()); glVertex2f(-repeat, repeat);
+	glTexCoord2f(repeat + ss_offset.getX(), repeat + ss_offset.getY()); glVertex2f(repeat, repeat);
+	glTexCoord2f(repeat + ss_offset.getX(), 0.0 + ss_offset.getY()); glVertex2f(repeat, -repeat);
 	glEnd();
 	glPopMatrix();
 
@@ -182,6 +193,7 @@ void Loop::processUI() {
 			}
 			if (clicked && e->enabled) {
 				e->focused = true;
+				e->clickedAt = debugger->getTime();
 				//We read the character in the inputstate object, and we do nothing with it
 				//since the input wasn't focused
 				//without this, the last character typed before focus will be entered in the case of textbox
@@ -221,4 +233,54 @@ void Loop::init(HDC &_hDC, DebugInfo &_debugger, InputStates &inputs) {
 Loop::Loop() {
 	this->UI = {};
 	this->loopStarted = 0.0;
+}
+
+void Loop::addFont(const char* name, unsigned int size) {
+
+	font_data* font1 = new font_data();
+	font1->init(name, 20);
+	Loop::fonts.push_back(font1);
+}
+
+GLuint Loop::getTexture(std::string name) {
+	int idx = 0;
+	for (std::string s : Loop::cache.textures) {
+		if (s == name) {
+			//cached
+			return Loop::cache.textureIDs.at(idx);
+		}
+		else idx++;
+	}
+	return initTexture(name);
+}
+
+GLuint Loop::initTexture(std::string name) {
+
+	//TODO:does this risk overwriting font lists?
+
+	GLuint myTextureID = (GLuint)((int)Loop::cache.textureIDs.size() + 1);
+
+	nv::Image* img = utils::loadPNG(name);
+
+	if (img != NULL) {
+
+		glBindTexture(GL_TEXTURE_2D, myTextureID);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+		glTexImage2D(GL_TEXTURE_2D, 0, img->getInternalFormat(), img->getWidth(), img->getHeight(), 0, img->getFormat(), img->getType(), img->getLevel(0));
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
+
+		img->~Image();
+
+	}
+
+
+	Loop::cache.textures.push_back(name);
+	Loop::cache.textureIDs.push_back(myTextureID);
+
+	return myTextureID;
 }

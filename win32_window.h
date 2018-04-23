@@ -29,6 +29,20 @@ public:
 
 	static void reshape(int width, int height);
 
+
+	static HDC			hDC;
+	static HGLRC		hRC;
+	static HWND		hWnd;
+	static HINSTANCE	hInstance;
+	static system_clock::time_point START_CTIME;
+	static system_clock::time_point WIN_CTIME;
+	static bool	active;
+	static bool	fullscreen;
+	static Loop* loop;
+	static InputStates inputs;
+	static DebugInfo debugger;
+	static LoopManagerOSR loops;
+
 };
 
 
