@@ -22,7 +22,7 @@ public:
 
 	~GO_Racer();
 	GO_Racer(); 
-	GO_Racer(string name, vector<GLuint> &sprites, vector<Vertex> &mesh, int activeSprite, Color4f &objectColor, bool loseSteeringOnCollision);
+	GO_Racer(string name, vector<GLuint> &sprites, vector<Vertex> &mesh, int activeSprite, Color4f &objectColor, vector<GLuint> chairSprites, bool loseSteeringOnCollision);
 	GO_Racer(const GO_Racer &copy);
 	void freeData() override;
 

@@ -16,6 +16,9 @@ public:
 	vector<RaceData*> others;
 	bool updated;
 	int difficulty;
+	int laps;
+	int ai;
+	string pusher;
 
 	inline GameData() {
 		this->player = NULL;
@@ -23,6 +26,9 @@ public:
 		this->playerName = "Player";
 		this->updated = false;
 		this->difficulty = -1;
+		this->laps = -1;
+		this->ai = -1;
+		this->pusher = "";
 	}
 
 	inline void freeData() {

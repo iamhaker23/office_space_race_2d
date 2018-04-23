@@ -26,18 +26,30 @@ GO_Racer::GO_Racer(const GO_Racer &copy) : GameObject(copy) {
 	this->raceData = new RaceData(*copy.raceData);
 	this->racer = copy.racer;
 	this->steering = copy.steering;
-
+	this->loseSteeringOnCollision = copy.loseSteeringOnCollision;
 }
 
-GO_Racer::GO_Racer(string name, vector<GLuint> &sprites, vector<Vertex> &mesh, int activeSprite, Color4f &objectColor, bool loseSteeringOnCollision) : GameObject(name, sprites, mesh, activeSprite, objectColor) {
+GO_Racer::GO_Racer(string name, vector<GLuint> &sprites, vector<Vertex> &mesh, int activeSprite, Color4f &objectColor, vector<GLuint> chairSprites, bool loseSteeringOnCollision) : GameObject(name, sprites, mesh, activeSprite, objectColor) {
 
-	loseSteeringOnCollision = loseSteeringOnCollision;
+	this->loseSteeringOnCollision = loseSteeringOnCollision;
 	steering = true;
 	playerControl = false;
 	aiControl = false;
 	racer = true;
 	raceData = new RaceData();
 	raceData->setName(name);
+
+	vector<Vertex> planeMesh = {
+		Vertex(0.0, 0.0, -0.5, -0.5),
+		Vertex(0.0, 1.0, -0.5, 0.5),
+		Vertex(1.0, 1.0, 0.5, 0.5),
+		Vertex(1.0, 0.0, 0.5, -0.5)
+	};
+
+	
+	GameObject chair = GameObject(name.append("_CHAIR"), chairSprites, planeMesh, 0, Color4f(1.0f, 1.0f, 1.0f, 1.0f));
+	chair.translate(0.0f, 0.7f, 0.0f);
+	this->addChild(chair);
 
 }
 
@@ -67,9 +79,14 @@ void GO_Racer::doAIControl(GameObject* track, int trackStep) {
 	if (angle < -180.0f) angle += 360.0f;
 
 	if (abs(angle) > 0.02f || (distSqrd) > 0.001f) {
-
 		this->zTorque += ((this->steering)?0.02f:0.005f)*angle;
+
+		int sprite = (angle > 0.0f) ? 1 : 2;
+		sprite = (angle == 0.0f) ? 0 : sprite;
+		if ((int)this->children.size() > 0) this->children.at(0).setSprite(sprite);
+
 		this->addForce(0.00f, ((this->steering)?0.09f:0.05f), 0.0f);
+		this->animate(AnimationLogic::LOOPEND);
 	}
 	
 }
@@ -120,7 +137,7 @@ void GO_Racer::processInputs(InputStates* inputs) {
 		if (inputs->keys[0x53]) {
 			//S Key
 			if (this->forces[1] > -0.5f*this->topSpeed) {
-
+				this->animate(AnimationLogic::LOOPEND);
 				/*if ((this->oldForces[1] - (this->forces[1] - 0.02f)) > 0.05f) {
 				this->oldForces[1] = this->forces[1];
 				}*/
@@ -130,7 +147,7 @@ void GO_Racer::processInputs(InputStates* inputs) {
 		if (inputs->keys[0x57]) {
 			//W Key
 			if (this->forces[1] < this->topSpeed) {
-
+				this->animate(AnimationLogic::LOOPEND);
 				/*if ((this->oldForces[1] - (this->forces[1] - 0.02f)) > 0.05f) {
 				this->oldForces[1] = this->forces[1];
 				}*/
@@ -144,28 +161,22 @@ void GO_Racer::processInputs(InputStates* inputs) {
 
 			if (inputs->keys[0x41]) {
 				//A Key
-				sprite = 1;
 				if (this->forces[1] != 0.0f) {
+					sprite = 1;
 					this->zTorque -= ((backwards) ? 1.0f : -1.0f) * 1.1f * factor;
 				}
 			}
 
 			if (inputs->keys[0x44]) {
 				//D Key
-				sprite = 2;
 				if (this->forces[1] != 0.0f) {
+					sprite = 2;
 					this->zTorque += ((backwards) ? -1.0f : 1.0f) * -1.1f * factor;
 				}
 			}
 		}
 
-		//Animations after auto-animation
-		if (inputs->LeftPressed) {
-			this->animate(AnimationLogic::PINGPONG);
-		}
-		else {
-			this->setSprite(sprite);
-		}
+		if ((int)this->children.size() > 0) this->children.at(0).setSprite(sprite);
 	}
 }
 

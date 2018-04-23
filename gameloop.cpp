@@ -66,7 +66,7 @@ void GameLoop::display() {
 
 	int NUM_TRACK_SEGMENTS = track->countCollisionRadii()-1;
 	int TRACK_SEGMENT_STEP = 1;
-	int TOTAL_LAPS = 1;
+	int TOTAL_LAPS = this->globals->laps;
 
 	glPushMatrix();
 
@@ -228,7 +228,7 @@ void GameLoop::initGame() {
 
 	vector<GLuint> trackSprites = { Loop::getTexture("resources/images/tracks/office_1.png") };
 
-	vector<GO_Racer> racers = GameLoop::generateRacers(3);
+	vector<GO_Racer> racers = GameLoop::generateRacers(this->globals->ai);
 	vector<GameObject> objects = GameLoop::generateObjects();
 
 	GameObject track = GameObject("Track", trackSprites, generatePlaneMesh(), 0, Color4f(1.0f, 1.0f, 1.0f, 1.0f));
@@ -239,11 +239,13 @@ void GameLoop::initGame() {
 	track.nuScaleBounds(0.5f, 0.5f, 1.0f);
 
 	scene.setTrack(track);
-	scene.setPlayer(generatePlayer(this->globals->playerName));
 
 	for (GO_Racer o : racers) {
 		scene.addCompetitor(o);
 	}
+
+	//setting after ensures player is rendered after ai
+	scene.setPlayer(generatePlayer(this->globals->playerName));
 
 	for (GameObject o : objects) {
 		scene.addObject(o);
@@ -255,11 +257,21 @@ void GameLoop::initGame() {
 
 GO_Racer GameLoop::generatePlayer(string &name) {
 
-	vector<GLuint> carSprites = { Loop::getTexture("resources/images/chair/1.png")
+	vector<GLuint> carSprites = { Loop::getTexture(string("resources/images/characters/").append(Loop::globals->pusher).append("/1.png"))
+		, Loop::getTexture(string("resources/images/characters/").append(Loop::globals->pusher).append("/2.png"))
+		, Loop::getTexture(string("resources/images/characters/").append(Loop::globals->pusher).append("/3.png"))
+		, Loop::getTexture(string("resources/images/characters/").append(Loop::globals->pusher).append("/4.png"))
+		, Loop::getTexture(string("resources/images/characters/").append(Loop::globals->pusher).append("/5.png"))
+		, Loop::getTexture(string("resources/images/characters/").append(Loop::globals->pusher).append("/6.png"))
+		, Loop::getTexture(string("resources/images/characters/").append(Loop::globals->pusher).append("/7.png"))
+		, Loop::getTexture(string("resources/images/characters/").append(Loop::globals->pusher).append("/8.png"))
+	};
+
+	vector<GLuint> chairSprites = { Loop::getTexture("resources/images/chair/1.png")
 		,Loop::getTexture("resources/images/chair/2.png")
 		,Loop::getTexture("resources/images/chair/3.png") };
-	
-	GO_Racer player = GO_Racer(name, carSprites, generatePlaneMesh(), 0, Color4f(1.0f, 0.0f, 0.0f, 1.0f), (Loop::globals->difficulty > 1));
+
+	GO_Racer player = GO_Racer(name, carSprites, generatePlaneMesh(), 0, Color4f(1.0f, 1.0f, 1.0f, 1.0f), chairSprites, (Loop::globals->difficulty == 2));
 	player.scale(0.6f, true);
 	player.setPhysicalAttributes(1.6f, 1.3f, 4.0f);
 	player.setZAngle(180.0f);
@@ -268,41 +280,52 @@ GO_Racer GameLoop::generatePlayer(string &name) {
 	player.setCollider(true);
 
 	player.setPhysics(true); 
-	CollisionRadii chairRadii = CollisionRadii(0.0f, 0.0f);
-	chairRadii.addRadius(0.3f, 0.0f);
-	chairRadii.addRadius(0.32f, 90.0f);
-	chairRadii.addRadius(0.3f, 180.0f);
-	chairRadii.addRadius(0.33f, 270.0f);
-	chairRadii.addRadius(0.3f, 45.0f);
-	chairRadii.addRadius(0.3f, 135.0f);
-	chairRadii.addRadius(0.3f, 225.0f);
-	chairRadii.addRadius(0.3f, 315.0f);
+	CollisionRadii radii = CollisionRadii(0.0f, 0.0f);
+	radii.addRadius(0.3f, 0.0f);
+	radii.addRadius(0.65f, 90.0f);
+	radii.addRadius(0.3f, 180.0f);
+	radii.addRadius(0.33f, 270.0f);
+	radii.addRadius(0.4f, 45.0f);
+	radii.addRadius(0.4f, 135.0f);
+	radii.addRadius(0.3f, 225.0f);
+	radii.addRadius(0.3f, 315.0f);
 
-	player.setCollisionBounds(chairRadii);
+	player.setCollisionBounds(radii);
 
 	return player;
 
 }
 vector<GO_Racer> GameLoop::generateRacers(int numAI) {
 
-	vector<GO_Racer> output = {}; 
-	vector<GLuint> carSprites = { Loop::getTexture("resources/images/chair/1.png")
+	vector<GO_Racer> output = {};
+
+	vector<GLuint> carSprites = { Loop::getTexture("resources/images/characters/carlos/1.png")
+		,Loop::getTexture("resources/images/characters/carlos/2.png")
+		,Loop::getTexture("resources/images/characters/carlos/3.png")
+		,Loop::getTexture("resources/images/characters/carlos/4.png")
+		,Loop::getTexture("resources/images/characters/carlos/5.png")
+		,Loop::getTexture("resources/images/characters/carlos/6.png")
+		,Loop::getTexture("resources/images/characters/carlos/7.png")
+		,Loop::getTexture("resources/images/characters/carlos/8.png")
+	};
+
+	vector<GLuint> chairSprites = { Loop::getTexture("resources/images/chair/1.png")
 		,Loop::getTexture("resources/images/chair/2.png")
 		,Loop::getTexture("resources/images/chair/3.png") };
-	
+
 	//effectively instancing for bounds (i.e. change one, change all).
-	CollisionRadii chairRadii = CollisionRadii(0.0f, 0.0f);
-	chairRadii.addRadius(0.3f, 0.0f);
-	chairRadii.addRadius(0.32f, 90.0f);
-	chairRadii.addRadius(0.3f, 180.0f);
-	chairRadii.addRadius(0.33f, 270.0f);
-	chairRadii.addRadius(0.3f, 45.0f);
-	chairRadii.addRadius(0.3f, 135.0f);
-	chairRadii.addRadius(0.3f, 225.0f);
-	chairRadii.addRadius(0.3f, 315.0f);
+	CollisionRadii radii = CollisionRadii(0.0f, 0.0f);
+	radii.addRadius(0.3f, 0.0f);
+	radii.addRadius(0.65f, 90.0f);
+	radii.addRadius(0.3f, 180.0f);
+	radii.addRadius(0.33f, 270.0f);
+	radii.addRadius(0.4f, 45.0f);
+	radii.addRadius(0.4f, 135.0f);
+	radii.addRadius(0.3f, 225.0f);
+	radii.addRadius(0.3f, 315.0f);
 
 	for (int i = 0; i < numAI; i++){
-		GO_Racer ai = GO_Racer(utils::intLabel("AI_RACER_", i, ""), carSprites, generatePlaneMesh(), 0, Color4f(0.1f, 0.2f, 1.0f, 1.0f), (Loop::globals->difficulty <= 1));
+		GO_Racer ai = GO_Racer(utils::intLabel("AI_RACER_", i, ""), carSprites, generatePlaneMesh(), 0, Color4f(0.1f, 0.2f, 1.0f, 1.0f), chairSprites, (Loop::globals->difficulty == 0));
 		ai.scale(0.6f, true);
 		ai.setPhysicalAttributes(1.4f - ((float)i*0.1f), 1.3f, 6.0f+((float)i));
 		ai.translate(-0.5f, -1.0f, 0.0f);
@@ -311,7 +334,7 @@ vector<GO_Racer> GameLoop::generateRacers(int numAI) {
 		ai.setPhysics(true);
 		ai.setAIControl(true);
 
-		ai.setCollisionBounds(chairRadii);
+		ai.setCollisionBounds(radii);
 
 		output.push_back(ai);
 	}

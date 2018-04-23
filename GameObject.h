@@ -29,6 +29,7 @@ class GameObject {
 		//Matrix to convert world to camera space
 		static Matrix3f worldToCamera;
 		static bool drawDebug;
+		vector<GameObject> children;
 
 		string name;
 
@@ -69,6 +70,8 @@ class GameObject {
 		void setCollisionBounds(const vector<CollisionRadii*> &bounds);
 
 	public:
+		void addChild(GameObject &o);
+
 		static GLuint defaultSprite;
 		static void setDebugMode(bool flag);
 		static bool getDebugMode();
@@ -87,7 +90,10 @@ class GameObject {
 		//void freeTextures();
 		
 		void animate(AnimationLogic al);
+		
 		virtual void draw();
+		void draw(Matrix3f &parentTransform);
+
 		virtual vector<CollisionResult> resolveCollisions(const vector<GameObject*> &others);
 
 		string toString();

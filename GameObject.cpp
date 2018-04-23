@@ -6,6 +6,7 @@ Matrix3f GameObject::worldToCamera = Matrix3f();
 bool GameObject::drawDebug = false;
 GLuint GameObject::defaultSprite = (GLuint)0;
 
+
 GameObject::~GameObject() {
 	this->freeData();
 	
@@ -89,6 +90,7 @@ GameObject::GameObject(const GameObject &copy) {
 
 	this->sprites = copy.sprites;
 	this->mesh = copy.mesh;
+	this->children = copy.children;
 	/*this->sprites = {};
 	for (GLuint i : copy.sprites) {
 		this->sprites.push_back(i);
@@ -124,12 +126,17 @@ GameObject::GameObject(const GameObject &copy) {
 
 }
 
+void GameObject::addChild(GameObject &o) {
+	this->children.push_back(GameObject(o));
+}
+
 GameObject::GameObject(string name, vector<GLuint> &sprites, vector<Vertex> &mesh, int activeSprite,  Color4f &objectColor) {
 	
 	this->name = name;
 
 	this->sprites = sprites;
 	this->mesh = mesh;
+	this->children = {};
 	/*this->sprites = {};
 	for (GLuint i : sprites) {
 	this->sprites.push_back(i);
@@ -176,6 +183,12 @@ GameObject::GameObject(string name, vector<GLuint> &sprites, vector<Vertex> &mes
 
 void GameObject::draw() {
 
+	//identity matrix
+	draw(Matrix3f());
+
+}
+
+void GameObject::draw(Matrix3f &parentTransform) {
 	if ((int)this->sprites.size() > 0) {
 		GLuint tex = this->sprites[this->activeSpriteIndex];
 
@@ -189,66 +202,75 @@ void GameObject::draw() {
 	}
 
 	glMatrixMode(GL_MODELVIEW);
-	
+
 	glColor4f(this->objectColor->r, this->objectColor->g, this->objectColor->b, this->objectColor->a);
 
-	
+
 	glPushMatrix();
 
+	glMultMatrixf(GameObject::worldToCamera.values);
+
+	//TODO: setWorldSpaceMatrix(MAtrix3f &mat);
+	Matrix3f* nM = new Matrix3f(this->getNewPosition());
+	delete this->worldSpaceTransform;
+	this->worldSpaceTransform = nM;
+
+	glMultMatrixf(parentTransform.Multiply(*this->worldSpaceTransform).values);
+
+
+	resetModifiers();
+
+	glBegin(GL_QUADS);
+
+	for (Vertex v : this->mesh) {
+		glTexCoord2f(v.u, v.v);
+		glVertex2f(v.x, v.y);
+	}
+
+	glEnd();
+
+
+	if (GameObject::drawDebug) {
+		//if ((int)this->collisionBounds.size() != 0) {
+		glPushMatrix();
+		glLoadIdentity();
+
 		glMultMatrixf(GameObject::worldToCamera.values);
-		
-		//TODO: setWorldSpaceMatrix(MAtrix3f &mat);
-		Matrix3f* nM = new Matrix3f(this->getNewPosition());
-		delete this->worldSpaceTransform;
-		this->worldSpaceTransform = nM;
-		
-		glMultMatrixf(this->worldSpaceTransform->values);
+		if (this->hasPhysics()) glMultMatrixf(this->worldSpaceTransform->values);
 
-		resetModifiers();
+		glDisable(GL_TEXTURE_2D);
+		for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
 
-		glBegin(GL_QUADS);
-	
-		for (Vertex v : this->mesh) {
-			glTexCoord2f(v.u, v.v); 
-			glVertex2f(v.x, v.y);
+			CollisionRadii* tmp = this->collisionBounds.at(i);
+			for (int j = 0; j < (int)tmp->radii.size(); j++) {
+
+				glBegin(GL_LINES);
+				glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+				glPointSize(5.0f);
+				Vect4f centre = boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
+				glVertex3f(centre.x, centre.y, 0.0f);
+				float ang = tmp->angles.at(j);
+				float rad = this->radius2DToWorldSpace(tmp->radii.at(j), ang);
+				Vect4f* toDraw = new Vect4f((rad*cosf(ang*(3.1415926f / 180.0f))), (rad*sinf(ang*(3.1415926f / 180.0f))), 0.0f);
+				glVertex3f(toDraw->getX() + centre.getX(), toDraw->getY() + centre.getY(), 0.0f);
+				glEnd();
+			}
 		}
-
-		glEnd();
-
-		if (GameObject::drawDebug) {
-			//if ((int)this->collisionBounds.size() != 0) {
-				glPushMatrix();
-				glLoadIdentity();
-
-				glMultMatrixf(GameObject::worldToCamera.values);
-				if (this->hasPhysics()) glMultMatrixf(this->worldSpaceTransform->values);
-
-				glDisable(GL_TEXTURE_2D);
-				for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
-
-					CollisionRadii* tmp = this->collisionBounds.at(i);
-					for (int j = 0; j < (int)tmp->radii.size(); j++) {
-
-						glBegin(GL_LINES);
-						glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
-						glPointSize(5.0f);
-						Vect4f centre = boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
-						glVertex3f(centre.x, centre.y, 0.0f);
-						float ang = tmp->angles.at(j);
-						float rad = this->radius2DToWorldSpace(tmp->radii.at(j), ang);
-						Vect4f* toDraw = new Vect4f((rad*cosf(ang*(3.1415926f / 180.0f))), (rad*sinf(ang*(3.1415926f / 180.0f))), 0.0f);
-						glVertex3f(toDraw->getX() + centre.getX(), toDraw->getY() + centre.getY(), 0.0f);
-						glEnd();
-					}
-				}
-				glEnable(GL_TEXTURE_2D);
-				glPopMatrix();
-			//}
-		}
+		glEnable(GL_TEXTURE_2D);
+		glPopMatrix();
+		//}
+	}
 
 	glPopMatrix();
-	glDisable(GL_TEXTURE_2D);
 
+
+	for (GameObject o : this->children) {
+		glPushMatrix();
+		o.draw(parentTransform.Multiply(*this->worldSpaceTransform));
+		glPopMatrix();
+	}
+
+	glDisable(GL_TEXTURE_2D);
 }
 
 void GameObject::scale(float uniformScaleFactor, bool scaleCollider) {
