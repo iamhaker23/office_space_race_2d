@@ -12,6 +12,8 @@ private:
 	GameObject* track;
 	GO_Racer* player;
 	vector<GO_Racer*> racers;
+	
+	bool raceStarted;
 
 	inline void addCompetitor(GO_Racer* competitor) {
 		addObject(competitor);
@@ -24,6 +26,7 @@ public:
 		this->racers = {};
 		this->player = NULL;
 		this->track = NULL;
+		this->raceStarted = false;
 	}
 
 	inline void setTrack(GameObject &track) {
@@ -68,6 +71,14 @@ public:
 
 	~RaceScene() {
 		this->freeData();
+	}
+
+	inline void startRace() {
+		this->raceStarted = true;
+	}
+
+	inline bool hasRaceStarted() {
+		return this->raceStarted;
 	}
 
 };

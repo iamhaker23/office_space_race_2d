@@ -61,6 +61,7 @@ GameObject::GameObject() {
 
 	this->colliderFlag = false;
 
+	this->ignoreContainers = false;
 	this->physics = false;
 	this->physicsContainer = false;
 	this->ghost = false;
@@ -112,6 +113,7 @@ GameObject::GameObject(const GameObject &copy) {
 	this->boundScales[2] = copy.boundScales[2];
 
 	this->colliderFlag = copy.colliderFlag;
+	this->ignoreContainers = copy.ignoreContainers;
 	this->physics = copy.physics;
 	this->physicsContainer = copy.physicsContainer;
 	this->ghost = copy.ghost;
@@ -168,6 +170,7 @@ GameObject::GameObject(string name, vector<GLuint> &sprites, vector<Vertex> &mes
 	this->forces[2] = 0.0f;
 	this->zTorque = 0.0f;
 
+	this->ignoreContainers = false;
 	this->friction = 0.0f;
 	this->angularDamping = 0.0f;
 	this->colliderFlag = false;
@@ -189,6 +192,7 @@ void GameObject::draw() {
 }
 
 void GameObject::draw(Matrix3f &parentTransform) {
+
 	if ((int)this->sprites.size() > 0) {
 		GLuint tex = this->sprites[this->activeSpriteIndex];
 
@@ -262,7 +266,6 @@ void GameObject::draw(Matrix3f &parentTransform) {
 	}
 
 	glPopMatrix();
-
 
 	for (GameObject o : this->children) {
 		glPushMatrix();
@@ -597,8 +600,8 @@ vector<CollisionResult> GameObject::resolveCollisions(const vector<GameObject*> 
 						}
 
 					}
-					else if ((iContain && ((myRad*myRad) < (distanceSqrd ))) ||
-							(theyContain && ((theirRad*theirRad) < (distanceSqrd )))) {
+					else if ((iContain && !other->ignoreContainers && ((myRad*myRad) < (distanceSqrd ))) ||
+							(theyContain && !this->ignoreContainers && ((theirRad*theirRad) < (distanceSqrd )))) {
 						float factor = 0.15f;
 						float torque = (angleToOther <= 270.0f && angleToOther >= 90.0f) ? -1.4f : 1.4f;
 						bool bothPhysics = this->hasPhysics() && other->hasPhysics();
@@ -837,11 +840,22 @@ Matrix3f GameObject::getNewPosition() {
 	return this->worldSpaceTransform->Multiply(transform);
 }
 
-//Track Only
+//getProgressAcrossTrackSegment() Function used for track only
 float GameObject::getProgressAcrossTrackSegment(int segIndex, Vect4f &worldPosition, int step) {
+	int size = (int)this->collisionBounds.size();
+	int tmp = segIndex;
+	int prev = -1;
+	int next = -1;
 
-	int prev = (segIndex - step < 0) ? ((int)this->collisionBounds.size()) - 1 : segIndex - step;
-	int next = (segIndex + step == (int)this->collisionBounds.size()) ? 0 : segIndex + step;
+	//reverse the forward direction for reverse (i.e. step < 0)
+	if (step > 0) {
+		prev = (segIndex - step < 0) ? size - 1 : segIndex - step;
+		next = (segIndex + step >= size) ? 0 : segIndex + step;
+	}
+	else {
+		next = (segIndex + step < 0) ? size - 1 : segIndex + step;
+		prev = (segIndex - step >= size) ? 0 : segIndex - step;
+	}
 
 	Vect4f currSeg = boundSpaceToObjectSpace(Vect4f(this->collisionBounds.at(segIndex)->centreX, this->collisionBounds.at(segIndex)->centreY, 0.0f));
 	Vect4f prevSeg = boundSpaceToObjectSpace(Vect4f(this->collisionBounds.at(prev)->centreX, this->collisionBounds.at(prev)->centreY, 0.0f));
@@ -859,4 +873,8 @@ float GameObject::getProgressAcrossTrackSegment(int segIndex, Vect4f &worldPosit
 
 	return (total - currentXComponent) / total;
 
+}
+
+void GameObject::setIgnoreContainers(bool flag) {
+	this->ignoreContainers = flag;
 }

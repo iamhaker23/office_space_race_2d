@@ -60,6 +60,7 @@ class GameObject {
 		bool physicsContainer;
 		vector<string> collidedWithThisFrame;
 
+		bool ignoreContainers;
 		bool physics;
 		GLfloat forces[3];
 		GLfloat zTorque;
@@ -143,7 +144,7 @@ class GameObject {
 		bool isPhysicsContainer();
 
 		float getProgressAcrossTrackSegment(int segIndex, Vect4f &worldPosition, int step);
-		
+		void setIgnoreContainers(bool flag);
 };
 
 

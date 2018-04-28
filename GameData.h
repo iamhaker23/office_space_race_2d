@@ -19,16 +19,24 @@ public:
 	int laps;
 	int ai;
 	string pusher;
+	string pushee;
+	bool reverse;
+	int track;
+	int collisionResolution;
 
 	inline GameData() {
 		this->player = NULL;
 		this->others = {};
 		this->playerName = "Player";
 		this->updated = false;
-		this->difficulty = -1;
-		this->laps = -1;
-		this->ai = -1;
-		this->pusher = "";
+		this->difficulty = 0;
+		this->laps = 2;
+		this->ai = 3;
+		this->pusher = "Suzanne";
+		this->pushee = "Office Dog";
+		this->track = 1;
+		this->reverse = false;
+		this->collisionResolution = 2;
 	}
 
 	inline void freeData() {
@@ -44,6 +52,10 @@ public:
 		this->others = copy.others;
 		this->playerName = copy.playerName;
 		this->updated = copy.updated;
+		this->pusher = copy.pusher;
+		this->pushee = copy.pusher;
+		this->track = copy.track;
+		this->reverse = copy.reverse;
 	}
 };
 

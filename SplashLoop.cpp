@@ -55,6 +55,6 @@ void SplashLoop::handleActivation() {
 
 	this->backgroundPNG = Loop::getTexture("resources/images/backgrounds/splash.png");;
 
-	Loop::addFont("resources/fonts/HANDC.TTF", 20);
+	Loop::addFont("resources/fonts/HANDA.TTF", 20);
 
 }

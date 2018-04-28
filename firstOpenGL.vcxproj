@@ -113,6 +113,7 @@
     <ClCompile Include="GameLoop.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GO_Racer.cpp" />
+    <ClCompile Include="InstructionsLoop.cpp" />
     <ClCompile Include="kgeMatrix.cpp" />
     <ClCompile Include="kgeUtils.cpp" />
     <ClCompile Include="kgeVect.cpp" />
@@ -120,6 +121,7 @@
     <ClCompile Include="LoopManager.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MenuLoop.cpp" />
+    <ClCompile Include="OptionsLoop.cpp" />
     <ClCompile Include="SplashLoop.cpp" />
     <ClCompile Include="win32_window.cpp" />
   </ItemGroup>
@@ -133,6 +135,7 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GO_Racer.h" />
     <ClInclude Include="InputStates.h" />
+    <ClInclude Include="InstructionsLoop.h" />
     <ClInclude Include="kgeGeometry.h" />
     <ClInclude Include="kgeMatrix.h" />
     <ClInclude Include="kgeUtils.h" />
@@ -142,6 +145,7 @@
     <ClInclude Include="LoopManagerOSR.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="MenuLoop.h" />
+    <ClInclude Include="OptionsLoop.h" />
     <ClInclude Include="RaceData.h" />
     <ClInclude Include="RaceScene.h" />
     <ClInclude Include="resource.h" />

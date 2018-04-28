@@ -135,7 +135,7 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 				}
 
 				if (!pauseMessageDisplayed && loop != NULL) {
-					loop->writeMessage("Paused\nQ - Main Menu");
+					loop->writeMessage("Paused\nQ - Main Menu\nTAB - Resume");
 					pauseMessageDisplayed = true;
 					//show pause message
 					SwapBuffers(hDC);

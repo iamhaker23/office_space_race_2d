@@ -17,6 +17,8 @@
     <ClCompile Include="GO_Racer.cpp" />
     <ClCompile Include="SplashLoop.cpp" />
     <ClCompile Include="FinishLoop.cpp" />
+    <ClCompile Include="OptionsLoop.cpp" />
+    <ClCompile Include="InstructionsLoop.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FreeType.h" />
@@ -44,6 +46,8 @@
     <ClInclude Include="SplashLoop.h" />
     <ClInclude Include="GameData.h" />
     <ClInclude Include="FinishLoop.h" />
+    <ClInclude Include="OptionsLoop.h" />
+    <ClInclude Include="InstructionsLoop.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="firstOpenGL.rc" />

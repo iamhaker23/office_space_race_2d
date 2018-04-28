@@ -15,6 +15,9 @@
 struct TextureCache {
 
 public:
+
+	//TODO: consider refactoring startTime into loop, as most loops use it!
+
 	vector<GLuint> textureIDs;
 	vector<std::string> textures;
 	TextureCache() {

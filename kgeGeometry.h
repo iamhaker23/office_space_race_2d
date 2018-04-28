@@ -478,7 +478,7 @@ public:
 		this->value = value;
 		this->type = type;
 
-		this->textColor = new Color4f();
+		this->textColor = new Color4f(0.9f, 0.9f, 0.9f, 1.0f);
 		this->boxColor = new Color4f(0.1f, 0.1f, 0.1f, 0.4f);
 		this->altColor = new Color4f(0.5f, 0.5f, 0.5f, 0.4f);
 		this->enabled = true;

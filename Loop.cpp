@@ -256,9 +256,11 @@ GLuint Loop::getTexture(std::string name) {
 
 GLuint Loop::initTexture(std::string name) {
 
-	//TODO:does this risk overwriting font lists?
-
-	GLuint myTextureID = (GLuint)((int)Loop::cache.textureIDs.size() + 1);
+	GLuint myTextureID = (int)Loop::cache.textureIDs.size();
+	//This makes sure we aren't using a handle that is already used
+	while ((int)myTextureID == 0 || glIsTexture(myTextureID)) {
+		myTextureID = (GLuint)((int)myTextureID + 1);
+	}
 
 	nv::Image* img = utils::loadPNG(name);
 
@@ -277,7 +279,6 @@ GLuint Loop::initTexture(std::string name) {
 		img->~Image();
 
 	}
-
 
 	Loop::cache.textures.push_back(name);
 	Loop::cache.textureIDs.push_back(myTextureID);

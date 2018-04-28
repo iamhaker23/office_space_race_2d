@@ -4,7 +4,7 @@ FinishLoop::FinishLoop() : Loop() {
 
 	this->backgroundPNG = 0;
 	this->scene = {};
-
+	this->startTime = 0.0;
 
 }
 
@@ -14,7 +14,6 @@ FinishLoop::~FinishLoop() {
 
 void FinishLoop::freeData() {
 	this->scene.clear();
-	//utils::freeTexture(this->backgroundPNG);
 	Loop::freeData();
 
 }
@@ -27,6 +26,8 @@ void FinishLoop::resetData() {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	this->backgroundPNG = Loop::getTexture("resources/images/backgrounds/finished.png");
 	this->scene = {};
+	if (this->startTime == 0.0 && debugger != NULL) this->startTime = debugger->getTime();
+
 }
 
 
@@ -39,7 +40,9 @@ void FinishLoop::display() {
 
 	Loop::drawBackground(this->backgroundPNG, 1, Color4f());
 
-	if (this->UI.front()->clicked) {
+	double timeSinceStarted = debugger->getTime() - startTime;
+
+	if (this->UI.front()->clicked && timeSinceStarted > 0.3) {
 		Loop::requestedActiveLoop = 1;
 	}
 	else {
@@ -48,17 +51,12 @@ void FinishLoop::display() {
 			this->globals->updated = false;
 			RaceData* r = this->globals->player;
 			
-			//playerName is used to communicate intended input between scenes, and player->getName is the actual name of the player
-			string stats = r->getName().append(" - ").append(utils::getPositionLabel(r->getPosition()));
+			string pos = (r->didNotFinish()) ? "DNF" : utils::getPositionLabel(r->getPosition());
+
+			string stats = r->getName().append(" - ").append(pos);
 			
 			this->addUI(Vect4f(0.0f, 100.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), stats, UIType::LABEL, *Loop::fonts.back());
-			/*
-			POSITIONS AREN'T CALCULATED FOR OTHER RACERS, SO NOTHING TO DISPLAY
-			int count = 0;
-			for (RaceData* r : this->globals->others) {
-				string stats = utils::intLabel(&r->getName()[0], r->getPosition(), "");
-				this->addUI(new Vect4f(0.0f, 100.0f - (60.0f*(count++)), 0.0f), new Vect4f(200.0f, 60.0f, 0.0f), stats, UIType::LABEL, Loop::fonts.back());
-			}*/
+			
 		}
 	}
 
@@ -70,5 +68,5 @@ void FinishLoop::handleActivation() {
 	
 	Loop::addFont("resources/fonts/BKANT.TTF", 26);
 
-	this->addUI(Vect4f(150.0f, 0.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), "Main Menu", UIType::BUTTON, *Loop::fonts.back());
+	this->addUI(Vect4f(0.0f, 0.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), "Main Menu >", UIType::BUTTON, *Loop::fonts.back());
 }

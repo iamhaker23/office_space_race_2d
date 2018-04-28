@@ -17,13 +17,16 @@
 
 		bool finished;
 		double startTimeOutClock;
+		double startTime;
+		bool renderedFirstFrame;
 
 		vector<CollisionRadii> GameLoop::generateTrackBounds(char* filename);
 		void initGame();
 
-		static vector<GO_Racer> generateRacers(int numAI); 
+		static vector<GO_Racer> generateRacers(int numAI, Vect4f &startPos); 
 		static GO_Racer generatePlayer(string &name);
 		static vector<GameObject> generateObjects();
+		static vector<GameObject> generateDesks();
 		static vector<Vertex> generatePlaneMesh();
 			
 	public:

@@ -1,11 +1,11 @@
 #pragma once
 #include "Loop.h"
 
-#ifndef MENULOOP_H
+#ifndef OPTIONSLOOP_H
 
-#define MENULOOP_H
+#define OPTIONSLOOP_H
 
-class MenuLoop : public Loop {
+class OptionsLoop : public Loop {
 
 
 private:
@@ -15,8 +15,8 @@ private:
 
 public:
 
-	MenuLoop();
-	~MenuLoop();
+	OptionsLoop();
+	~OptionsLoop();
 
 	void display();
 	void freeData() override;

@@ -11,6 +11,7 @@ class FinishLoop : public Loop {
 private:
 	vector<GameObject*> scene;
 	GLuint backgroundPNG;
+	double startTime;
 
 public:
 

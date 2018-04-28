@@ -10,7 +10,7 @@ class LoopManagerOSR : public LoopManager {
 
 	public:
 		
-		int MAX_LOOP_INDEX = 3;
+		int MAX_LOOP_INDEX = 5;
 
 		inline void loadLoop(int index) override {
 			
@@ -35,6 +35,16 @@ class LoopManagerOSR : public LoopManager {
 				case(3):
 				{
 					this->activeLoop = new FinishLoop();
+					break;
+				}
+				case(4):
+				{
+					this->activeLoop = new OptionsLoop();
+					break;
+				}
+				case(5):
+				{
+					this->activeLoop = new InstructionsLoop();
 					break;
 				}
 				default:

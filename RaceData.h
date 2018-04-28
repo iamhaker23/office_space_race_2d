@@ -11,7 +11,7 @@ struct RaceData {
 		string name;
 		float progressOnCurrentSegment;
 		int position;
-
+		bool dnf;
 
 	public:
 		inline RaceData() {
@@ -20,6 +20,7 @@ struct RaceData {
 			this->name = "UNKNOWN";
 			this->progressOnCurrentSegment = 0.0f;
 			this->position = -1;
+			this->dnf = false;
 		}
 
 		inline ~RaceData() {
@@ -77,6 +78,14 @@ struct RaceData {
 
 		inline bool hasCompletedSegments(int total) {
 			return (this->currentSegment == total);
+		}
+
+		inline void setDNF(bool flag) {
+			this->dnf = flag;
+		}
+
+		inline bool didNotFinish() {
+			return this->dnf;
 		}
 
 

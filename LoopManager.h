@@ -4,6 +4,8 @@
 #include "MenuLoop.h"
 #include "SplashLoop.h"
 #include "FinishLoop.h"
+#include "OptionsLoop.h"
+#include "InstructionsLoop.h"
 
 #ifndef LOOPMAN_H
 
