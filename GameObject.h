@@ -136,6 +136,9 @@ class GameObject {
 		float getAngleToOther(GameObject &other);
 		float getAngleToPosition(Vect4f &position);
 		float getAngleFromX();
+		CollisionRadii* getRadiiAt(int index);
+		int getWrappedBoundsIndex(int value);
+		float getXYScale();
 
 		void addForce(float x, float y, float z);
 		void setGhost(bool flag);

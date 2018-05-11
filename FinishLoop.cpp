@@ -52,7 +52,7 @@ void FinishLoop::display() {
 			RaceData* r = this->globals->player;
 			
 			string pos = (r->didNotFinish()) ? "DNF" : utils::getPositionLabel(r->getPosition());
-
+			
 			string stats = r->getName().append(" - ").append(pos);
 			
 			this->addUI(Vect4f(0.0f, 100.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), stats, UIType::LABEL, *Loop::fonts.back());

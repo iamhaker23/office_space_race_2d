@@ -8,6 +8,12 @@ GameLoop::GameLoop() : Loop() {
 
 	this->startTime = 0.0;
 	this->renderedFirstFrame = false;
+
+	//x1, y1, x2, y2
+	this->worldSize[0] = -4.7f;
+	this->worldSize[1] = -2.5f;
+	this->worldSize[2] = 5.0f;
+	this->worldSize[3] = 3.2f;
 }
 
 GameLoop::~GameLoop() {
@@ -72,7 +78,25 @@ void GameLoop::display() {
 	}
 
 	for (GameObject* obj : objs) {
-		obj->draw();
+		Vect4f pos = obj->getWorldPosition();
+		if (pos.getX() < this->worldSize[0] || pos.getY() < this->worldSize[1] || pos.getX() > this->worldSize[2] || pos.getY() > this->worldSize[3]) {
+			
+			//outside world plane
+			//object will fall and die
+			if (obj->getXYScale() < 0.1f) {
+				//disable collision and don't draw
+				//TODO: elegant object kill in Scene class
+				obj->setGhost(true);
+			}
+			else {
+				obj->scale(0.9f, true);
+				obj->draw();
+			}
+
+		}
+		else {
+			obj->draw();
+		}
 	}
 
 	glPopMatrix();
@@ -94,15 +118,12 @@ void GameLoop::display() {
 	if (inputs != NULL) scene.getPlayer()->processInputs(inputs);
 	vector<GO_Racer*> racers = scene.getRacers();
 	for (GO_Racer* competitor : racers) {
-		competitor->doAIControl(track, TRACK_SEGMENT_STEP);
+		if (competitor->isAI()) competitor->doAIControl(track, TRACK_SEGMENT_STEP);
 		if (competitor->getRaceData() != NULL) {
 
 			int segmentOn = track->getIndexOfClosestRadiiTo(competitor->getWorldPosition());
 
 			RaceData* rd = competitor->getRaceData();
-
-			//TODO: reverse track cannot track progress or laps
-			//TODO: is there a bug on going from finishloop to menuloop that throws you into optionloop or is the button poorly placed?
 
 			int SKIPPABLE = 4;
 
@@ -131,7 +152,7 @@ void GameLoop::display() {
 						}
 					}
 				}
-				if (competitor->getName() == "Player") Loop::globals;
+
 				rd->setCurrentSegment(segmentOn);
 			}
 			else if (segDelta > SKIPPABLE) {
@@ -340,14 +361,14 @@ GO_Racer GameLoop::generatePlayer(string &name) {
 	player.setPhysics(true); 
 	CollisionRadii radii = CollisionRadii(0.0f, 0.0f);
 	radii.addRadius(0.3f, 0.0f);
-	radii.addRadius(0.9f, 90.0f);
+	radii.addRadius(1.2f, 90.0f);
 	radii.addRadius(0.3f, 180.0f);
 	radii.addRadius(0.33f, 270.0f);
-	radii.addRadius(0.4f, 45.0f);
-	radii.addRadius(0.4f, 135.0f);
+	radii.addRadius(1.1f, 60.0f);
+	radii.addRadius(1.1f, 120.0f);
 	radii.addRadius(0.3f, 225.0f);
 	radii.addRadius(0.3f, 315.0f);
-
+	radii.setInterpolationTrigO(true);
 	player.setCollisionBounds(radii);
 
 	return player;
@@ -360,13 +381,14 @@ vector<GO_Racer> GameLoop::generateRacers(int numAI, Vect4f &startPos) {
 	//effectively instancing for bounds (i.e. change one, change all).
 	CollisionRadii radii = CollisionRadii(0.0f, 0.0f);
 	radii.addRadius(0.3f, 0.0f);
-	radii.addRadius(0.9f, 90.0f);
+	radii.addRadius(1.2f, 90.0f);
 	radii.addRadius(0.3f, 180.0f);
 	radii.addRadius(0.33f, 270.0f);
-	radii.addRadius(0.4f, 45.0f);
-	radii.addRadius(0.4f, 135.0f);
+	radii.addRadius(1.1f, 60.0f);
+	radii.addRadius(1.1f, 120.0f);
 	radii.addRadius(0.3f, 225.0f);
 	radii.addRadius(0.3f, 315.0f);
+	radii.setInterpolationTrigO(true);
 
 	string characters[] = { "Carlos", "Suzanne", "Barry" };
 	string chairs[] = { "IT Guy", "Office Dog", "Sally" };
@@ -418,14 +440,11 @@ vector<GameObject> GameLoop::generateObjects() {
 	vector<GameObject> output = {};
 		
 	CollisionRadii boxRadii = CollisionRadii(0.0f, 0.0f);
-	boxRadii.addRadius(0.29f, 0.0f);
-	boxRadii.addRadius(0.32f, 90.0f);
-	boxRadii.addRadius(0.29f, 180.0f);
-	boxRadii.addRadius(0.25f, 270.0f);
-	boxRadii.addRadius(0.4f, 45.0f);
-	boxRadii.addRadius(0.4f, 135.0f);
-	boxRadii.addRadius(0.35f, 225.0f);
-	boxRadii.addRadius(0.35f, 315.0f);
+	boxRadii.addRadius(0.7f, 45.0f);
+	boxRadii.addRadius(0.7f, 135.0f);
+	boxRadii.addRadius(0.7f, 225.0f);
+	boxRadii.addRadius(0.7f, 315.0f);
+	boxRadii.setInterpolationTrigO(true);
 
 	for (int i = 0; i < 5; i++) {
 		string name = utils::intToString(i % 3);
@@ -434,7 +453,7 @@ vector<GameObject> GameLoop::generateObjects() {
 		GameObject box = GameObject(utils::intLabel("Box", i, ""), boxSprites, generatePlaneMesh(), 0, Color4f(1.0f, 1.0f, 1.0f, 1.0f));
 		
 		//hack to make the printer bounds larger
-		if (name == "1") box.nuScaleBounds(1.8f, 1.8f, 0.0f);
+		if (name == "1") box.nuScaleBounds(2.0f, 2.0f, 1.0f);
 
 		box.translate(-1.0f, 1.5f + (i*0.1f), 0.0f);
 		box.scale(0.8f, true);
@@ -442,6 +461,7 @@ vector<GameObject> GameLoop::generateObjects() {
 		box.setCollisionBounds(boxRadii);
 		box.setPhysics(true);
 		box.setPhysicalAttributes(1.6f, 1.5f, 6.0f);
+		box.setIgnoreContainers(true);
 
 		output.push_back(box);
 	}
@@ -496,14 +516,11 @@ vector<GameObject> GameLoop::generateDesks() {
 	}
 
 	CollisionRadii deskRadii = CollisionRadii(0.0f, 0.0f);
-	deskRadii.addRadius(0.29f, 0.0f);
-	deskRadii.addRadius(0.32f, 90.0f);
-	deskRadii.addRadius(0.29f, 180.0f);
-	deskRadii.addRadius(0.25f, 270.0f);
-	deskRadii.addRadius(0.4f, 45.0f);
-	deskRadii.addRadius(0.4f, 135.0f);
-	deskRadii.addRadius(0.35f, 225.0f);
-	deskRadii.addRadius(0.35f, 315.0f);
+	deskRadii.addRadius(0.7f, 45.0f);
+	deskRadii.addRadius(0.7f, 135.0f);
+	deskRadii.addRadius(0.7f, 225.0f);
+	deskRadii.addRadius(0.7f, 315.0f);
+	deskRadii.setInterpolationTrigO(true);
 
 	vector<GLuint> deskSprites = { Loop::getTexture("resources/images/obstacles/desk.png") };
 

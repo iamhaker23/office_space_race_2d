@@ -67,7 +67,13 @@ void GO_Racer::doAIControl(GameObject* track, int trackStep) {
 		drawLine(this->getWorldPosition().getX(), this->getWorldPosition().getY(), closestTo.getX(), closestTo.getY());
 	}
 
-	CollisionRadii* target = track->getNextCollisionRadiiFor(closestTo, trackStep);
+	//CollisionRadii* target = track->getNextCollisionRadiiFor(closestTo, trackStep);
+	//CollisionRadii* currentSegment = track->getRadiiAt(this->raceData->getCurrentSegment());
+	//Vect4f currentSegmentPos = Vect4f(currentSegment->centreX, currentSegment->centreY, 0.0f);
+	//CollisionRadii* target = track->getNextCollisionRadiiFor(currentSegmentPos, trackStep);
+
+	CollisionRadii* target = track->getRadiiAt(track->getWrappedBoundsIndex(this->raceData->getCurrentSegment() + trackStep));
+
 	Vect4f targetWoCo = track->boundSpaceToObjectSpace(Vect4f(target->centreX, target->centreY, 0.0f));
 
 	float distX = (targetWoCo.x - this->getWorldPosition().x);

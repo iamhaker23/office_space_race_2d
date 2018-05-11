@@ -14,6 +14,7 @@
 		RaceScene scene;
 		vector<GLuint> backgrounds;
 		vector<GLuint> sprites;
+		float worldSize[4];
 
 		bool finished;
 		double startTimeOutClock;

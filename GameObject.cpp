@@ -193,6 +193,9 @@ void GameObject::draw() {
 
 void GameObject::draw(Matrix3f &parentTransform) {
 
+	//TODO: could this ever be a feature? Need justification to ruin the matrix at the top of the stack
+	//glRotatef(10.0f, 0.0f, 0.0f, 1.0f);
+
 	if ((int)this->sprites.size() > 0) {
 		GLuint tex = this->sprites[this->activeSpriteIndex];
 
@@ -246,17 +249,23 @@ void GameObject::draw(Matrix3f &parentTransform) {
 		for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
 
 			CollisionRadii* tmp = this->collisionBounds.at(i);
-			for (int j = 0; j < (int)tmp->radii.size(); j++) {
-
+			//for (int j = 0; j < (int)tmp->radii.size(); j++) {
+			for (int j = 0; j <= 360; j++){
 				glBegin(GL_LINES);
 				glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
 				glPointSize(5.0f);
 				Vect4f centre = boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
+
 				glVertex3f(centre.x, centre.y, 0.0f);
-				float ang = tmp->angles.at(j);
-				float rad = this->radius2DToWorldSpace(tmp->radii.at(j), ang);
-				Vect4f* toDraw = new Vect4f((rad*cosf(ang*(3.1415926f / 180.0f))), (rad*sinf(ang*(3.1415926f / 180.0f))), 0.0f);
-				glVertex3f(toDraw->getX() + centre.getX(), toDraw->getY() + centre.getY(), 0.0f);
+				//float ang = tmp->angles.at(j);
+				//float rad = this->radius2DToWorldSpace(tmp->radii.at(j), ang);
+
+				float ang = (float)j;
+				float rad = tmp->getInterpolatedRadiusAt(ang);
+
+				Vect4f toDraw = Vect4f((rad*cosf(ang*(3.1415926f / 180.0f))), (rad*sinf(ang*(3.1415926f / 180.0f))), 0.0f);
+				
+				glVertex3f(toDraw.getX() + centre.getX(), toDraw.getY() + centre.getY(), 0.0f);
 				glEnd();
 			}
 		}
@@ -534,10 +543,14 @@ vector<CollisionResult> GameObject::resolveCollisions(const vector<GameObject*> 
 										
 					CollisionResult result = CollisionResult();
 
-					CollisionRadii* myClosest = this->getClosestRadiiTo(other->getWorldPosition());
+					//Account for movement before doing collisions
+					//Or post-collision set forces to zero (feels too sticky tho)
+
+					CollisionRadii* myClosest = this->getClosestRadiiTo(other->getNewPosition().getPosition());
+					//CollisionRadii* myClosest = this->getClosestRadiiTo(other->getWorldPosition());
 					
 					//bounds are transformed seperately to the object
-					//we only apply object transform in the case of dynamic or translated objects (e.g. physics)
+					//only apply object transform in the case of dynamic or translated objects (e.g. physics)
 					Vect4f myCentreWo = 
 						(this->hasPhysics()) ?
 						this->localToWorldSpace(this->boundSpaceToObjectSpace(Vect4f(myClosest->centreX, myClosest->centreY, 0.0f)))
@@ -550,7 +563,14 @@ vector<CollisionResult> GameObject::resolveCollisions(const vector<GameObject*> 
 					float distX = (myCentreWo.x - theirCentreWo.x);
 					float distY = (myCentreWo.y - theirCentreWo.y);
 
-					float angleToOther = GameObject::getAngleBetweenPositions(myCentreWo, theirCentreWo);
+					float angleToOther = GameObject::getAngleBetweenPositions(myCentreWo, theirCentreWo) - this->getAngleFromX();
+					while (angleToOther > 360.0f) {
+						angleToOther -= 360.0f;
+					}
+					while (angleToOther < 0.0f) {
+						angleToOther += 360.0f;
+					}
+
 
 					float myRad = this->radius2DToWorldSpace(myClosest->getInterpolatedRadiusAt(angleToOther), angleToOther);
 					
@@ -581,10 +601,20 @@ vector<CollisionResult> GameObject::resolveCollisions(const vector<GameObject*> 
 						//regular collision
 						if (GameObject::drawDebug) {
 							//collision is detected, even if either object is "ghost"
+							delete this->objectColor; 
+							delete other->objectColor;
 							this->objectColor = new Color4f(0.0f, 0.0f, 1.0f, 1.0f);
+							other->objectColor = new Color4f(0.0f, 0.0f, 1.0f, 1.0f);
 						}
+						else {
+							delete this->objectColor;
+							delete other->objectColor;
+							this->objectColor = new Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+							other->objectColor = new Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+						}
+
 						if (!this->isGhost() && !other->isGhost()) {
-							float factor = 0.09f;
+							float factor = 0.06f;
 							float torque = (angleToOther <= 270.0f && angleToOther >= 90.0f) ? -1.4f : 1.4f;
 							bool bothPhysics = this->hasPhysics() && other->hasPhysics();
 
@@ -592,10 +622,18 @@ vector<CollisionResult> GameObject::resolveCollisions(const vector<GameObject*> 
 							if (bothPhysics || other->hasPhysics()) {
 								if (!bothPhysics) other->zTorque += torque;
 								other->translate(-distX*factor, -distY*factor, 0.0f);
+								//other->forces[0] = 0.0f;
+								//other->forces[1] = 0.0f;
+								//other->forces[2] = 0.0f;
+								//this->zTorque /= this->angularDamping;
 							}
 							if (bothPhysics || this->hasPhysics()) {
 								if (!bothPhysics) this->zTorque += -torque;
 								this->translate(distX*factor, distY*factor, 0.0f);
+								//this->forces[0] = 0.0f;
+								//this->forces[1] = 0.0f;
+								//this->forces[2] = 0.0f;
+								//this->zTorque /= this->angularDamping;
 							}
 						}
 
@@ -612,11 +650,19 @@ vector<CollisionResult> GameObject::resolveCollisions(const vector<GameObject*> 
 
 						//short circuit optimisation?
 						if (bothPhysics || (other->hasPhysics() && !this->isGhost())) {
-							other->translate(distX*factor, distY*factor, 0.0f);
+							other->translate(distX*factor, distY*factor, 0.0f); 
+							//other->forces[0] = 0.0f;
+							//other->forces[1] = 0.0f;
+							//other->forces[2] = 0.0f;
+							//this->zTorque /= this->angularDamping;
 						}
 
 						if (bothPhysics || (this->hasPhysics() && !other->isGhost())) {
 							this->translate(-distX*factor, -distY*factor, 0.0f);
+							//this->forces[0] = 0.0f;
+							//this->forces[1] = 0.0f;
+							//this->forces[2] = 0.0f;
+							//this->zTorque /= this->angularDamping;
 						}
 					}
 					else {
@@ -631,8 +677,10 @@ vector<CollisionResult> GameObject::resolveCollisions(const vector<GameObject*> 
 					results.push_back(result);
 				}
 			}
+
 		}
 	}
+
 	return results;
 }
 
@@ -728,11 +776,16 @@ float GameObject::getAngleBetweenPositions(Vect4f &a, Vect4f &b) {
 CollisionRadii* GameObject::getNextCollisionRadiiFor(Vect4f &otherPosition, int step) {
 	int closestCollisionRadii = getIndexOfClosestRadiiTo(otherPosition);
 
-	//increment and wrap
-	closestCollisionRadii = (closestCollisionRadii + step  < 0) ? ((int)this->collisionBounds.size()) - 1 : closestCollisionRadii + step;
-	closestCollisionRadii = (closestCollisionRadii > (int)this->collisionBounds.size() - 1) ? 0 : closestCollisionRadii;
-
+	closestCollisionRadii = getWrappedBoundsIndex(closestCollisionRadii);
+	
 	return this->collisionBounds.at(closestCollisionRadii);
+}
+
+int GameObject::getWrappedBoundsIndex(int value) {
+	int output = value;
+	output = (output < 0) ? ((int)this->collisionBounds.size()) - 1 : output ;
+	output = (output >(int)this->collisionBounds.size() - 1) ? 0 : output;
+	return output;
 }
 
 CollisionRadii* GameObject::getClosestRadiiTo(Vect4f &otherPosition) {
@@ -743,30 +796,18 @@ int GameObject::getIndexOfClosestRadiiTo(Vect4f &otherPosition) {
 	int closestCollisionRadii = 0;
 
 	float smallestDistSqrd = 10000.0f;
-	//Vect4f* tmpWoPos;
-	//float tmpCX = 0.0f;
 
 	for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
 
 		CollisionRadii* tmp = this->collisionBounds.at(i);
-
-		//tmpWoPos = this->localToWorldSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
-		//Vect4f* tmpWoPos = this->localToWorldSpace(*(this->boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f))));
-		Vect4f tmpWoPos = (!this->hasPhysics()) ? (this->boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f))) : 
-			this->localToWorldSpace(this->boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f)));
+		Vect4f tmpWoPos = (!this->hasPhysics()) ? (this->boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f))) 
+			: this->localToWorldSpace(this->boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f)));
 
 		float distSqrd = ((tmpWoPos.x - otherPosition.x)*(tmpWoPos.x - otherPosition.x)) + ((tmpWoPos.y - otherPosition.y)*(tmpWoPos.y - otherPosition.y));
-		//float distSqrd = ((tmp->centreX - otherPosition->x)*(tmp->centreX - otherPosition->x)) + ((tmp->centreY - otherPosition->y)*(tmp->centreY - otherPosition->y));
-
+		
 		if (distSqrd < smallestDistSqrd) {
-			//closest centre so far
-			//Because an object may have multiple centres
-
-			//tmpCX = tmp->centreX;
-
 			smallestDistSqrd = distSqrd;
 			closestCollisionRadii = i;
-			//continue;
 		}
 	}
 
@@ -792,10 +833,7 @@ void GameObject::drawCircle(float x, float y, float radius, Color4f* col)
 
 void GameObject::drawLine(float x1, float y1, float x2, float y2) {
 	glDisable(GL_TEXTURE_2D);
-
-	//Earthquake test!
-	//glRotatef(10.0f, 0.0f, 0.0f, 1.0f);
-	
+		
 	glPushMatrix();
 
 	glMultMatrixf(GameObject::worldToCamera.values);
@@ -877,4 +915,13 @@ float GameObject::getProgressAcrossTrackSegment(int segIndex, Vect4f &worldPosit
 
 void GameObject::setIgnoreContainers(bool flag) {
 	this->ignoreContainers = flag;
+}
+
+CollisionRadii* GameObject::getRadiiAt(int index) {
+	if (this->collisionBounds.size() <= index) return NULL;
+	return this->collisionBounds.at(index);
+}
+
+float GameObject::getXYScale() {
+	return ((this->scales[0] + this->scales[1]) / 2.0f);
 }

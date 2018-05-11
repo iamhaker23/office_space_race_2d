@@ -227,37 +227,7 @@ public:
 		this->radii = newRadii;
 		this->angles = newAngles;
 	}
-	/*
-	inline float CollisionRadii::getRadiusAtOLD(float angle) {
 
-	if (this->angles.size() == 0) return 0.2f;
-
-	//bound angle
-	float myAngle = angle;
-
-	while (myAngle > 360.0f) {
-	myAngle -= 360.0f;
-	}
-
-	bool found = false;
-	int index = 0;
-	int maxIndex = this->angles.size() - 1;
-	while (!found && index <= maxIndex) {
-	float tmpAngle = this->angles.at(index);
-	if (tmpAngle >= angle) {
-	this->lastSelected[0] = index;
-	this->lastSelected[1] = -1;
-	return this->radii.at(index);
-	}
-	else index++;
-	}
-
-	//fallback - has radius values but none that are bigger than (i.e. capture in minor arc) my angle
-	this->lastSelected[0] = 0;
-	this->lastSelected[1] = -1;
-	return this->radii.at(0);
-	}
-	*/
 	inline float CollisionRadii::getInterpolatedRadiusAt(float angle) {
 
 		if (this->angles.size() == 0) return 0.2f;
@@ -311,7 +281,7 @@ public:
 				radius = ((interpolationPercentage * (abs(difference))) + ((difference > 0.0f) ? X_2 : X_1)) / absCosAngle;
 			}*/
 			if (this->trigonometricInterpolation) {
-
+			//if (true){
 
 				int smallest = (this->angles.at(first) <= this->angles.at(second)) ? first : second;
 				int largest = (smallest == first) ? second : first;
@@ -354,12 +324,13 @@ public:
 			}
 			else {
 				//linear interpolation results in a circular edge
-				//float interpolationPercentage = angle / (((this->angles.at(second) + this->angles.at(first))));
+				
+				int largest = first;
+				int smallest = second;
 
-				int smallest = (this->angles.at(first) <= this->angles.at(second)) ? first : second;
-				int largest = (smallest == first) ? second : first;
 				float largestAngle = this->angles.at(largest);
 				float smallestAngle = this->angles.at(smallest);
+
 				if (largest == first) {
 					//if the largest is the first then we have to wrap so we interpolate correctly
 					if (angle >= largestAngle) angle = angle - 360.0f;
