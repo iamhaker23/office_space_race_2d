@@ -32,6 +32,8 @@ void GameObject::freeData() {
 }
 
 GameObject::GameObject() {
+	this->visible = true;
+	this->canFall = false;
 
 	this->sprites = {};
 	this->sprites.push_back(GameObject::defaultSprite);
@@ -75,7 +77,8 @@ GameObject::GameObject() {
 
 
 GameObject::GameObject(const GameObject &copy) {
-
+	this->visible = copy.visible;
+	this->canFall = copy.canFall;
 	this->worldSpaceTransform = new Matrix3f(*copy.worldSpaceTransform);
 	this->boundsTransform = new Matrix3f(*copy.boundsTransform);
 	for (int i = 0; i < 3; i++) {
@@ -133,7 +136,8 @@ void GameObject::addChild(GameObject &o) {
 }
 
 GameObject::GameObject(string name, vector<GLuint> &sprites, vector<Vertex> &mesh, int activeSprite,  Color4f &objectColor) {
-	
+	this->visible = true;
+	this->canFall = false;
 	this->name = name;
 
 	this->sprites = sprites;
@@ -184,8 +188,21 @@ GameObject::GameObject(string name, vector<GLuint> &sprites, vector<Vertex> &mes
 	this->collisionBounds = {};
 }
 
+void GameObject::setVisibility(bool vis) {
+	this->visible = vis;
+}
+
+void GameObject::setCanFall(bool fall) {
+	this->canFall = fall;
+}
+
+bool GameObject::getCanFall() {
+	return this->canFall;
+}
+
 void GameObject::draw() {
 
+	if (!this->visible) return;
 	//identity matrix
 	draw(Matrix3f());
 
@@ -193,6 +210,7 @@ void GameObject::draw() {
 
 void GameObject::draw(Matrix3f &parentTransform) {
 
+	if (!this->visible) return;
 	//TODO: could this ever be a feature? Need justification to ruin the matrix at the top of the stack
 	//glRotatef(10.0f, 0.0f, 0.0f, 1.0f);
 
@@ -249,26 +267,57 @@ void GameObject::draw(Matrix3f &parentTransform) {
 		for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
 
 			CollisionRadii* tmp = this->collisionBounds.at(i);
-			//for (int j = 0; j < (int)tmp->radii.size(); j++) {
+			
+			glColor4f(0.6f, 0.6f, 1.0f, 1.0f);
 			for (int j = 0; j <= 360; j++){
 				glBegin(GL_LINES);
-				glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
-				glPointSize(5.0f);
 				Vect4f centre = boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
 
 				glVertex3f(centre.x, centre.y, 0.0f);
-				//float ang = tmp->angles.at(j);
-				//float rad = this->radius2DToWorldSpace(tmp->radii.at(j), ang);
-
 				float ang = (float)j;
 				float rad = tmp->getInterpolatedRadiusAt(ang);
 
-				Vect4f toDraw = Vect4f((rad*cosf(ang*(3.1415926f / 180.0f))), (rad*sinf(ang*(3.1415926f / 180.0f))), 0.0f);
+				Vect4f toDraw = boundSpaceToObjectSpace(Vect4f((rad*cosf(ang*(3.1415926f / 180.0f))), (rad*sinf(ang*(3.1415926f / 180.0f))), 0.0f));
 				
 				glVertex3f(toDraw.getX() + centre.getX(), toDraw.getY() + centre.getY(), 0.0f);
 				glEnd();
 			}
 		}
+
+		for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
+
+			CollisionRadii* tmp = this->collisionBounds.at(i);
+			glBegin(GL_LINES);
+			for (int j = 0; j < (int)tmp->radii.size(); j++) {
+				Vect4f centre = boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
+				glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+				glVertex3f(centre.x, centre.y, 0.0f);
+
+
+				float ang = tmp->angles.at(j);
+				float rad = this->radius2DToWorldSpace(tmp->radii.at(j), ang);
+
+				Vect4f toDraw = Vect4f((rad*cosf(ang*(3.1415926f / 180.0f))), (rad*sinf(ang*(3.1415926f / 180.0f))), 0.0f);
+				glVertex3f(toDraw.getX() + centre.getX(), toDraw.getY() + centre.getY(), 0.0f);
+			}
+			glEnd();
+		}
+		glBegin(GL_LINE_LOOP);
+		glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+		for (int i = 0; i < (int)this->collisionBounds.size(); i++) {
+			
+			CollisionRadii* tmp = this->collisionBounds.at(i);
+			
+			for (int j = 0; j < (int)tmp->radii.size(); j++) {
+				Vect4f centre = boundSpaceToObjectSpace(Vect4f(tmp->centreX, tmp->centreY, 0.0f));
+				float ang = tmp->angles.at(j);
+				float rad = this->radius2DToWorldSpace(tmp->radii.at(j), ang);
+				Vect4f toDraw = Vect4f((rad*cosf(ang*(3.1415926f / 180.0f))), (rad*sinf(ang*(3.1415926f / 180.0f))), 0.0f);
+				glVertex3f(toDraw.getX() + centre.getX(), toDraw.getY() + centre.getY(), 0.0f);
+			}
+		}
+		glEnd();
+
 		glEnable(GL_TEXTURE_2D);
 		glPopMatrix();
 		//}
@@ -593,6 +642,9 @@ vector<CollisionResult> GameObject::resolveCollisions(const vector<GameObject*> 
 
 					if ((!iContain && !theyContain) && combRad*combRad > distanceSqrd) {
 						
+
+						this->setCollidedWith(other->name);
+						other->setCollidedWith(this->name);
 						this->collided = true;
 						other->collided = true;
 						result.other = other;
@@ -644,17 +696,19 @@ vector<CollisionResult> GameObject::resolveCollisions(const vector<GameObject*> 
 						float torque = (angleToOther <= 270.0f && angleToOther >= 90.0f) ? -1.4f : 1.4f;
 						bool bothPhysics = this->hasPhysics() && other->hasPhysics();
 
+						this->setCollidedWith(other->name);
+						other->setCollidedWith(this->name);
 						this->collided = true;
 						other->collided = true;
 						result.other = other;
 
 						//short circuit optimisation?
 						if (bothPhysics || (other->hasPhysics() && !this->isGhost())) {
-							other->translate(distX*factor, distY*factor, 0.0f); 
+							other->translate(distX*factor, distY*factor, 0.0f);
 							//other->forces[0] = 0.0f;
 							//other->forces[1] = 0.0f;
 							//other->forces[2] = 0.0f;
-							//this->zTorque /= this->angularDamping;
+							//other->zTorque /= this->angularDamping;
 						}
 
 						if (bothPhysics || (this->hasPhysics() && !other->isGhost())) {
@@ -776,15 +830,18 @@ float GameObject::getAngleBetweenPositions(Vect4f &a, Vect4f &b) {
 CollisionRadii* GameObject::getNextCollisionRadiiFor(Vect4f &otherPosition, int step) {
 	int closestCollisionRadii = getIndexOfClosestRadiiTo(otherPosition);
 
-	closestCollisionRadii = getWrappedBoundsIndex(closestCollisionRadii);
+	closestCollisionRadii = getNextIndexStep(closestCollisionRadii, step);
 	
 	return this->collisionBounds.at(closestCollisionRadii);
 }
 
-int GameObject::getWrappedBoundsIndex(int value) {
-	int output = value;
-	output = (output < 0) ? ((int)this->collisionBounds.size()) - 1 : output ;
-	output = (output >(int)this->collisionBounds.size() - 1) ? 0 : output;
+int GameObject::getNextIndexStep(int segIndex, int step) {
+	int size = (int)this->collisionBounds.size();
+	int output = segIndex + step;
+	
+	if (output <= size*-1) output += size;
+	output = (output < 0) ? (size + (output - 1)) : output;
+	output = (output > (int)this->collisionBounds.size() - 1) ? 0 : output;
 	return output;
 }
 
@@ -850,6 +907,12 @@ void GameObject::drawLine(float x1, float y1, float x2, float y2) {
 }
 
 bool GameObject::hasResolvedWith(string name) {
+	for (string collidedWith : this->resolvedWithThisFrame) {
+		if (name == collidedWith) return true;
+	}
+	return false;
+}
+bool GameObject::hasCollidedWith(string name) {
 	for (string collidedWith : this->collidedWithThisFrame) {
 		if (name == collidedWith) return true;
 	}
@@ -857,11 +920,15 @@ bool GameObject::hasResolvedWith(string name) {
 }
 
 void GameObject::setCollisionResolvedWith(string name) {
+	this->resolvedWithThisFrame.push_back(name);
+}
+void GameObject::setCollidedWith(string name) {
 	this->collidedWithThisFrame.push_back(name);
 }
 
 void GameObject::resetCollisionFlags() {
 	this->collidedWithThisFrame.clear();
+	this->resolvedWithThisFrame.clear();
 }
 
 void GameObject::toggleDebugMode() {
@@ -884,18 +951,24 @@ float GameObject::getProgressAcrossTrackSegment(int segIndex, Vect4f &worldPosit
 	int tmp = segIndex;
 	int prev = -1;
 	int next = -1;
+	int curr = -1;
 
 	//reverse the forward direction for reverse (i.e. step < 0)
-	if (step > 0) {
+	/*if (step > 0) {
 		prev = (segIndex - step < 0) ? size - 1 : segIndex - step;
 		next = (segIndex + step >= size) ? 0 : segIndex + step;
 	}
 	else {
 		next = (segIndex + step < 0) ? size - 1 : segIndex + step;
 		prev = (segIndex - step >= size) ? 0 : segIndex - step;
-	}
+	}*/
 
-	Vect4f currSeg = boundSpaceToObjectSpace(Vect4f(this->collisionBounds.at(segIndex)->centreX, this->collisionBounds.at(segIndex)->centreY, 0.0f));
+	curr = getNextIndexStep(segIndex, 0);
+	prev = getNextIndexStep(segIndex, -step);
+	next = getNextIndexStep(segIndex, step);
+
+
+	Vect4f currSeg = boundSpaceToObjectSpace(Vect4f(this->collisionBounds.at(curr)->centreX, this->collisionBounds.at(segIndex)->centreY, 0.0f));
 	Vect4f prevSeg = boundSpaceToObjectSpace(Vect4f(this->collisionBounds.at(prev)->centreX, this->collisionBounds.at(prev)->centreY, 0.0f));
 	Vect4f nextSeg = boundSpaceToObjectSpace(Vect4f(this->collisionBounds.at(next)->centreX, this->collisionBounds.at(next)->centreY, 0.0f));
 
@@ -907,9 +980,13 @@ float GameObject::getProgressAcrossTrackSegment(int segIndex, Vect4f &worldPosit
 	while (angle >= 90.0f) {
 		angle -= 90.0f;
 	}
-	float currentXComponent = current * (((angle >= 90.0f && angle <= 180.0f) || (angle <= 360.0f && angle >= 270.0f)) ? sinf(angle*(3.1415926f / 180.0f)) : cosf(angle*(3.1415926f / 180.0f)));
 
-	return (total - currentXComponent) / total;
+	//TODO: more accurate calculation would be to project the worldPosition onto the axis between prevSeg and nextSeg
+	//use trig to get the distance along the relative x of vector "current"
+	float relativeXComponent = current * (((angle >= 90.0f && angle <= 180.0f) || (angle <= 360.0f && angle >= 270.0f)) ? sinf(angle*(3.1415926f / 180.0f)) : cosf(angle*(3.1415926f / 180.0f)));
+
+	//approaches 1.0 as worldPosition approaches nextSeg
+	return (total - relativeXComponent) / total;
 
 }
 
@@ -918,7 +995,7 @@ void GameObject::setIgnoreContainers(bool flag) {
 }
 
 CollisionRadii* GameObject::getRadiiAt(int index) {
-	if (this->collisionBounds.size() <= index) return NULL;
+	if (((int)this->collisionBounds.size()) <= index) return NULL;
 	return this->collisionBounds.at(index);
 }
 

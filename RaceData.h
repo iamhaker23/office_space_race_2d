@@ -33,6 +33,7 @@ struct RaceData {
 			this->progressOnCurrentSegment = copy.progressOnCurrentSegment;
 			this->position = copy.position;
 			this->currentSegment = copy.currentSegment;
+			this->dnf = copy.dnf;
 		}
 
 		inline void setName(string name) {

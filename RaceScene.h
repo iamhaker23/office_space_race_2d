@@ -10,6 +10,7 @@
 class RaceScene : public Scene {
 private:
 	GameObject* track;
+	GameObject* world;
 	GO_Racer* player;
 	vector<GO_Racer*> racers;
 	
@@ -26,6 +27,7 @@ public:
 		this->racers = {};
 		this->player = NULL;
 		this->track = NULL;
+		this->world = NULL;
 		this->raceStarted = false;
 	}
 
@@ -33,6 +35,12 @@ public:
 		GameObject* ntrack = new GameObject(track);
 		addObject(ntrack);
 		this->track = ntrack;
+	}
+
+	inline void setWorld(GameObject &world) {
+		GameObject* nworld = new GameObject(world);
+		addObject(nworld);
+		this->world = nworld;
 	}
 
 	inline void setPlayer(GO_Racer &player) {
@@ -49,6 +57,10 @@ public:
 
 	inline GameObject* getTrack() {
 		return this->track;
+	}
+
+	inline GameObject* getWorld() {
+		return this->world;
 	}
 
 	inline GO_Racer* getPlayer() {

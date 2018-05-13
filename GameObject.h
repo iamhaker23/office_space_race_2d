@@ -59,6 +59,7 @@ class GameObject {
 		bool ghost;
 		bool physicsContainer;
 		vector<string> collidedWithThisFrame;
+		vector<string> resolvedWithThisFrame;
 
 		bool ignoreContainers;
 		bool physics;
@@ -68,9 +69,17 @@ class GameObject {
 		GLfloat angularDamping;
 		float topSpeed;
 
+		bool visible;
+		bool canFall;
+
 		void setCollisionBounds(const vector<CollisionRadii*> &bounds);
 
 	public:
+		void setVisibility(bool vis);
+
+		void setCanFall(bool fall);
+		bool getCanFall();
+		
 		void addChild(GameObject &o);
 
 		static GLuint defaultSprite;
@@ -127,9 +136,13 @@ class GameObject {
 		bool isCollider();
 		void resetModifiers(); 
 		void setCollider(bool flag);
+
 		bool hasResolvedWith(string name);
 		void setCollisionResolvedWith(string name);
+		bool hasCollidedWith(string name);
+		void setCollidedWith(string name);
 		void resetCollisionFlags();
+
 		CollisionRadii* getClosestRadiiTo(Vect4f &otherPosition);
 		int getIndexOfClosestRadiiTo(Vect4f &otherPosition);
 		CollisionRadii* getNextCollisionRadiiFor(Vect4f &otherPosition, int step);
@@ -137,7 +150,7 @@ class GameObject {
 		float getAngleToPosition(Vect4f &position);
 		float getAngleFromX();
 		CollisionRadii* getRadiiAt(int index);
-		int getWrappedBoundsIndex(int value);
+		int getNextIndexStep(int segIndex, int step);
 		float getXYScale();
 
 		void addForce(float x, float y, float z);

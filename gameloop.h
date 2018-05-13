@@ -14,14 +14,14 @@
 		RaceScene scene;
 		vector<GLuint> backgrounds;
 		vector<GLuint> sprites;
-		float worldSize[4];
 
 		bool finished;
 		double startTimeOutClock;
 		double startTime;
+		int bestPlayerPos;
 		bool renderedFirstFrame;
 
-		vector<CollisionRadii> GameLoop::generateTrackBounds(char* filename);
+		vector<CollisionRadii> GameLoop::loadBoundsFromFile(char* filename);
 		void initGame();
 
 		static vector<GO_Racer> generateRacers(int numAI, Vect4f &startPos); 

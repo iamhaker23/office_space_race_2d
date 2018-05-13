@@ -7,13 +7,9 @@ GameLoop::GameLoop() : Loop() {
 	this->sprites = {};
 
 	this->startTime = 0.0;
+	this->bestPlayerPos = 1;
 	this->renderedFirstFrame = false;
 
-	//x1, y1, x2, y2
-	this->worldSize[0] = -4.7f;
-	this->worldSize[1] = -2.5f;
-	this->worldSize[2] = 5.0f;
-	this->worldSize[3] = 3.2f;
 }
 
 GameLoop::~GameLoop() {
@@ -40,7 +36,9 @@ void GameLoop::display() {
 	if (finished) {
 		Loop::requestedActiveLoop = 3;
 		if (!Loop::globals->updated) {
+			//first time this finish routine has been called
 			Loop::globals->updated = true;
+			if (Loop::globals->player != NULL) delete Loop::globals->player;
 			Loop::globals->player = scene.getPlayer()->getRaceData();
 		}
 
@@ -78,13 +76,11 @@ void GameLoop::display() {
 	}
 
 	for (GameObject* obj : objs) {
-		Vect4f pos = obj->getWorldPosition();
-		if (pos.getX() < this->worldSize[0] || pos.getY() < this->worldSize[1] || pos.getX() > this->worldSize[2] || pos.getY() > this->worldSize[3]) {
-			
+		if (obj->getCanFall() && !obj->hasCollidedWith(scene.getWorld()->getName())){
 			//outside world plane
 			//object will fall and die
 			if (obj->getXYScale() < 0.1f) {
-				//disable collision and don't draw
+				//disable collisions and don't draw
 				//TODO: elegant object kill in Scene class
 				obj->setGhost(true);
 			}
@@ -92,7 +88,6 @@ void GameLoop::display() {
 				obj->scale(0.9f, true);
 				obj->draw();
 			}
-
 		}
 		else {
 			obj->draw();
@@ -121,17 +116,19 @@ void GameLoop::display() {
 		if (competitor->isAI()) competitor->doAIControl(track, TRACK_SEGMENT_STEP);
 		if (competitor->getRaceData() != NULL) {
 
+			
 			int segmentOn = track->getIndexOfClosestRadiiTo(competitor->getWorldPosition());
+			int segIndex = segmentOn;
+			if (TRACK_SEGMENT_STEP < 0) {
+				//segmentOn is the number of segments progressed and must account for track step
+				//segIndex is the index of the current segment in track bounds (i.e. vector<CollisionRadii*>)
+				segmentOn = NUM_TRACK_SEGMENTS - segmentOn;
+			}
 
 			RaceData* rd = competitor->getRaceData();
 
 			int SKIPPABLE = 4;
-
-			//reverse the direction of our segment travelling
-			if (TRACK_SEGMENT_STEP < 0) {
-				segmentOn = NUM_TRACK_SEGMENTS - segmentOn;
-			}
-
+			
 			int segDelta = (segmentOn - rd->getCurrentSegment());
 			segDelta = (segDelta == -NUM_TRACK_SEGMENTS) ? segmentOn + 1 : segDelta;
 			//will give cheat alert if you SKIP TOO MANY SEGMENTS
@@ -146,6 +143,8 @@ void GameLoop::display() {
 							if (startTimeOutClock == -1.0) {
 								startTimeOutClock = debugger->getTime();
 							}
+							//used to prevent player overtaking opponent who has already finished
+							this->bestPlayerPos += 1;
 						}
 						else {
 							finished = true;
@@ -160,11 +159,21 @@ void GameLoop::display() {
 
 			}
 			else if (segDelta == 0) {
-				rd->setProgressOnCurrentSegment(track->getProgressAcrossTrackSegment(segmentOn, competitor->getWorldPosition(), TRACK_SEGMENT_STEP));
+				//important note: the racers can move to the next segment and have an arbitrary progress across a track segment
+				//i.e. after 70% across the current segment, the algorithm could validly say the racer is now on the next segment
+				//similarly the racer might enter the new segment at 40% progress across the length
+				//it is bounded 0.0 to 1.0 but not guaranteed (or even likely) to use the full range
+				//because it is a measurement that does not inform the algorithm's workings, only statistics
+
+				//NOTE: segIndex NOT segmentOn
+				float prog = track->getProgressAcrossTrackSegment(segIndex, competitor->getWorldPosition(), TRACK_SEGMENT_STEP);
+				
+				rd->setProgressOnCurrentSegment(prog);
 			}
 			else if (segDelta < -1) {
 				if (competitor->getName() == this->globals->playerName) Loop::writeMessage("Wrong way!", 30.0f, 150.0f, Color4f(), Color4f(0.6f, 0.4f, 0.0f, 0.5f));
 			}
+
 		}
 	}
 
@@ -190,7 +199,14 @@ void GameLoop::display() {
 			}
 		}
 	}
-	rd->setPosition(playerPosition);
+
+	//best player pos variable accounts for the edge case:
+	//if the opponent wins and triggers the DNF timer
+	//the player may cross the line very shortly after, e.g. in 2nd
+	//the player might have further "progressAcrossCurrentSegment"
+	//even though the opponent already finished
+	//the player still would place 1st because they have more overall progress
+	rd->setPosition(max(playerPosition, this->bestPlayerPos));
 
 	
 	debugger->addMessage(utils::getPositionLabel(playerPosition));
@@ -231,7 +247,7 @@ void GameLoop::display() {
 	objs.clear();
 }
 
-vector<CollisionRadii> GameLoop::generateTrackBounds(char* filename){
+vector<CollisionRadii> GameLoop::loadBoundsFromFile(char* filename){
 
 	vector<string> lines = utils::getFileContents(filename);
 
@@ -278,6 +294,7 @@ void GameLoop::initGame() {
 
 	string trackName = (Loop::globals->track == 1) ? "resources/images/tracks/office_1.png" : "resources/images/tracks/office_2.png";
 	char* trackBounds = (Loop::globals->track == 1) ? "resources/data/office_container_1.txt" : "resources/data/office_container_2.txt";
+	char* worldBounds = (Loop::globals->track == 1) ? "resources/data/world_plane_1.txt" : "resources/data/world_plane_2.txt";
 
 	vector<GLuint> trackSprites = { Loop::getTexture(trackName) };
 	GO_Racer player = generatePlayer(this->globals->playerName);
@@ -285,17 +302,25 @@ void GameLoop::initGame() {
 	vector<GameObject> objects = GameLoop::generateObjects();
 
 	GameObject track = GameObject("Track", trackSprites, generatePlaneMesh(), 0, Color4f(1.0f, 1.0f, 1.0f, 1.0f));
-	track.setCollisionBounds(generateTrackBounds(trackBounds));
+	track.setCollisionBounds(loadBoundsFromFile(trackBounds));
 	track.setCollider(true);
 	track.setPhysicsContainer(true);
 	track.scale(10.0f, false);
 	track.nuScaleBounds(0.5f, 0.5f, 1.0f);
+
+	GameObject world = GameObject("WorldPlane", vector<GLuint>{}, vector<Vertex>{}, 0, Color4f(0.0f, 0.0f, 0.0f, 0.0f));
+	world.setCollisionBounds(loadBoundsFromFile(worldBounds));
+	world.setCollider(true);
+	world.setGhost(true);
+	world.nuScaleBounds(0.45f, 0.45f, 1.0f);
 	
+
 	//Uncomment to allow player to go anywhere
-	//track.setGhost(true);
-
+	//track.setGhost(true)
+	
 	scene.setTrack(track);
-
+	scene.setWorld(world); 
+	
 	CollisionRadii* startSegment = track.getNextCollisionRadiiFor(player.getWorldPosition(), (Loop::globals->reverse||Loop::globals->track==2)?1:-1);
 	Vect4f oppositionLoc = 
 		track.localToWorldSpace(
@@ -350,8 +375,8 @@ GO_Racer GameLoop::generatePlayer(string &name) {
 	if (Loop::globals->track == 1) {
 		player.setZAngle((Loop::globals->reverse) ? 0.0f : 180.0f);
 	}
-	else {
-		player.setZAngle((Loop::globals->reverse) ? 0.0f : 90.0f);
+	else if (Loop::globals->track == 2){
+		player.setZAngle((Loop::globals->reverse) ? 180.0f : 90.0f);
 	}
 	
 	player.translate(-1.8f, -1.8f, 0.0f);
@@ -360,14 +385,14 @@ GO_Racer GameLoop::generatePlayer(string &name) {
 
 	player.setPhysics(true); 
 	CollisionRadii radii = CollisionRadii(0.0f, 0.0f);
-	radii.addRadius(0.3f, 0.0f);
-	radii.addRadius(1.2f, 90.0f);
-	radii.addRadius(0.3f, 180.0f);
-	radii.addRadius(0.33f, 270.0f);
-	radii.addRadius(1.1f, 60.0f);
-	radii.addRadius(1.1f, 120.0f);
-	radii.addRadius(0.3f, 225.0f);
-	radii.addRadius(0.3f, 315.0f);
+	radii.addRadius(0.5f, 0.0f);
+	radii.addRadius(1.3f, 90.0f);
+	radii.addRadius(0.5f, 180.0f);
+	radii.addRadius(0.5f, 270.0f);
+	radii.addRadius(1.2f, 80.0f);
+	radii.addRadius(1.2f, 100.0f);
+	radii.addRadius(0.5f, 225.0f);
+	radii.addRadius(0.5f, 315.0f);
 	radii.setInterpolationTrigO(true);
 	player.setCollisionBounds(radii);
 
@@ -380,14 +405,14 @@ vector<GO_Racer> GameLoop::generateRacers(int numAI, Vect4f &startPos) {
 
 	//effectively instancing for bounds (i.e. change one, change all).
 	CollisionRadii radii = CollisionRadii(0.0f, 0.0f);
-	radii.addRadius(0.3f, 0.0f);
-	radii.addRadius(1.2f, 90.0f);
-	radii.addRadius(0.3f, 180.0f);
-	radii.addRadius(0.33f, 270.0f);
-	radii.addRadius(1.1f, 60.0f);
-	radii.addRadius(1.1f, 120.0f);
-	radii.addRadius(0.3f, 225.0f);
-	radii.addRadius(0.3f, 315.0f);
+	radii.addRadius(0.5f, 0.0f);
+	radii.addRadius(1.3f, 90.0f);
+	radii.addRadius(0.5f, 180.0f);
+	radii.addRadius(0.5f, 270.0f);
+	radii.addRadius(1.2f, 80.0f);
+	radii.addRadius(1.2f, 100.0f);
+	radii.addRadius(0.5f, 225.0f);
+	radii.addRadius(0.5f, 315.0f);
 	radii.setInterpolationTrigO(true);
 
 	string characters[] = { "Carlos", "Suzanne", "Barry" };
@@ -457,6 +482,7 @@ vector<GameObject> GameLoop::generateObjects() {
 
 		box.translate(-1.0f, 1.5f + (i*0.1f), 0.0f);
 		box.scale(0.8f, true);
+		box.setCanFall(true);
 		box.setCollider(true);
 		box.setCollisionBounds(boxRadii);
 		box.setPhysics(true);
@@ -529,7 +555,7 @@ vector<GameObject> GameLoop::generateDesks() {
 
 		desk.setZAngle(((i % 2) == 0) ? 0.0f : 180.0f); 
 		desk.translate(deskPositions.at(i).getX(), deskPositions.at(i).getY(), deskPositions.at(i).getZ() );
-		
+		desk.setCanFall(true);
 		desk.scale(0.8f, true);
 		desk.setCollider(true);
 		desk.setCollisionBounds(deskRadii);
