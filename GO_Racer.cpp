@@ -66,13 +66,12 @@ void GO_Racer::doAIControl(GameObject* track, int trackStep) {
 	if (GameObject::drawDebug) {
 		drawLine(this->getWorldPosition().getX(), this->getWorldPosition().getY(), closestTo.getX(), closestTo.getY());
 	}
-
-	//NOTE: current segment is absolute (does not account for track direction) 
-	//so does not map to track CollisionRadii indices without accounting for track direction
-
-	int currentSegment = this->raceData->getCurrentSegment();
-	if (trackStep < 0) currentSegment *= -1;
-
+	
+	//Ensures ai will move in the direction of the race, from their start
+	//ensures navigation is according to track even if the route will be longer
+	//to the next track segment
+	//Fixes bug on track 2 when ai starts slightly around the first u-turn
+	int currentSegment = track->getIndexOfClosestRadiiTo(this->getWorldPosition());
 	int targetIdx = track->getNextIndexStep(currentSegment, trackStep);
 
 	CollisionRadii* target = track->getRadiiAt(targetIdx);

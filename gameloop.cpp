@@ -321,7 +321,9 @@ void GameLoop::initGame() {
 	scene.setTrack(track);
 	scene.setWorld(world); 
 	
-	CollisionRadii* startSegment = track.getNextCollisionRadiiFor(player.getWorldPosition(), (Loop::globals->reverse||Loop::globals->track==2)?1:-1);
+	//CollisionRadii* startSegment = track.getNextCollisionRadiiFor(player.getWorldPosition(), (Loop::globals->reverse||Loop::globals->track==2)?1:-1);
+	
+	CollisionRadii* startSegment = track.getRadiiAt(track.getNextIndexStep(0, (Loop::globals->reverse || Loop::globals->track == 2) ? 1 : -1));
 	Vect4f oppositionLoc = 
 		track.localToWorldSpace(
 			track.boundSpaceToObjectSpace(
