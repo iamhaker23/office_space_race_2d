@@ -89,9 +89,9 @@ void OptionsLoop::display() {
 		else if (pusherSelector->clicked) {
 			if ((now - pusherSelector->changedAt) > BUTTON_DELAY) {
 				pusherSelector->changedAt = now;
-				if (pusherSelector->value == "Carlos") pusherSelector->value = "Barry";
+				if (pusherSelector->value == "Barry[OLD]") pusherSelector->value = "Barry";
 				else if (pusherSelector->value == "Barry") pusherSelector->value = "Suzanne";
-				else pusherSelector->value = "Carlos";
+				else pusherSelector->value = "Barry[OLD]";
 			}
 		}
 		else if (pusheeSelector->clicked) {
@@ -132,13 +132,13 @@ void OptionsLoop::handleActivation() {
 	this->backgroundPNG = Loop::getTexture("resources/images/backgrounds/presentation.png");
 	
 
-	Loop::addFont("resources/fonts/BKANT.TTF", 20);
+	Loop::addFont("resources/fonts/PIXEL.TTF", 25);
 
 	int difficulty = (this->globals->difficulty != -1) ? this->globals->difficulty : 1;
 	int laps = (this->globals->laps != -1) ? this->globals->laps : 2;
 	int ai = (this->globals->ai != -1) ? this->globals->ai : 3;
 	int collRes = this->globals->collisionResolution;
-	string pusher = (this->globals->pusher != "") ? this->globals->pusher : "Carlos";
+	string pusher = (this->globals->pusher != "") ? this->globals->pusher : "Barry[OLD]";
 	string pushee = (this->globals->pushee != "") ? this->globals->pushee : "Office Dog";
 	
 	string track = (this->globals->track != -1) ? utils::intToString(this->globals->track) : "1";

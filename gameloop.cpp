@@ -290,7 +290,7 @@ void GameLoop::initGame() {
 	this->backgrounds.push_back(Loop::getTexture("resources/images/backgrounds/aerial_city.png"));
 	this->backgrounds.push_back(Loop::getTexture("resources/images/backgrounds/clouds.png"));
 
-	Loop::addFont("resources/fonts/HANDA.TTF", 20);
+	Loop::addFont("resources/fonts/PIXEL.TTF", 20);
 
 	string trackName = (Loop::globals->track == 1) ? "resources/images/tracks/office_1.png" : "resources/images/tracks/office_2.png";
 	char* trackBounds = (Loop::globals->track == 1) ? "resources/data/office_container_1.txt" : "resources/data/office_container_2.txt";
@@ -417,7 +417,7 @@ vector<GO_Racer> GameLoop::generateRacers(int numAI, Vect4f &startPos) {
 	radii.addRadius(0.5f, 315.0f);
 	radii.setInterpolationTrigO(true);
 
-	string characters[] = { "Carlos", "Suzanne", "Barry" };
+	string characters[] = { "Barry[OLD]", "Suzanne", "Barry" };
 	string chairs[] = { "IT Guy", "Office Dog", "Sally" };
 
 	for (int i = 0; i < numAI; i++){

@@ -43,7 +43,7 @@ void SplashLoop::display() {
 			Loop::requestedActiveLoop = 1;
 		}
 		else {
-			writeMessage("Press Enter", 50.0f, 160.0f);
+			writeMessage(" Press Enter >", 30.0f, 250.0f, Color4f(0.0f, 0.0f, 0.0f, 1.0f), Color4f(1.0f, 1.0f, 0.5f, 0.5f));
 		}
 	}
 
@@ -55,6 +55,6 @@ void SplashLoop::handleActivation() {
 
 	this->backgroundPNG = Loop::getTexture("resources/images/backgrounds/splash.png");;
 
-	Loop::addFont("resources/fonts/HANDA.TTF", 20);
+	Loop::addFont("resources/fonts/SPLASH.TTF", 20);
 
 }

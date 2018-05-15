@@ -66,7 +66,7 @@ void FinishLoop::handleActivation() {
 	//LoopManager has activated this scene
 	this->resetData();
 	
-	Loop::addFont("resources/fonts/BKANT.TTF", 26);
+	Loop::addFont("resources/fonts/PIXEL.TTF", 25);
 
 	this->addUI(Vect4f(0.0f, 0.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), "Main Menu >", UIType::BUTTON, *Loop::fonts.back());
 }

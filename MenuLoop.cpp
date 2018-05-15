@@ -75,18 +75,18 @@ void MenuLoop::handleActivation() {
 	this->backgroundPNG = Loop::getTexture("resources/images/backgrounds/presentation.png");
 	
 
-	Loop::addFont("resources/fonts/BKANT.TTF", 20);
+	Loop::addFont("resources/fonts/PIXEL.TTF", 25);
 
 	string name = (this->globals->playerName != "") ? this->globals->playerName : "Player";
 
 	this->addUI(Vect4f(-165.0f, 45.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Name:", UIType::LABEL, *Loop::fonts.back());
 	this->addUI(Vect4f(0.0f, 45.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), name, UIType::TEXTBOX, *Loop::fonts.back());
 
-	this->addUI(Vect4f(0.0f, -20.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), "Options  >", UIType::BUTTON, *Loop::fonts.back());
+	this->addUI(Vect4f(0.0f, -20.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), "Options >", UIType::BUTTON, *Loop::fonts.back());
 
-	this->addUI(Vect4f(0.0f, -85.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), "Instructions  >", UIType::BUTTON, *Loop::fonts.back());
+	this->addUI(Vect4f(0.0f, -85.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), "Instructions >", UIType::BUTTON, *Loop::fonts.back());
 
-	this->addUI(Vect4f(0.0f, -150.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), "Race  >", UIType::BUTTON, *Loop::fonts.back());
+	this->addUI(Vect4f(0.0f, -150.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), "Race >", UIType::BUTTON, *Loop::fonts.back());
 
 
 }

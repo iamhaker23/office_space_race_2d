@@ -90,8 +90,9 @@ void Loop::drawTextBox(freetype::font_data &_font, string _str, float ssOffsetX,
 		glPushMatrix();
 			glDisable(GL_TEXTURE_2D);
 
-			float boxXFactor = boxXSize / 2;
-			float boxYFactor = boxYSize / 2;
+			
+			float boxXFactor = (boxXSize / 2);
+			float boxYFactor = (boxYSize / 2);
 			glColor4f(boxColor.r, boxColor.g, boxColor.b, boxColor.a);
 			glBegin(GL_QUADS);
 
@@ -102,6 +103,7 @@ void Loop::drawTextBox(freetype::font_data &_font, string _str, float ssOffsetX,
 
 			glEnd();
 			glColor4f(textColor.r, textColor.g, textColor.b, textColor.a);
+			
 			freetype::print(_font, centreX - boxXFactor, centreY + boxYFactor - (_font.h), _str.c_str());
 
 			glEnable(GL_TEXTURE_2D);
@@ -238,7 +240,7 @@ Loop::Loop() {
 void Loop::addFont(const char* name, unsigned int size) {
 
 	font_data* font1 = new font_data();
-	font1->init(name, 20);
+	font1->init(name, size);
 	Loop::fonts.push_back(font1);
 }
 
