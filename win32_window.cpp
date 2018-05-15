@@ -62,6 +62,14 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 	
 	int oldTicks = -1;
 
+	mciSendString("open \"resources/sounds/bg.mp3\" type mpegvideo alias bg", NULL, 0, NULL);
+	mciSendString("open \"resources/sounds/btn.mp3\" type mpegvideo alias btn", NULL, 0, NULL);
+	mciSendString("open \"resources/sounds/beep.mp3\" type mpegvideo alias beep", NULL, 0, NULL);
+	mciSendString("open \"resources/sounds/step.mp3\" type mpegvideo alias step", NULL, 0, NULL);
+
+	mciSendString("play bg repeat", NULL, 0, NULL);
+
+
 	while (!done){
 
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))	// Is There A Message Waiting?
@@ -82,6 +90,7 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 		bool changed = loops.hasLoopChanged();
 		if (!done && changed) {
 			loop = loops.getActiveLoop();
+			mciSendString("stop step", NULL, 0, NULL);
 		}
 
 		if (!done && loop != NULL) {
@@ -98,6 +107,7 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 				if (loops.isActivePausable() && timeSincePaused >= 300 && inputs.keys[pauseKey]) {
 					pausedAt = cNow;
 					paused = true;
+					mciSendString("play btn from 0", NULL, 0, NULL);
 				}
 
 				pauseMessageDisplayed = false;
@@ -125,13 +135,17 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 			}
 			else {
 
+				mciSendString("stop step", NULL, 0, NULL);
+
 				if (timeSincePaused >= 300 && inputs.keys[pauseKey]) {
+					mciSendString("play btn from 0", NULL, 0, NULL);
 					pausedAt = cNow;
 					paused = false;
 				}
 				else if (inputs.keys[0x51]) {
 					Loop::requestedActiveLoop = 1;
 					paused = false;
+					mciSendString("play btn from 0", NULL, 0, NULL);
 				}
 
 				if (!pauseMessageDisplayed && loop != NULL) {
@@ -153,7 +167,10 @@ int WINAPI win32_window::WinMainHandler(HINSTANCE	hInstance,			// Instance
 			}
 		}
 	}
-
+	mciSendString("close bg", NULL, 0, NULL);
+	mciSendString("close btn", NULL, 0, NULL);
+	mciSendString("close beep", NULL, 0, NULL);
+	mciSendString("close step", NULL, 0, NULL);
 	// Shutdown
 	KillGLWindow();									// Kill The Window
 	return (int)(msg.wParam);						// Exit The Program

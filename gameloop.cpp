@@ -96,8 +96,12 @@ void GameLoop::display() {
 
 	glPopMatrix();
 
-	if (startTime != 0.0 && debugger != NULL && (debugger->getTime() - this->startTime) < 3.0) {
-		string message = utils::floatLabel("START IN ", 3.0f - (static_cast<float>(debugger->getTime() - this->startTime)), "");
+	if (startTime != 0.0 && debugger != NULL && (debugger->getTime() - this->startTime) <= 3.0) {
+		float t = 3.0f - (static_cast<float>(debugger->getTime() - this->startTime));
+		string message = utils::floatLabel("START IN ", t, "");
+		if (t == ceilf(t) ){
+			mciSendString("play beep from 0", NULL, 0, NULL);
+		}
 		Loop::writeMessage(message, 50.0f, 250.0f, Color4f(), Color4f(0.6f, 0.0f, 0.0f, 0.5f));
 	}
 	else {
@@ -440,7 +444,7 @@ vector<GO_Racer> GameLoop::generateRacers(int numAI, Vect4f &startPos) {
 			, Loop::getTexture(string("resources/images/characters/").append(name).append("/8.png"))
 		};
 
-		GO_Racer ai = GO_Racer(utils::intLabel("AI_RACER_", i, ""), carSprites, generatePlaneMesh(), 0, Color4f(1.0f, 1.0f, 1.0f, 1.0f), chairSprites, (Loop::globals->difficulty == 0));
+		GO_Racer ai = GO_Racer(utils::intLabel("AI_RACER_", i, ""), carSprites, generatePlaneMesh(), 0, Color4f(0.4f, 0.4f, 0.4f, 1.0f), chairSprites, (Loop::globals->difficulty == 0));
 		
 		ai.setPhysicalAttributes(1.4f - ((float)i*0.1f), 1.3f, 6.0f+((float)i));
 		//ai.translate(-0.5f, -1.0f, 0.0f);

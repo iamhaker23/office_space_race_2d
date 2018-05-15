@@ -85,7 +85,7 @@ GameObject::GameObject(const GameObject &copy) {
 		this->forces[i] = copy.forces[i];
 	}
 
-	this->objectColor = new Color4f(*copy.objectColor);
+	this->objectColor = new Color4f(copy.objectColor->r, copy.objectColor->g, copy.objectColor->b, copy.objectColor->a);
 
 	this->friction = copy.friction;
 	this->angularDamping = copy.angularDamping;
@@ -658,12 +658,6 @@ vector<CollisionResult> GameObject::resolveCollisions(const vector<GameObject*> 
 							this->objectColor = new Color4f(0.0f, 0.0f, 1.0f, 1.0f);
 							other->objectColor = new Color4f(0.0f, 0.0f, 1.0f, 1.0f);
 						}
-						else {
-							delete this->objectColor;
-							delete other->objectColor;
-							this->objectColor = new Color4f(1.0f, 1.0f, 1.0f, 1.0f);
-							other->objectColor = new Color4f(1.0f, 1.0f, 1.0f, 1.0f);
-						}
 
 						if (!this->isGhost() && !other->isGhost()) {
 							float factor = 0.06f;
@@ -725,6 +719,12 @@ vector<CollisionResult> GameObject::resolveCollisions(const vector<GameObject*> 
 						other->collided = false;
 						result.other = NULL;
 
+						if (GameObject::drawDebug) {
+							delete this->objectColor;
+							delete other->objectColor;
+							this->objectColor = new Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+							other->objectColor = new Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+						}
 					}
 					other->setCollisionResolvedWith(this->name);
 					this->setCollisionResolvedWith(other->name);

@@ -200,6 +200,7 @@ void Loop::processUI() {
 				//since the input wasn't focused
 				//without this, the last character typed before focus will be entered in the case of textbox
 				inputs->characterIsNew = false;
+				mciSendString("play btn from 0", NULL, 0, NULL);
 			}
 			else if ((e->type == UIType::BUTTON) || (!clicked && inputs->LeftPressed) || (!e->enabled)){
 				e->focused = false;

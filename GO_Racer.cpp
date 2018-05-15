@@ -47,7 +47,7 @@ GO_Racer::GO_Racer(string name, vector<GLuint> &sprites, vector<Vertex> &mesh, i
 	};
 
 	
-	GameObject chair = GameObject(name.append("_CHAIR"), chairSprites, planeMesh, 0, Color4f(1.0f, 1.0f, 1.0f, 1.0f));
+	GameObject chair = GameObject(name.append("_CHAIR"), chairSprites, planeMesh, 0, objectColor);
 	chair.translate(0.0f, 0.7f, 0.0f);
 	this->addChild(chair);
 
@@ -153,6 +153,8 @@ void GO_Racer::processInputs(InputStates* inputs) {
 			}
 		}
 		if (inputs->keys[0x57]) {
+
+			mciSendString("play step repeat", NULL, 0, NULL);
 			//W Key
 			if (this->forces[1] < this->topSpeed) {
 				this->animate(AnimationLogic::LOOPEND);
@@ -162,6 +164,9 @@ void GO_Racer::processInputs(InputStates* inputs) {
 				this->forces[1] += 0.03f * factor;
 			}
 
+		}
+		else {
+			mciSendString("stop step", NULL, 0, NULL);
 		}
 		bool backwards = this->forces[1] < 0.0f;
 		if (this->steering) {

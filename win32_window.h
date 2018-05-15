@@ -9,6 +9,10 @@
 #include <time.h>
 #include "InputStates.h"
 
+#include <Mmsystem.h>
+#include <mciapi.h>
+#pragma comment( lib, "winmm.lib" )
+
 #ifndef WIN32_WINDOW_H
 
 #define WIN32_WINDOW_H
