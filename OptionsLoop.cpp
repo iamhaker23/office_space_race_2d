@@ -144,28 +144,28 @@ void OptionsLoop::handleActivation() {
 	string track = (this->globals->track != -1) ? utils::intToString(this->globals->track) : "1";
 	string reverse = (this->globals->reverse) ? "Yes" : "No";
 	
-	this->addUI(Vect4f(-165.0f, 260.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Difficulty:", UIType::LABEL, *Loop::fonts.back());
+	this->addUI(Vect4f(-165.0f, 260.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Difficulty", UIType::LABEL, *Loop::fonts.back());
 	this->addUI(Vect4f(0.0f, 260.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), utils::intToString(difficulty), UIType::BUTTON, *Loop::fonts.back());
 
-	this->addUI(Vect4f(-165.0f, 195.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Laps:", UIType::LABEL, *Loop::fonts.back());
+	this->addUI(Vect4f(-165.0f, 195.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Laps", UIType::LABEL, *Loop::fonts.back());
 	this->addUI(Vect4f(0.0f, 195.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), utils::intToString(laps), UIType::BUTTON, *Loop::fonts.back());
 
-	this->addUI(Vect4f(-165.0f, 130.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "# CPU:", UIType::LABEL, *Loop::fonts.back());
+	this->addUI(Vect4f(-165.0f, 130.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "# CPU", UIType::LABEL, *Loop::fonts.back());
 	this->addUI(Vect4f(0.0f, 130.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), utils::intToString(ai), UIType::BUTTON, *Loop::fonts.back());
 
-	this->addUI(Vect4f(-165.0f, 65.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Pusher:", UIType::LABEL, *Loop::fonts.back());
+	this->addUI(Vect4f(-165.0f, 65.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Pusher", UIType::LABEL, *Loop::fonts.back());
 	this->addUI(Vect4f(0.0f, 65.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), pusher, UIType::BUTTON, *Loop::fonts.back());
 
-	this->addUI(Vect4f(-165.0f, 0.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Pushee:", UIType::LABEL, *Loop::fonts.back());
+	this->addUI(Vect4f(-165.0f, 0.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Pushee", UIType::LABEL, *Loop::fonts.back());
 	this->addUI(Vect4f(0.0f, 0.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), pushee, UIType::BUTTON, *Loop::fonts.back());
 
-	this->addUI(Vect4f(-165.0f, -65.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Track:", UIType::LABEL, *Loop::fonts.back());
+	this->addUI(Vect4f(-165.0f, -65.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Track", UIType::LABEL, *Loop::fonts.back());
 	this->addUI(Vect4f(0.0f, -65.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), track, UIType::BUTTON, *Loop::fonts.back());
 
-	this->addUI(Vect4f(-165.0f, -130.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Reverse:", UIType::LABEL, *Loop::fonts.back());
+	this->addUI(Vect4f(-165.0f, -130.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Reverse", UIType::LABEL, *Loop::fonts.back());
 	this->addUI(Vect4f(0.0f, -130.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), reverse, UIType::BUTTON, *Loop::fonts.back());
 
-	this->addUI(Vect4f(-165.0f, -195.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Coll. Res.:", UIType::LABEL, *Loop::fonts.back());
+	this->addUI(Vect4f(-165.0f, -195.0f, 0.0f), Vect4f(130.0f, 60.0f, 0.0f), "Coll. Res.", UIType::LABEL, *Loop::fonts.back());
 	this->addUI(Vect4f(0.0f, -195.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), utils::intToString(collRes), UIType::BUTTON, *Loop::fonts.back());
 
 	this->addUI(Vect4f(0.0f, -260.0f, 0.0f), Vect4f(200.0f, 60.0f, 0.0f), "Menu >", UIType::BUTTON, *Loop::fonts.back());

@@ -247,6 +247,8 @@ void GameLoop::display() {
 		}
 
 	}
+
+	//get rid of these convenient lists but leave the objects to persist into the next frame
 	racers.clear();
 	objs.clear();
 }

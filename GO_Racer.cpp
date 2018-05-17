@@ -138,8 +138,6 @@ void GO_Racer::processInputs(InputStates* inputs) {
 		//float factor = (GameObject::debugger != NULL && GameObject::debugger->getAverageFrameRate() > 25.0f) ? ((float)(1.0 / (GameObject::debugger->getAverageFrameRate()/100.0f))) : 1.0f;
 		float factor = 1.0f;
 
-
-
 		int sprite = 0;
 
 		if (inputs->keys[0x53]) {

@@ -211,9 +211,7 @@ void GameObject::draw() {
 void GameObject::draw(Matrix3f &parentTransform) {
 
 	if (!this->visible) return;
-	//TODO: could this ever be a feature? Need justification to ruin the matrix at the top of the stack
-	//glRotatef(10.0f, 0.0f, 0.0f, 1.0f);
-
+	
 	if ((int)this->sprites.size() > 0) {
 		GLuint tex = this->sprites[this->activeSpriteIndex];
 
@@ -325,11 +323,11 @@ void GameObject::draw(Matrix3f &parentTransform) {
 
 	glPopMatrix();
 
-	for (GameObject o : this->children) {
+	/*for (GameObject o : this->children) {
 		glPushMatrix();
 		o.draw(parentTransform.Multiply(*this->worldSpaceTransform));
 		glPopMatrix();
-	}
+	}*/
 
 	glDisable(GL_TEXTURE_2D);
 }
@@ -660,26 +658,23 @@ vector<CollisionResult> GameObject::resolveCollisions(const vector<GameObject*> 
 						}
 
 						if (!this->isGhost() && !other->isGhost()) {
-							float factor = 0.06f;
+							float factor = 0.09f;
 							float torque = (angleToOther <= 270.0f && angleToOther >= 90.0f) ? -1.4f : 1.4f;
 							bool bothPhysics = this->hasPhysics() && other->hasPhysics();
 
 							//short circuit optimisation?
 							if (bothPhysics || other->hasPhysics()) {
+								//rotate when hitting a static obstacle
 								if (!bothPhysics) other->zTorque += torque;
+
 								other->translate(-distX*factor, -distY*factor, 0.0f);
-								//other->forces[0] = 0.0f;
-								//other->forces[1] = 0.0f;
-								//other->forces[2] = 0.0f;
-								//this->zTorque /= this->angularDamping;
 							}
 							if (bothPhysics || this->hasPhysics()) {
+								//rotate when hitting a static obstacle
 								if (!bothPhysics) this->zTorque += -torque;
+
 								this->translate(distX*factor, distY*factor, 0.0f);
-								//this->forces[0] = 0.0f;
-								//this->forces[1] = 0.0f;
-								//this->forces[2] = 0.0f;
-								//this->zTorque /= this->angularDamping;
+								
 							}
 						}
 
@@ -699,18 +694,10 @@ vector<CollisionResult> GameObject::resolveCollisions(const vector<GameObject*> 
 						//short circuit optimisation?
 						if (bothPhysics || (other->hasPhysics() && !this->isGhost())) {
 							other->translate(distX*factor, distY*factor, 0.0f);
-							//other->forces[0] = 0.0f;
-							//other->forces[1] = 0.0f;
-							//other->forces[2] = 0.0f;
-							//other->zTorque /= this->angularDamping;
 						}
 
 						if (bothPhysics || (this->hasPhysics() && !other->isGhost())) {
 							this->translate(-distX*factor, -distY*factor, 0.0f);
-							//this->forces[0] = 0.0f;
-							//this->forces[1] = 0.0f;
-							//this->forces[2] = 0.0f;
-							//this->zTorque /= this->angularDamping;
 						}
 					}
 					else {
@@ -745,9 +732,9 @@ float GameObject::radius2DToWorldSpace(float radius, float angle) {
 	float adj = (radius * (cosf(angle * (3.1415926f / 180.0f))))*this->scales[0] * this->boundScales[0];// *0.5f;
 	float opp = (radius * (sinf(angle * (3.1415926f / 180.0f))))*this->scales[1] * this->boundScales[1];// *0.5f;
 
-	Vect4f* newRad = (new Vect4f(adj, opp, 0.0f));
+	Vect4f newRad = Vect4f(adj, opp, 0.0f);
 
-	return newRad->getXYMagnitude();
+	return newRad.getXYMagnitude();
 }
 
 float GameObject::radius2DToObjectSpace(float radius, float angle) {
@@ -906,23 +893,23 @@ void GameObject::drawLine(float x1, float y1, float x2, float y2) {
 	glEnable(GL_TEXTURE_2D);
 }
 
-bool GameObject::hasResolvedWith(string name) {
+bool GameObject::hasResolvedWith(string &name) {
 	for (string collidedWith : this->resolvedWithThisFrame) {
 		if (name == collidedWith) return true;
 	}
 	return false;
 }
-bool GameObject::hasCollidedWith(string name) {
+bool GameObject::hasCollidedWith(string &name) {
 	for (string collidedWith : this->collidedWithThisFrame) {
 		if (name == collidedWith) return true;
 	}
 	return false;
 }
 
-void GameObject::setCollisionResolvedWith(string name) {
+void GameObject::setCollisionResolvedWith(string &name) {
 	this->resolvedWithThisFrame.push_back(name);
 }
-void GameObject::setCollidedWith(string name) {
+void GameObject::setCollidedWith(string &name) {
 	this->collidedWithThisFrame.push_back(name);
 }
 

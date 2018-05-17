@@ -137,10 +137,10 @@ class GameObject {
 		void resetModifiers(); 
 		void setCollider(bool flag);
 
-		bool hasResolvedWith(string name);
-		void setCollisionResolvedWith(string name);
-		bool hasCollidedWith(string name);
-		void setCollidedWith(string name);
+		bool hasResolvedWith(string &name);
+		void setCollisionResolvedWith(string &name);
+		bool hasCollidedWith(string &name);
+		void setCollidedWith(string &name);
 		void resetCollisionFlags();
 
 		CollisionRadii* getClosestRadiiTo(Vect4f &otherPosition);
