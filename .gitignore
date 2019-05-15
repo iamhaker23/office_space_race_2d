@@ -1,0 +1,6 @@
+*.blend
+*.zip
+Debug/*
+Release/*
+resources/images/*
+resources/sounds/*
