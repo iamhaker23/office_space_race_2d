@@ -2,6 +2,4 @@
 *.zip
 Debug/*
 Release/*
-resources/images/*
-resources/sounds/*
 *.db
