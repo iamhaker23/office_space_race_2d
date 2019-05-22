@@ -30,11 +30,11 @@
 
 ## Screenshots
 
-![osr screenshot 1](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/1.jpg "Splash")
-![osr screenshot 2](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/2.jpg "Menu")
-![osr screenshot 3](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/3.jpg "Options")
-![osr screenshot 4](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/4.jpg "Race")
-![osr screenshot 4](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/5.jpg "Finish")
+![osr screenshot 1](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/1.PNG "Splash")
+![osr screenshot 2](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/2.PNG "Menu")
+![osr screenshot 3](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/3.PNG "Options")
+![osr screenshot 4](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/4.PNG "Race track 1")
+![osr screenshot 4](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/5.PNG "Race track 2")
 
 ## Credits
 
