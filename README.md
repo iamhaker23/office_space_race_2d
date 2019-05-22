@@ -1,10 +1,49 @@
-# office_space_race_2d
+# Office Space Race 2D
 
+* A 2D racing game from a top-down perspective
+* Choose a team and a name, then race on 2 tracks
+* University assignment for Graphics I course
+* This program is provided only as a demonstration of my software development experience
+* See my technical report <a href="https://github.com/iamhaker23/portfolio/blob/master/osr/OSR_Collision_And_Movement_Report.pdf" target="_blank">on collisions and movement</a>
 
-#NOTE
+## Setup
 
-Requires image and sound assets. 
-Download and unzip into resources/sounds and resources/images folders: ___here___ .
+* Recommended: Visual Studio 2015, C++11, openGL 3.2
+* Download Visual Studio project source
+* Unzip and open firstOpenGL.sln
+* To run, select "release" (or "debug") configuration and click "Local Windows Debugger"
 
+## Instructions To Use
 
-Optional level editor (Blender 3D files) with python export script: ___here___.
+* See instruction manual <a href="https://github.com/iamhaker23/portfolio/blob/master/osr/Office_Space_Race_User_Manual.pdf" target="_blank">here</a>
+
+## Demonstrates
+
+* 2D graphics
+* Custom 2D collision algorithm
+* Racing game systems
+* UI programming
+* Object-oriented C++
+* openGL 
+* UV scrolling
+* Animation system
+
+## Screenshots
+
+![osr screenshot 1](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/1.jpg "Splash")
+![osr screenshot 2](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/2.jpg "Menu")
+![osr screenshot 3](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/3.jpg "Options")
+![osr screenshot 4](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/4.jpg "Race")
+![osr screenshot 4](https://raw.githubusercontent.com/iamhaker23/portfolio/master/osr/5.jpg "Finish")
+
+## Credits
+
+* **Hakeem Bux** - *Developed as per assignment brief* - [iamhaker23](https://github.com/iamhaker23)
+
+## Acknowledgments
+
+* Based on initial classes provided by UEA CMP faculty.
+
+## Issues
+
+* No major issues are noted.

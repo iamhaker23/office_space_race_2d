@@ -323,11 +323,11 @@ void GameObject::draw(Matrix3f &parentTransform) {
 
 	glPopMatrix();
 
-	/*for (GameObject o : this->children) {
+	for (GameObject o : this->children) {
 		glPushMatrix();
 		o.draw(parentTransform.Multiply(*this->worldSpaceTransform));
 		glPopMatrix();
-	}*/
+	}
 
 	glDisable(GL_TEXTURE_2D);
 }
